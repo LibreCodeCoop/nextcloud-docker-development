@@ -6,7 +6,9 @@ An development apps environment for NextCloud.
 
 ### Before first run
 
-Edit the `.env` file to set your database password.
+Edit the `.env` file to set your database password and the version of NextCloud that you will use.
+
+`VERSION` To this environment get a or branch of [NextCloud server repository](github.com/nextcloud/server).
 
 ### PHP custom settings
 
