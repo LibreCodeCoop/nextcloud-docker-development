@@ -1,0 +1,49 @@
+# Nextcloud development environment
+
+An development apps environment for NextCloud.
+
+## Development environment
+
+### Before first run
+
+Edit the `.env` file to set your database password.
+
+### PHP custom settings
+
+If you need custom settings in PHP, change the file [`.docker/app/config/php.ini`](/.docker/app/config/php.ini).
+
+### Up environment
+```bash
+docker-compsoe up
+```
+
+Access in the browser using the port mapped in `docker-compose.yml`.
+
+Uncheck to setup extra apps to create a clean instalation of NextCloud for development.
+
+After finish the setup, access this url: https://localhost/settings/admin/overview.
+
+If is necessary run any occ command, run like this:
+
+```bash
+docker exec -u www-data -it nextcloud_app_1 ./occ db:add-missing-indices
+docker exec -u www-data -it nextcloud_app_1 ./occ db:convert-filecache-bigint
+```
+
+## Start development
+
+Follow the instructions in official NextCloud app development page.
+
+After create the folder to your app, in terminal, change the owner of the folder to your user:
+
+```bash
+sudo chown -R $USER:$USER nextcloud/apps/yourappfolder
+```
+
+Go to your app folder and initialize versioning.
+
+```php
+cd nextcloud/apps/yourappfolder
+```
+
+Good work!
