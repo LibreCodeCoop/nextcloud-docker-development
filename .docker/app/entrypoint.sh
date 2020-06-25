@@ -1,7 +1,7 @@
 #!/bin/bash
 cd ../
 . `pwd`/.env
-php .docker/php7/wait-for-db.php
+php .docker/app/wait-for-db.php
 if [ ! -d "nextcloud/.git" ]; then
     git clone https://github.com/nextcloud/server --branch "${VERSION}" nextcloud
     cd nextcloud
