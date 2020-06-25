@@ -7,9 +7,6 @@ if [ ! -d "nextcloud/.git" ]; then
     cd nextcloud
     git submodule update --init
     mkdir data
-    cp config/config.sample.php config/config.php
-    sed -i -e "s/'debug' => false,/'debug' => true,/g" config/config.php
-    sed -i -e "s/'instanceid' => '',/'instanceid' => 'd3c944a9a',/g" config/config.php
     cd -
 fi
 cd nextcloud
