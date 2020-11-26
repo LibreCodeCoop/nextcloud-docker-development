@@ -62,6 +62,9 @@ RUN docker-php-ext-enable imagick
 # Install intl
 RUN docker-php-ext-install intl
 
+# Install pcntl
+RUN docker-php-ext-install pcntl
+
 COPY config/php.ini /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www/nextcloud
