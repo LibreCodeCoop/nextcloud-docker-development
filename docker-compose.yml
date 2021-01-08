@@ -17,6 +17,8 @@ services:
       - db
     volumes:
       - ./:/var/www
+      - ~/.composer:/root/.composer/
+      - ~/.npm:/root/.npm/
     restart: unless-stopped
     ports:
       - $HTTP_PORT:$HTTP_PORT

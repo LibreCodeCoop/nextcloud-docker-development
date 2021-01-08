@@ -17,7 +17,7 @@ RUN apt-get install -y \
         && docker-php-ext-install pdo pdo_pgsql pgsql
 
 # Install xdebug
-RUN pecl install xdebug-2.9.4 \
+RUN pecl install xdebug-2.9.8 \
     && docker-php-ext-enable xdebug
 
 # Install Redis
@@ -64,6 +64,17 @@ RUN docker-php-ext-install intl
 
 # Install pcntl
 RUN docker-php-ext-install pcntl
+
+ENV NVM_DIR=/opt/nvm
+RUN git clone https://github.com/nvm-sh/nvm.git $NVM_DIR
+RUN cd $NVM_DIR && \
+    git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)` && \
+    . $NVM_DIR/nvm.sh && \
+    nvm install 13 && \
+    nvm use node
+RUN echo "source ${NVM_DIR}/nvm.sh" > $HOME/.bashrc
+
+COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 COPY config/php.ini /usr/local/etc/php/conf.d/
 
