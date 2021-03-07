@@ -71,7 +71,8 @@ RUN cd $NVM_DIR && \
     git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)` && \
     . $NVM_DIR/nvm.sh && \
     nvm install 13 && \
-    nvm use node
+    nvm use node && \
+    npm install --global yarn
 RUN echo "source ${NVM_DIR}/nvm.sh" > $HOME/.bashrc
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
