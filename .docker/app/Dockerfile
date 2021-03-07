@@ -17,7 +17,7 @@ RUN apt-get install -y \
         && docker-php-ext-install pdo pdo_pgsql pgsql
 
 # Install xdebug
-RUN pecl install xdebug-2.9.8 \
+RUN pecl install xdebug-3.0.3 \
     && docker-php-ext-enable xdebug
 
 # Install Redis
