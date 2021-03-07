@@ -21,14 +21,8 @@ RUN pecl install xdebug-3.0.3 \
     && docker-php-ext-enable xdebug
 
 # Install Redis
-ENV PHPREDIS_VERSION 5.2.1
-
-RUN curl -L -o /tmp/redis.tar.gz https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz \
-    && tar xfz /tmp/redis.tar.gz \
-    && rm -r /tmp/redis.tar.gz \
-    && mkdir -p /usr/src/php/ext \
-    && mv phpredis-$PHPREDIS_VERSION /usr/src/php/ext/redis \
-    && docker-php-ext-install redis
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 # Install Memcached
 RUN apt-get install -y libmemcached-dev \
