@@ -1,10 +1,10 @@
 #!/bin/bash
-cd ../
-. `pwd`/.env
-php .docker/app/wait-for-db.php
-if [ ! -d "nextcloud/.git" ]; then
-    git clone --progress --single-branch --depth 1 --branch "${VERSION}" --recurse-submodules -j 4 https://github.com/nextcloud/server nextcloud
-    mkdir nextcloud/data
+. `pwd`/../.env
+php /var/www/scripts/wait-for-db.php
+if [ ! -d ".git" ]; then
+    git clone --progress --single-branch --depth 1 --branch "${VERSION}" --recurse-submodules -j 4 https://github.com/nextcloud/server /tmp/nextcloud
+    rsync -r /tmp/nextcloud/ .
+    mkdir data
+    chown -R www-data:www-data .
 fi
-cd nextcloud
-php -S 0.0.0.0:"$HTTP_PORT"
+php-fpm

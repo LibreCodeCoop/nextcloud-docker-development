@@ -1,7 +1,7 @@
 version: "3.7"
 
 services:
-  db:
+  postgres:
     image: postgres:13-alpine
     restart: unless-stopped
     volumes:
@@ -11,22 +11,45 @@ services:
     ports:
       - 5432:5432
     command: postgres -c log_statement=all
-  app:
+  nextcloud:
     build: .docker/app
     links:
-      - db
+      - postgres
     volumes:
-      - ./:/var/www
+      - ./.docker/app/wait-for-db.php:/var/www/scripts/wait-for-db.php
+      - ./.env:/var/www/.env
+      - ./volumes/nextcloud:/var/www/html
       - ~/.composer:/root/.composer/
       - ~/.npm:/root/.npm/
+      - ./cfssl:/cfssl
     restart: unless-stopped
     ports:
-      - $HTTP_PORT:$HTTP_PORT
+      # libresign documentations
+      - 8080:8080
     env_file:
       - .env
     environment:
       - XDEBUG_CONFIG=client_host=172.17.0.1 client_port=9005 start_with_request=yes
+  nginx:
+    build: .docker/web
+    restart: unless-stopped
+    volumes:
+      - ./volumes/nextcloud:/var/www/html:ro
+    depends_on:
+      - nextcloud
+    ports:
+      - 80:80
   mailhog:
     image: blueimp/mailhog
     ports:
       - 8025:8025
+  cfssl:
+    image: cfssl/cfssl
+    volumes:
+      - ./volumes/cfssl:/cfssl
+    working_dir: /cfssl
+    entrypoint: /bin/bash
+    ports:
+      - 8888:8888
+    command:
+      - /cfssl/entrypoint.sh
