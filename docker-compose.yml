@@ -21,7 +21,7 @@ services:
       - ./volumes/nextcloud:/var/www/html
       - ~/.composer:/root/.composer/
       - ~/.npm:/root/.npm/
-      - ./cfssl:/cfssl
+      - ./volumes/cfssl:/cfssl
     restart: unless-stopped
     ports:
       # libresign documentations
