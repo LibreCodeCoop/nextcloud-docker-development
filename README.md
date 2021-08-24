@@ -19,6 +19,7 @@ If you need custom settings in PHP, change the file [`.docker/app/config/php.ini
 docker-compsoe up
 ```
 
+### Web setup
 Access in the browser using the port mapped in `docker-compose.yml`.
 
 Uncheck to setup extra apps to create a clean instalation of NextCloud for development.
@@ -30,6 +31,22 @@ If is necessary run any occ command, run like this:
 ```bash
 docker exec -u www-data -it nextcloud_app_1 ./occ db:add-missing-indices
 docker exec -u www-data -it nextcloud_app_1 ./occ db:convert-filecache-bigint
+```
+
+### CLI setup
+
+```bash
+docker-compose exec --user www-data nextcloud php occ \
+    maintenance:install \
+        --verbose \
+        --database=pgsql \
+        --database-name=nextcloud_main \
+        --database-host=postgres \
+        --database-port= \
+        --database-user=nextcloud \
+        --database-pass=nextcloud \
+        --admin-user=admin \
+        --admin-pass=admin
 ```
 
 ## Start development
