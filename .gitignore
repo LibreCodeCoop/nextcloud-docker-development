@@ -2,7 +2,4 @@
 .vscode
 
 # Docker volumes
-.docker/volumes
-
-# Source of NextCloud
-/nextcloud
+/volumes
