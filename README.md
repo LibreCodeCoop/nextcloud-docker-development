@@ -24,18 +24,9 @@ After finish the setup, access this url: http://localhost/settings/admin/overvie
 
 ## Start development
 
-Follow the instructions in official Nextcloud app development page.
-
-After create the folder to your app, in terminal, change the owner of the folder to your user:
+After create (or clone) the folder of app on folder `volumes/nextcloud/apps`, in terminal, change the owner of the folder to your user:
 
 ```bash
-sudo chown -R $USER:$USER nextcloud/apps/yourappfolder
+sudo chown -R $USER:$USER volumes/nextcloud/apps/yourappfolder
 ```
-
-Go to your app folder and initialize versioning.
-
-```php
-cd nextcloud/apps/yourappfolder
-```
-
 Good work!
