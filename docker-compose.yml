@@ -21,8 +21,6 @@ services:
         version_xdebug: ${VERSION_XDEBUG}
         version_node: ${VERSION_NODE}
         version_jsignpdf: ${VERSION_JSIGNPDF}
-    links:
-      - postgres
     volumes:
       - ./.docker/app/wait-for-db.php:/var/www/scripts/wait-for-db.php
       - ./.env:/var/www/.env
