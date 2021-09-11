@@ -1,16 +1,14 @@
 # Nextcloud development environment
 
-An development apps environment for NextCloud.
+An development apps environment for Nextcloud.
 
 ## Development environment
 
 ### Before first run
 
-Copy `.env.example` to `.env` and chante `.env`
+Copy `.env.example` to `.env` and change the values of `.env`
 
-Edit the `.env` file to set your database password and the version of NextCloud that you will use.
-
-`VERSION` To this environment get a or branch of [NextCloud server repository](github.com/nextcloud/server).
+`VERSION_NEXTCLOUD` To this environment get a or branch of [Nextcloud server repository](github.com/nextcloud/server).
 
 ### PHP custom settings
 
@@ -22,9 +20,9 @@ docker-compsoe up
 ```
 
 ### Web setup
-Access in the browser using the port mapped in `docker-compose.yml`.
+Access in the browser using the port defined on `HTTP_PORT`.
 
-Uncheck to setup extra apps to create a clean instalation of NextCloud for development.
+Uncheck to setup extra apps to create a clean instalation of Nextcloud for development.
 
 After finish the setup, access this url: https://localhost/settings/admin/overview.
 
@@ -53,7 +51,7 @@ docker-compose exec --user www-data nextcloud php occ \
 
 ## Start development
 
-Follow the instructions in official NextCloud app development page.
+Follow the instructions in official Nextcloud app development page.
 
 After create the folder to your app, in terminal, change the owner of the folder to your user:
 
