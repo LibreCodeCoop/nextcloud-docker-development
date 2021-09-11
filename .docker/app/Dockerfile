@@ -1,4 +1,17 @@
-FROM php:8-fpm
+ARG php_version=8
+ARG xdebug_version=3.0.4
+ARG node_version=14
+ARG jsignpdf_version=1.6.5
+
+FROM php:${php_version}-fpm
+ARG php_version
+ARG xdebug_version
+ARG node_version
+ARG jsignpdf_version
+
+ENV XDEBUG_VERSION=${xdebug_version}
+ENV NODE_VERSION=${node_version}
+ENV JSIGNPDF_VERSION=${jsignpdf_version}
 
 RUN apt-get update
 
@@ -19,7 +32,7 @@ RUN apt-get install -y \
         && docker-php-ext-install pdo pdo_pgsql pgsql
 
 # Install xdebug
-RUN pecl install xdebug-3.0.4 \
+RUN pecl install xdebug-${XDEBUG_VERSION} \
     && docker-php-ext-enable xdebug
 
 # Install Redis
@@ -76,7 +89,7 @@ RUN git clone https://github.com/nvm-sh/nvm.git $NVM_DIR
 RUN cd $NVM_DIR && \
     git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)` && \
     . $NVM_DIR/nvm.sh && \
-    nvm install 14 && \
+    nvm install ${NODE_VERSION} && \
     nvm use node && \
     npm install --global yarn
 RUN echo "source ${NVM_DIR}/nvm.sh" > $HOME/.bashrc
@@ -86,9 +99,9 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 # Install Java and JsignPDF
 RUN mkdir -p /usr/share/man/man1
 RUN apt-get install -y default-jre
-RUN curl -OL https://sourceforge.net/projects/jsignpdf/files/stable/JSignPdf%201.6.5/JSignPdf-1.6.5.zip \
-    && unzip JSignPdf-1.6.5.zip -d /opt \
-    && rm JSignPdf-1.6.5.zip
+RUN curl -OL https://sourceforge.net/projects/jsignpdf/files/stable/JSignPdf%20${JSIGNPDF_VERSION}/JSignPdf-${JSIGNPDF_VERSION}.zip \
+    && unzip JSignPdf-${JSIGNPDF_VERSION}.zip -d /opt \
+    && rm JSignPdf-${JSIGNPDF_VERSION}.zip
 
 RUN mkdir -p /cfssl ; chown -R www-data:www-data /cfssl
 VOLUME /cfssl

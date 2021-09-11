@@ -2,8 +2,10 @@
 <?php
 function dbIsUp() {
     try {
-        $dsn = getenv('DB_ADAPTER').':dbname='.getenv('DB_NAME').';host='.getenv('DB_HOST');
-        new PDO($dsn, getenv('DB_USER'), getenv('DB_PASSWD'));
+        if ( !empty('POSTGRES_DB') && !empty('POSTGRES_USER') && !empty('POSTGRES_PASSWORD') && !empty('POSTGRES_HOST') ) {
+            $dsn = 'pgsql:dbname='.getenv('POSTGRES_DB').';host='.getenv('POSTGRES_HOST');
+            new PDO($dsn, getenv('POSTGRES_USER'), getenv('POSTGRES_PASSWORD'));
+        }
     } catch(Exception $e) {
         echo $e->getMessage()."\n";
         return false;
