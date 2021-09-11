@@ -1,17 +1,17 @@
-ARG php_version=8
-ARG xdebug_version=3.0.4
-ARG node_version=14
-ARG jsignpdf_version=1.6.5
+ARG version_php=8
+ARG version_xdebug=3.0.4
+ARG version_node=14
+ARG version_jsignpdf=1.6.5
 
-FROM php:${php_version}-fpm
-ARG php_version
-ARG xdebug_version
-ARG node_version
-ARG jsignpdf_version
+FROM php:${version_php}-fpm
+ARG version_php
+ARG version_xdebug
+ARG version_node
+ARG version_jsignpdf
 
-ENV XDEBUG_VERSION=${xdebug_version}
-ENV NODE_VERSION=${node_version}
-ENV JSIGNPDF_VERSION=${jsignpdf_version}
+ENV VERSION_XDEBUG=${version_xdebug}
+ENV VERSION_NODE=${version_node}
+ENV VERSION_JSIGNPDF=${version_jsignpdf}
 
 RUN apt-get update
 

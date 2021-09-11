@@ -3,3 +3,5 @@
 
 # Docker volumes
 /volumes
+
+.env
