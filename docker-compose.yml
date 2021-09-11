@@ -35,7 +35,7 @@ services:
       # libresign documentations
       - ${LIBRESIGN_DOCUMENTATION_PORT}:8080
     environment:
-      - NEXTCLOUD_VERSION
+      - VERSION_NEXTCLOUD
       - NEXTCLOUD_ADMIN_USER
       - NEXTCLOUD_ADMIN_PASSWORD
       - POSTGRES_DB
