@@ -47,8 +47,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./volumes/nextcloud:/var/www/html:ro
-    depends_on:
-      - nextcloud
+      - ./volumes/nginx/includes:/etc/nginx/conf.d/includes/
     ports:
       - ${HTTP_PORT}:80
   mailhog:
@@ -65,3 +64,4 @@ services:
       - 8888:8888
     command:
       - /cfssl/entrypoint.sh
+
