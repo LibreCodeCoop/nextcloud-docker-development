@@ -13,6 +13,22 @@ services:
     ports:
       - 5432:5432
     command: postgres -c log_statement=all
+  mysql:
+    image: mysql
+    volumes:
+      - ./.docker/mysql/conf:/etc/mysql/conf.d
+      - ./volumes/mysql/dump:/docker-entrypoint-initdb.d
+      - ./volumes/mysql/data:/var/lib/mysql
+    ports:
+      - 3306:3306
+    restart: unless-stopped
+    environment:
+      - TZ
+      - MYSQL_HOST
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
   nextcloud:
     build:
       context: .docker/app
