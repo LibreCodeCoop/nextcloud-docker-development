@@ -56,7 +56,13 @@ services:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - POSTGRES_HOST
+      - MYSQL_HOST
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
       - VERSION_NEXTCLOUD
+      - AUTOINSTALL
       - XDEBUG_CONFIG
   nginx:
     build: .docker/web
@@ -70,6 +76,8 @@ services:
     image: blueimp/mailhog
     ports:
       - ${MAILHOG_PORT}:8025
+  redis:
+    image: redis
   cfssl:
     image: cfssl/cfssl
     volumes:
