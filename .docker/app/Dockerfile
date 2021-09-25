@@ -1,7 +1,4 @@
-ARG version_php=8
-ARG version_xdebug=3.0.4
-ARG version_node=14
-ARG version_jsignpdf=1.6.5
+ARG version_php
 
 FROM php:${version_php}-fpm
 ARG version_php
@@ -31,10 +28,6 @@ RUN apt-get install -y \
         && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
         && docker-php-ext-install pdo pdo_pgsql pgsql
 
-# Install xdebug
-RUN pecl install xdebug-${VERSION_XDEBUG} \
-    && docker-php-ext-enable xdebug
-
 # Install Redis
 RUN pecl install redis \
     && docker-php-ext-enable redis
@@ -43,6 +36,10 @@ RUN pecl install redis \
 RUN apt-get install -y libmemcached-dev \
     && pecl install memcached \
     && docker-php-ext-enable memcached
+
+# Install APCu
+RUN pecl install apcu \
+    && docker-php-ext-enable apcu
 
 # Install MySQL
 RUN docker-php-ext-configure mysqli -with-mysqli=mysqlnd \
@@ -84,6 +81,11 @@ RUN docker-php-ext-install bcmath
 RUN apt-get install -y libgmp-dev
 RUN docker-php-ext-install gmp
 
+# Install xdebug
+RUN pecl install xdebug-${VERSION_XDEBUG} \
+    && docker-php-ext-enable xdebug
+
+# Install node
 ENV NVM_DIR=/opt/nvm
 RUN git clone https://github.com/nvm-sh/nvm.git $NVM_DIR
 RUN cd $NVM_DIR && \
@@ -110,4 +112,4 @@ COPY config/php.ini /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www/html
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-ENTRYPOINT [ "sh", "/usr/local/bin/entrypoint.sh" ]
+ENTRYPOINT [ "bash", "/usr/local/bin/entrypoint.sh" ]
