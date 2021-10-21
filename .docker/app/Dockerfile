@@ -101,9 +101,9 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 # Install Java and JsignPDF
 RUN mkdir -p /usr/share/man/man1
 RUN apt-get install -y default-jre
-RUN curl -OL https://sourceforge.net/projects/jsignpdf/files/stable/JSignPdf%20${VERSION_JSIGNPDF}/JSignPdf-${VERSION_JSIGNPDF}.zip \
-    && unzip JSignPdf-${VERSION_JSIGNPDF}.zip -d /opt \
-    && rm JSignPdf-${VERSION_JSIGNPDF}.zip
+RUN curl -OL https://sourceforge.net/projects/jsignpdf/files/stable/JSignPdf%20${VERSION_JSIGNPDF}/jsignpdf-${VERSION_JSIGNPDF}.zip \
+    && unzip jsignpdf-${VERSION_JSIGNPDF}.zip -d /opt \
+    && rm jsignpdf-${VERSION_JSIGNPDF}.zip
 
 RUN mkdir -p /cfssl ; chown -R www-data:www-data /cfssl
 VOLUME /cfssl
