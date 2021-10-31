@@ -64,6 +64,7 @@ RUN apt-get install -y libmagickwand-dev
 RUN pecl install \
     imagick
 RUN docker-php-ext-enable imagick
+RUN sed -i'' 's|.*<policy domain="coder".*"PDF".*|<policy domain="coder" rights="read \| write" pattern="PDF" />|g' /etc/ImageMagick-6/policy.xml
 
 # Install intl
 RUN docker-php-ext-install intl
