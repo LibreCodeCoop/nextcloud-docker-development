@@ -16,7 +16,7 @@ If you need custom settings in PHP, change the file [`.docker/app/config/php.ini
 
 ### Up environment
 ```bash
-docker-compsoe up -d
+docker-compose up -d
 ```
 Access in the browser using the port defined on `HTTP_PORT`.
 
