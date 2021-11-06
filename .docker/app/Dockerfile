@@ -87,17 +87,15 @@ RUN pecl install xdebug-${VERSION_XDEBUG} \
     && docker-php-ext-enable xdebug
 
 # Install node
-ENV NVM_DIR=/opt/nvm
-RUN git clone https://github.com/nvm-sh/nvm.git $NVM_DIR
-RUN cd $NVM_DIR && \
-    git checkout `git describe --abbrev=0 --tags --match "v[0-9]*" $(git rev-list --tags --max-count=1)` && \
-    . $NVM_DIR/nvm.sh && \
-    nvm install ${VERSION_NODE} && \
-    nvm use node && \
-    npm install --global yarn && \
-    npm install --global webpack && \
-    npm install --global webpack-cli
-RUN echo "source ${NVM_DIR}/nvm.sh" > $HOME/.bashrc
+RUN curl -fsSL https://deb.nodesource.com/setup_${VERSION_NODE}.x | bash - \
+    && apt install --no-install-recommends -y nodejs \
+    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && apt update \
+    && apt install --no-install-recommends yarn \
+    && node --version \
+    && npm --version \
+    && yarn --version
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
