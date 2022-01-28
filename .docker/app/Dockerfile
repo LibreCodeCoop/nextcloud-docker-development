@@ -94,7 +94,9 @@ RUN cd $NVM_DIR && \
     . $NVM_DIR/nvm.sh && \
     nvm install ${VERSION_NODE} && \
     nvm use node && \
-    npm install --global yarn
+    npm install --global yarn && \
+    npm install --global webpack && \
+    npm install --global webpack-cli
 RUN echo "source ${NVM_DIR}/nvm.sh" > $HOME/.bashrc
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
