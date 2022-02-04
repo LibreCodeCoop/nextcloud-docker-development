@@ -26,9 +26,11 @@ After finish the setup, access this url: http://localhost/settings/admin/overvie
 
 ## Start development
 
-After create (or clone) the folder of app on folder `volumes/nextcloud/apps`, in terminal, change the owner of the folder to your user:
+You will need create (or clone) the folder of app on folder `volumes/nextcloud/apps`. Because the owner of folder `apps` is the root user, you will need to the follow steps (using LibreSign app repository as example):
 
 ```bash
-sudo chown -R $USER:$USER volumes/nextcloud/apps/yourappfolder
+sudo chown $USER:$USER volumes/nextcloud/apps
+git clone git@github.com:LibreSign/libresign.git volumes/nextcloud/apps/libresign
+sudo chown www-data:www-data volumes/nextcloud/apps
 ```
 Good work!
