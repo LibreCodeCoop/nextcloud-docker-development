@@ -22,7 +22,7 @@ docker-compose up
 ```
 Access in the browser using the port defined on `HTTP_PORT`.
 
-After finish the setup, access this url: http://localhost/settings/admin/overview.
+After finish the setup, access this url: http://localhost/.
 
 ## Start development of apps
 
