@@ -16,7 +16,7 @@ If you want to use PostgreSQL, comment the environments of MySQL on `.env` and t
 
 If you need custom settings in PHP, change the file [`.docker/app/config/php.ini`](/.docker/app/config/php.ini).
 
-### Up environment
+### Up services
 ```bash
 docker-compose up -d
 ```
