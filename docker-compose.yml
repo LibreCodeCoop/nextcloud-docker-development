@@ -81,14 +81,3 @@ services:
       - ${MAILHOG_PORT}:8025
   redis:
     image: redis
-  cfssl:
-    image: cfssl/cfssl
-    volumes:
-      - ./volumes/cfssl:/cfssl
-    working_dir: /cfssl
-    entrypoint: /bin/bash
-    ports:
-      - 8888:8888
-    command:
-      - /cfssl/entrypoint.sh
-

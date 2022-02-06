@@ -14,5 +14,6 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
         runuser -u www-data -- php occ maintenance:install --verbose --database=mysql --database-name=${MYSQL_DATABASE} --database-host=${MYSQL_HOST} --database-port= --database-user=${MYSQL_USER} --database-pass=${MYSQL_PASSWORD} --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
     fi
     runuser -u www-data -- php occ config:system:set default_phone_region ${DEFAULT_PHONE_REGION}
+    runuser -u www-data -- php occ config:system:set --value=1 allow_local_remote_servers
 fi
 php-fpm
