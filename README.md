@@ -28,9 +28,30 @@ After finish the setup, access this url: http://localhost/.
 
 You will need create (or clone) the folder of the app that you will work inside the folder `volumes/nextcloud/apps`. Because the owner of folder `apps` is the root user, you will need do the follow steps (using LibreSign app repository as example) to change the owner of folder `apps` to your user and group, clone the app and revert the owner of folder app to root again:
 
-```bash
+```sh
 sudo chown $USER:$USER volumes/nextcloud/apps
 git clone git@github.com:LibreSign/libresign.git volumes/nextcloud/apps/libresign
 sudo chown www-data:www-data volumes/nextcloud/apps
 ```
+
 Good work!
+
+### LibreSign Setup
+
+```sh
+sudo chown $USER:$USER volumes/nextcloud/apps
+git clone git@github.com:LibreSign/libresign.git volumes/nextcloud/apps/libresign
+docker-compose exec nextcloud bash -c 'chown www-data:www-data /var/www/html/apps'
+
+docker-compose exec -u www-data nextcloud php occ config:system:set --value=true debug
+docker-compose exec -u www-data nextcloud php occ app:enable libresign
+docker-compose exec -u www-data nextcloud php occ libresign:install --all
+docker-compose exec -u www-data nextcloud php occ libresign:configure:cfssl --cn=LibreCode --ou=LibreCode --o=LibreCode --c=BR
+```
+
+#### Migrations
+
+```sh
+docker-compose exec -u www-data nextcloud php occ migrations:status libresign
+docker-compose exec -u www-data nextcloud php occ migrations:migrate libresign
+```
