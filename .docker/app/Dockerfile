@@ -5,7 +5,8 @@ ARG version_php
 ARG version_xdebug
 ARG version_node
 ARG version_jsignpdf
-
+ARG host_uid
+ARG host_gid
 ENV VERSION_XDEBUG=${version_xdebug}
 ENV VERSION_NODE=${version_node}
 ENV VERSION_JSIGNPDF=${version_jsignpdf}
@@ -21,6 +22,10 @@ RUN apt-get install -y \
         unzip \
         && docker-php-ext-install opcache \
         && docker-php-ext-install zip
+
+RUN usermod --non-unique --uid ${host_uid} www-data \
+  && groupmod --non-unique --gid ${host_gid} www-data 
+
 
 # Install PostgreSQL
 RUN apt-get install -y \
