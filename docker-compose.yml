@@ -38,7 +38,6 @@ services:
         version_php: ${VERSION_PHP}
         version_xdebug: ${VERSION_XDEBUG}
         version_node: ${VERSION_NODE}
-        version_jsignpdf: ${VERSION_JSIGNPDF}
         host_uid: ${UID}
         host_gid: ${GID}
     volumes:

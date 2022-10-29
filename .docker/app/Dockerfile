@@ -4,12 +4,10 @@ FROM php:${version_php}-fpm
 ARG version_php
 ARG version_xdebug
 ARG version_node
-ARG version_jsignpdf
 ARG host_uid
 ARG host_gid
 ENV VERSION_XDEBUG=${version_xdebug}
 ENV VERSION_NODE=${version_node}
-ENV VERSION_JSIGNPDF=${version_jsignpdf}
 
 RUN apt-get update
 
