@@ -15,5 +15,10 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     fi
     runuser -u www-data -- php occ config:system:set default_phone_region ${DEFAULT_PHONE_REGION}
     runuser -u www-data -- php occ config:system:set --value=1 allow_local_remote_servers
+
+    runuser -u www-data -- php occ config:system:set mail_from_address --value ${MAIL_FROM_ADDRESS}
+    runuser -u www-data -- php occ config:system:set mail_domain --value ${MAIL_DOMAIN}
+    runuser -u www-data -- php occ config:system:set mail_smtphost --value ${MAIL_SMTPHOST}
+    runuser -u www-data -- php occ config:system:set mail_smtpport --value ${MAIL_SMTPPORT}
 fi
 php-fpm
