@@ -1,12 +1,20 @@
 #!/bin/bash
+
+# Source the enviroment variables
 . `pwd`/../.env
+
+# Clone Nextcloud repository, if needed
 if [ ! -d ".git" ]; then
     git clone --progress --single-branch --depth 1 --branch "${VERSION_NEXTCLOUD}" --recurse-submodules -j 4 https://github.com/nextcloud/server /tmp/nextcloud
     rsync -r /tmp/nextcloud/ .
     mkdir data
     chown -R www-data:www-data .
 fi
+
+# Wait for database
 php /var/www/scripts/wait-for-db.php
+
+# Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     if [[ ! -z ${POSTGRES_HOST} && ! -z ${POSTGRES_DB} && ! -z ${POSTGRES_USER} && ! -z ${POSTGRES_PASSWORD} ]]; then
         runuser -u www-data -- php occ maintenance:install --verbose --database=pgsql --database-name=${POSTGRES_DB} --database-host=${POSTGRES_HOST} --database-port= --database-user=${POSTGRES_USER} --database-pass=${POSTGRES_PASSWORD} --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
@@ -21,4 +29,6 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     runuser -u www-data -- php occ config:system:set mail_smtphost --value ${MAIL_SMTPHOST}
     runuser -u www-data -- php occ config:system:set mail_smtpport --value ${MAIL_SMTPPORT}
 fi
+
+# Start PHP-FPM
 php-fpm
