@@ -8,7 +8,7 @@ An development apps environment for Nextcloud.
 
 Copy `.env.example` to `.env` and change the values of `.env`
 
-`VERSION_NEXTCLOUD` To this environment get a or branch of [Nextcloud server repository](https://github.com/nextcloud/server).
+`VERSION_NEXTCLOUD` To this environment I recommend to use the branch `master`. If you need to work with old version of server, use other branch of [Nextcloud server repository](https://github.com/nextcloud/server).
 
 If you want to use PostgreSQL, comment the environments of MySQL on `.env` and the MySQL service on `docker-compose.yml`. The same if you want to use MySQL, comment all about PostgreSQL on `.env` and on `docker-compose.yml`
 
