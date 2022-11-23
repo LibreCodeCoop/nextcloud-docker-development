@@ -55,3 +55,9 @@ Good work!
                 "/var/www/html": "${workspaceFolder}"
             }
   ```
+**I havent permission to write in files of my project using my user**
+- The default user id (`UID`) and group id (`GID`) of root user inside container is the same of your user in host machine. This is defined in `.env` file. If is different of 1000 and 1000, change in your `.env` file.
+- Run the follow command to move all files to your UID and GID:
+  ```
+  sudo chown -R $USER:$USER volumes/nextcloud
+  ```
