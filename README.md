@@ -35,7 +35,7 @@ Good work!
 - Go down the containers, remove the folder volumes and go up. This will delete the database and Nextcloud volumes. Before do a backup of all that you don't want to lost, by example `volumes/nextcloud/config/config.php`
 
 **How to upgrade to newest commits of server repository?**
-- ```
+- ```bash
   cd volumes/nextcloud
   git pull origin master
   ```
