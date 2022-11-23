@@ -39,3 +39,19 @@ Good work!
   cd volumes/nextcloud
   git pull origin master
   ```
+
+**What folder do I need to open my project on my IDE?**
+- To work with PHP, I recommend to open in folder `volumes/nextcloud`
+- To work only with frontend, you can directly open the folder of app that you are working
+
+**How to use xdebug on VSCode or Codium?**
+- Open the IDE on folder `volumes/nextcloud`
+- setup the extension PHP Debug or PHP Extension Pack
+- Press F5 to start debugging or go to "Run > Start debugging"
+- Create a launch.json file to PHP
+- Add the follow to your launch.json inside configuration named as `Listen for Xdebug`:
+  ```json
+            "pathMappings": {
+                "/var/www/html": "${workspaceFolder}"
+            }
+  ```
