@@ -28,3 +28,14 @@ After finish the setup, access this url: http://localhost/.
 
 You will need create (or clone) the folder of the app that you will work inside the folder `volumes/nextcloud/apps`. 
 Good work!
+
+## FAQ
+
+**How to reset the entire setup?**
+- Go down the containers, remove the folder volumes and go up. This will delete the database and Nextcloud volumes. Before do a backup of all that you don't want to lost, by example `volumes/nextcloud/config/config.php`
+
+**How to upgrade to newest commits of server repository?**
+- ```
+  cd volumes/nextcloud
+  git pull origin master
+  ```
