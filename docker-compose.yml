@@ -48,10 +48,6 @@ services:
       - ./volumes/cfssl:/cfssl
       - ./volumes/nextcloud:/var/www/html
     restart: unless-stopped
-    ports:
-      # libresign documentations
-      - ${LIBRESIGN_DOCUMENTATION_PORT}:8080
-      - 8000:8000
     environment:
       - DEFAULT_PHONE_REGION
       - NEXTCLOUD_ADMIN_USER
