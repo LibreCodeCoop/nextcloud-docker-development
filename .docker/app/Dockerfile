@@ -97,7 +97,7 @@ RUN cd $NVM_DIR && \
     . $NVM_DIR/nvm.sh && \
     nvm install ${VERSION_NODE} && \
     nvm use node && \
-    npm install --global npm@7 && \
+    npm install --global npm@8 && \
     npm install --global yarn && \
     npm install --global webpack && \
     npm install --global webpack-cli
