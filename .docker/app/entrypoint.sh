@@ -22,19 +22,19 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
         runuser -u www-data -- php occ maintenance:install --verbose --database=mysql --database-name=${MYSQL_DATABASE} --database-host=${MYSQL_HOST} --database-port= --database-user=${MYSQL_USER} --database-pass=${MYSQL_PASSWORD} --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
     fi
 
-    runuser -u www-data -- php occ config:system:set memcache.local --value "\OC\Memcache\APCu"
-    runuser -u www-data -- php occ config:system:set memcache.distributed --value "\OC\Memcache\Redis"
-    runuser -u www-data -- php occ config:system:set redis host --value "redis"
-    runuser -u www-data -- php occ config:system:set debug --value true --type boolean
-    runuser -u www-data -- php occ config:system:set loglevel --value 0 --type integer
-    runuser -u www-data -- php occ config:system:set query_log_file --value /var/www/html/data/database.log
+    runuser -u www-data -- php occ config:system:set memcache.local             --value "\OC\Memcache\APCu"
+    runuser -u www-data -- php occ config:system:set memcache.distributed       --value "\OC\Memcache\Redis"
+    runuser -u www-data -- php occ config:system:set redis host                 --value "redis"
+    runuser -u www-data -- php occ config:system:set debug                      --value true --type boolean
+    runuser -u www-data -- php occ config:system:set loglevel                   --value 0 --type integer
+    runuser -u www-data -- php occ config:system:set query_log_file             --value /var/www/html/data/database.log
 
-    runuser -u www-data -- php occ config:system:set default_phone_region --value ${DEFAULT_PHONE_REGION}
-    runuser -u www-data -- php occ config:system:set --value=1 allow_local_remote_servers
+    runuser -u www-data -- php occ config:system:set default_phone_region       --value ${DEFAULT_PHONE_REGION}
+    runuser -u www-data -- php occ config:system:set allow_local_remote_servers --value true --type boolean
 
-    runuser -u www-data -- php occ config:system:set mail_from_address --value ${MAIL_FROM_ADDRESS}
-    runuser -u www-data -- php occ config:system:set mail_domain --value ${MAIL_DOMAIN}
-    runuser -u www-data -- php occ config:system:set mail_smtpport --value ${MAIL_SMTPPORT} --type integer
+    runuser -u www-data -- php occ config:system:set mail_from_address          --value ${MAIL_FROM_ADDRESS}
+    runuser -u www-data -- php occ config:system:set mail_domain                --value ${MAIL_DOMAIN}
+    runuser -u www-data -- php occ config:system:set mail_smtpport              --value ${MAIL_SMTPPORT} --type integer
 fi
 
 # Start PHP-FPM
