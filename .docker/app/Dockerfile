@@ -85,6 +85,9 @@ RUN docker-php-ext-install bcmath
 RUN apt-get install -y libgmp-dev
 RUN docker-php-ext-install gmp
 
+# Install sysvsem
+RUN docker-php-ext-install sysvsem
+
 # Install xdebug
 RUN pecl install xdebug-${VERSION_XDEBUG} \
     && docker-php-ext-enable xdebug
