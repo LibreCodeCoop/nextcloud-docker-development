@@ -98,15 +98,11 @@ RUN cd $NVM_DIR && \
     nvm install ${VERSION_NODE} && \
     nvm use node && \
     npm install --global npm@8 && \
-    npm install --global yarn && \
     npm install --global webpack && \
     npm install --global webpack-cli
 RUN echo "source ${NVM_DIR}/nvm.sh" > $HOME/.bashrc
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
-
-RUN mkdir -p /cfssl ; chown -R www-data:www-data /cfssl
-VOLUME /cfssl
 
 COPY config/php.ini /usr/local/etc/php/conf.d/
 
