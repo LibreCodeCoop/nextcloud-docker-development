@@ -26,7 +26,7 @@ After finish the setup, access this url: http://localhost/.
 
 ## Start development of apps
 
-You will need create (or clone) the folder of the app that you will work inside the folder `volumes/nextcloud/apps`. 
+You will need create (or clone) the folder of the app that you will work inside the folder `volumes/nextcloud/apps-extra`.
 Good work!
 
 ## FAQ

@@ -45,7 +45,6 @@ services:
       - ./.env:/var/www/.env
       - ~/.composer:/root/.composer/
       - ~/.npm:/root/.npm/
-      - ./volumes/cfssl:/cfssl
       - ./volumes/nextcloud:/var/www/html
     restart: unless-stopped
     environment:
