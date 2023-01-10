@@ -8,6 +8,8 @@ if [ ! -d ".git" ]; then
     git clone --progress --single-branch --depth 1 --branch "${VERSION_NEXTCLOUD}" --recurse-submodules -j 4 https://github.com/nextcloud/server /tmp/nextcloud
     rsync -r /tmp/nextcloud/ .
     mkdir data
+    mkdir apps-writable
+    mkdir apps-extra
     chown -R www-data:www-data .
 fi
 
@@ -22,9 +24,34 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
         runuser -u www-data -- php occ maintenance:install --verbose --database=mysql --database-name=${MYSQL_DATABASE} --database-host=${MYSQL_HOST} --database-port= --database-user=${MYSQL_USER} --database-pass=${MYSQL_PASSWORD} --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
     fi
 
+    runuser -u www-data -- php occ config:import <<EOF
+{
+    "system": {
+        "apps_paths":[
+            {
+                "path":"/var/www/html/apps",
+                "url":"/apps",
+                "writable":false
+            },
+            {
+                "path":"/var/www/html/apps-extra",
+                "url":"/apps-extra",
+                "writable":false
+            },
+            {
+                "path":"/var/www/html/apps-writable",
+                "url":"/apps-extra",
+                "writable":true
+            }
+        ]
+    }
+}
+EOF
+
     runuser -u www-data -- php occ config:system:set memcache.local             --value "\OC\Memcache\APCu"
     runuser -u www-data -- php occ config:system:set memcache.distributed       --value "\OC\Memcache\Redis"
     runuser -u www-data -- php occ config:system:set redis host                 --value "redis"
+
     runuser -u www-data -- php occ config:system:set debug                      --value true --type boolean
     runuser -u www-data -- php occ config:system:set loglevel                   --value 0 --type integer
     runuser -u www-data -- php occ config:system:set query_log_file             --value /var/www/html/data/database.log
