@@ -62,6 +62,7 @@ EOF
     runuser -u www-data -- php occ config:system:set mail_from_address          --value ${MAIL_FROM_ADDRESS}
     runuser -u www-data -- php occ config:system:set mail_domain                --value ${MAIL_DOMAIN}
     runuser -u www-data -- php occ config:system:set mail_smtpport              --value ${MAIL_SMTPPORT} --type integer
+    runuser -u www-data -- php occ config:system:set mail_smtphost              --value ${MAIL_SMTPHOST}
 fi
 
 # Start PHP-FPM
