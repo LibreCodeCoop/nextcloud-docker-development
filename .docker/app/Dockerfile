@@ -9,88 +9,42 @@ ARG host_gid
 ENV VERSION_XDEBUG=${version_xdebug}
 ENV VERSION_NODE=${version_node}
 
-RUN apt-get update
-
-RUN apt-get install -y \
+RUN apt-get update \
+    && apt-get install -y \
         git \
         libicu-dev \
         libzip-dev \
         procps \
         rsync \
-        unzip \
-        && docker-php-ext-install opcache \
-        && docker-php-ext-install zip
+        unzip
 
 RUN usermod --non-unique --uid ${host_uid} www-data \
-  && groupmod --non-unique --gid ${host_gid} www-data 
+  && groupmod --non-unique --gid ${host_gid} www-data
 
-
-# Install PostgreSQL
-RUN apt-get install -y \
-        libpq-dev \
-        && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
-        && docker-php-ext-install pdo pdo_pgsql pgsql
-
-# Install Redis
-RUN pecl install redis \
-    && docker-php-ext-enable redis
-
-# Install Memcached
-RUN apt-get install -y libmemcached-dev \
-    && pecl install memcached \
-    && docker-php-ext-enable memcached
-
-# Install APCu
-RUN pecl install apcu \
-    && docker-php-ext-enable apcu
-
-# Install MySQL
-RUN docker-php-ext-configure mysqli -with-mysqli=mysqlnd \
-    && docker-php-ext-configure pdo_mysql -with-pdo-mysql=mysqlnd \
-    && docker-php-ext-install pdo pdo_mysql mysqli
-
-# Install GD
-RUN apt-get install -y \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
-        libpng-dev \
-        libxpm-dev
-
-RUN docker-php-ext-configure gd --with-freetype=/usr/include/ \
-                                --with-jpeg=/usr/include/ \
-                                --with-xpm=/usr/include/ \
-                                --enable-gd-jis-conv \
-    && docker-php-ext-install gd
-
-# Install Imagick
-RUN apt-get install -y libmagickwand-dev
-RUN pecl install \
-    imagick
-RUN docker-php-ext-enable imagick
-RUN sed -i'' 's|.*<policy domain="coder".*"PDF".*|<policy domain="coder" rights="read \| write" pattern="PDF" />|g' /etc/ImageMagick-6/policy.xml
-
-# Install intl
-RUN docker-php-ext-install intl
-
-# Install pcntl
-RUN docker-php-ext-install pcntl
-
-# Install sockets
-RUN docker-php-ext-install sockets
-
-# Install bcmath
-RUN docker-php-ext-install bcmath
-
-# Install gmp
-RUN apt-get install -y libgmp-dev
-RUN docker-php-ext-install gmp
-
-# Install sysvsem
-RUN docker-php-ext-install sysvsem
-
-# Install xdebug
-RUN pecl install xdebug-${VERSION_XDEBUG} \
-    && docker-php-ext-enable xdebug
+# Install PHP extensions
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
+    && install-php-extensions \
+    apcu \
+    bcmath \
+    gd \
+    gmp \
+    imagick \
+    intl \
+    memcached \
+    mysqli \
+    opcache \
+    pcntl \
+    pdo \
+    pdo_mysql \
+    pgsql \
+    redis \
+    sockets \
+    sysvsem \
+    xdebug \
+    zip \
+    && rm /usr/local/bin/install-php-extensions \
+    && sed -i'' 's|.*<policy domain="coder".*"PDF".*|<policy domain="coder" rights="read \| write" pattern="PDF" />|g' /etc/ImageMagick-6/policy.xml
 
 # Install node
 ENV NVM_DIR=/opt/nvm
