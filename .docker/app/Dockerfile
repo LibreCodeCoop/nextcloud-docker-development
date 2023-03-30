@@ -2,11 +2,9 @@ ARG version_php
 
 FROM php:${version_php}-fpm
 ARG version_php
-ARG version_xdebug
 ARG version_node
 ARG host_uid
 ARG host_gid
-ENV VERSION_XDEBUG=${version_xdebug}
 ENV VERSION_NODE=${version_node}
 
 RUN apt-get update \
