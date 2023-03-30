@@ -11,7 +11,7 @@ services:
       - POSTGRES_DB
       - POSTGRES_USER
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     command: postgres -c log_statement=all
   mysql:
     image: mysql
@@ -22,7 +22,7 @@ services:
       - ./volumes/mysql/dump:/docker-entrypoint-initdb.d
       - ./volumes/mysql/data:/var/lib/mysql
     ports:
-      - 3306:3306
+      - 127.0.0.1:3306:3306
     restart: unless-stopped
     environment:
       - TZ
@@ -40,6 +40,8 @@ services:
         version_node: ${VERSION_NODE}
         host_uid: ${UID}
         host_gid: ${GID}
+    ports:
+      - 127.0.0.1:8080:8080
     volumes:
       - ./.docker/app/wait-for-db.php:/var/www/scripts/wait-for-db.php
       - ./.env:/var/www/.env
