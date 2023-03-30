@@ -27,6 +27,7 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     bcmath \
     gd \
     gmp \
+    exif \
     imagick \
     intl \
     memcached \
