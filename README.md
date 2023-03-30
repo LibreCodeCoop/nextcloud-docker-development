@@ -46,10 +46,10 @@ Good work!
 
 **How to use xdebug on VSCode or Codium?**
 - Open the IDE on folder `volumes/nextcloud`
-- setup the extension PHP Debug or PHP Extension Pack
-- Press F5 to start debugging or go to "Run > Start debugging"
-- Create a launch.json file to PHP
-- Add the follow to your launch.json inside configuration named as `Listen for Xdebug`:
+- setup the extension [PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug) or [PHP Extension Pack](https://marketplace.visualstudio.com/items?itemName=xdebug.php-pack)
+- Press `F5` to start debugging or go to "`Run > Start debugging`"
+- Create a `launch.json` file to PHP
+- Add the follow to your `launch.json` inside configuration named as `Listen for Xdebug`:
   ```json
             "pathMappings": {
                 "/var/www/html": "${workspaceFolder}"
