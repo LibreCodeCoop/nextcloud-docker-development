@@ -16,6 +16,12 @@ RUN apt-get update \
         rsync \
         unzip
 
+# cron
+RUN apt-get install -y \
+        busybox-static \
+    && mkdir -p /var/spool/cron/crontabs \
+    && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data
+
 RUN usermod --non-unique --uid ${host_uid} www-data \
   && groupmod --non-unique --gid ${host_gid} www-data
 
@@ -63,5 +69,5 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY config/php.ini /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www/html
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY *.sh /usr/local/bin/
 ENTRYPOINT [ "bash", "/usr/local/bin/entrypoint.sh" ]

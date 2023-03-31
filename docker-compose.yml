@@ -62,6 +62,19 @@ services:
       - VERSION_NEXTCLOUD
       - AUTOINSTALL
       - XDEBUG_CONFIG
+  cron:
+    build:
+      context: .docker/app
+      args:
+        version_php: ${VERSION_PHP}
+        version_node: ${VERSION_NODE}
+        host_uid: ${UID}
+        host_gid: ${GID}
+    volumes:
+      - ./.docker/app/wait-for-db.php:/var/www/scripts/wait-for-db.php
+      - ./.env:/var/www/.env
+      - ./volumes/nextcloud:/var/www/html
+    entrypoint: /usr/local/bin/cron.sh
   nginx:
     build: .docker/web
     restart: unless-stopped
