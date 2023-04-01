@@ -82,10 +82,10 @@ services:
       - ./volumes/nextcloud:/var/www/html:ro
       - ./volumes/nginx/includes:/etc/nginx/conf.d/includes/
     ports:
-      - ${HTTP_PORT}:80
+      - 127.0.0.1:${HTTP_PORT}:80
   mailhog:
     image: blueimp/mailhog
     ports:
-      - ${MAILHOG_PORT}:8025
+      - 127.0.0.1:${MAILHOG_PORT}:8025
   redis:
     image: redis
