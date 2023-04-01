@@ -14,7 +14,8 @@ RUN apt-get update \
         libzip-dev \
         procps \
         rsync \
-        unzip
+        unzip \
+        ghostscript
 
 # cron
 RUN apt-get install -y \
