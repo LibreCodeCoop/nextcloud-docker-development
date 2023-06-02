@@ -36,7 +36,10 @@ To install LibreSign in the structure of develop is required [up servicer](#up-s
   - open folder `/volumes/nextcloud/app-extra`
   - clone project with `git clone https://github.com/LibreSign/libresign.git`
   - open bash in nextcloud container with `docker compose exec nextcloud bash`
-  - open folder `/app-extra`
+  - go to folder `apps-extra`
+    ```bash
+    cd apps-extra
+    ```
   - run commands to compile LibreSign, commands like: `make serve`
 
 
