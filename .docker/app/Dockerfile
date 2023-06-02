@@ -55,13 +55,8 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
 # Install node
 RUN curl -fsSL https://deb.nodesource.com/setup_${VERSION_NODE}.x | bash - \
     && apt install --no-install-recommends -y nodejs \
-    && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && apt update \
-    && apt install --no-install-recommends yarn \
     && node --version \
-    && npm --version \
-    && yarn --version
+    && npm --version
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
