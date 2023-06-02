@@ -40,7 +40,15 @@ To install LibreSign in the structure of develop is required [up servicer](#up-s
     ```bash
     cd apps-extra
     ```
-  - run commands to compile LibreSign, commands like: `make serve`
+  - Now you can run all the necessaries commands to build the project, i.e:
+    ```bash
+    # download composer dependencies
+    composer install
+    # download JS dependencies
+    npm ci
+    # build and watch JS changes
+    npm run watch
+    ```
 
 
 ## FAQ
