@@ -37,8 +37,6 @@ services:
         version_node: ${VERSION_NODE}
         host_uid: ${UID}
         host_gid: ${GID}
-    ports:
-      - 127.0.0.1:8080:8080
     volumes:
       - ./.docker/app/wait-for-db.php:/var/www/scripts/wait-for-db.php
       - ./.env:/var/www/.env
