@@ -29,13 +29,7 @@ services:
       - MYSQL_USER=${MYSQL_USER:-nextcloud}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
   nextcloud:
-    build:
-      context: .docker/app
-      args:
-        version_php: ${VERSION_PHP}
-        version_node: ${VERSION_NODE}
-        host_uid: ${UID}
-        host_gid: ${GID}
+    image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-80}:latest
     volumes:
       - ./.docker/app/wait-for-db.php:/var/www/scripts/wait-for-db.php
       - ./.env:/var/www/.env
