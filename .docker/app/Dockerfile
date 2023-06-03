@@ -24,7 +24,7 @@ RUN apt-get install -y \
     && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data
 
 RUN usermod --non-unique --uid ${host_uid} www-data \
-  && groupmod --non-unique --gid ${host_gid} www-data
+    && groupmod --non-unique --gid ${host_gid} www-data
 
 # Install PHP extensions
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
@@ -61,7 +61,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_${VERSION_NODE}.x | bash - \
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 COPY config/php.ini /usr/local/etc/php/conf.d/
-
 
 WORKDIR /var/www/html
 COPY *.sh /usr/local/bin/
