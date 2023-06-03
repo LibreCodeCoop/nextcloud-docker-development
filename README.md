@@ -27,7 +27,29 @@ After finish the setup, access this url: http://localhost/.
 ## Start development of apps
 
 You will need create (or clone) the folder of the app that you will work inside the folder `volumes/nextcloud/apps-extra`.
-Good work!
+
+It's not required install all dependencis like php or nodejs to develop apps, with this project is only use the bash in container to compile app.
+
+### Sample using the [LibreSign](https://github.com/LibreSign/libresign)
+
+To install LibreSign in the structure of develop is required [up servicer](#up-services). After nextcloud config and install.
+  - open folder `volumes/nextcloud/app-extra`
+  - clone project with `git clone https://github.com/LibreSign/libresign.git`
+  - open bash in nextcloud container with `docker compose exec nextcloud bash`
+  - go to folder `apps-extra`
+    ```bash
+    cd apps-extra
+    ```
+  - Now you can run all the necessaries commands to build the project, i.e:
+    ```bash
+    # download composer dependencies
+    composer install
+    # download JS dependencies
+    npm ci
+    # build and watch JS changes
+    npm run watch
+    ```
+
 
 ## FAQ
 
@@ -51,15 +73,15 @@ Good work!
 - Create a `launch.json` file to PHP
 - Add the follow to your `launch.json` inside configuration named as `Listen for Xdebug`:
   ```json
-            "pathMappings": {
-                "/var/www/html": "${workspaceFolder}"
-            }
+  "pathMappings": {
+      "/var/www/html": "${workspaceFolder}"
+  }
   ```
 - **PS**: [`log_level`](https://xdebug.org/docs/all_settings#log_level) is defined to 0 (Criticals). If you wish a different value, ghante this at `.env` file.
 
 **I havent permission to write in files of my project using my user**
 - The default user id (`UID`) and group id (`GID`) of root user inside container is the same of your user in host machine. This is defined in `.env` file. If is different of 1000 and 1000, change in your `.env` file.
 - Run the follow command to move all files to your UID and GID:
-  ```
+  ```bash
   sudo chown -R $USER:$USER volumes/nextcloud
   ```
