@@ -73,9 +73,9 @@ To install LibreSign in the structure of develop is required [up servicer](#up-s
 - Create a `launch.json` file to PHP
 - Add the follow to your `launch.json` inside configuration named as `Listen for Xdebug`:
   ```json
-            "pathMappings": {
-                "/var/www/html": "${workspaceFolder}"
-            }
+  "pathMappings": {
+      "/var/www/html": "${workspaceFolder}"
+  }
   ```
 - **PS**: [`log_level`](https://xdebug.org/docs/all_settings#log_level) is defined to 0 (Criticals). If you wish a different value, ghante this at `.env` file.
 
