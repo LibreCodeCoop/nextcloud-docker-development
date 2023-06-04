@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+concurrency:
+  group: push-to-registry-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   push_to_registry:
