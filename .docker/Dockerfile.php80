@@ -18,10 +18,7 @@ RUN apt-get update \
     && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
     && apt-get install --no-install-recommends -y nodejs \
     && node --version \
-    && npm --version \
-    # Set uid of host machine
-    && usermod --non-unique --uid 1000 www-data \
-    && groupmod --non-unique --gid 1000 www-data
+    && npm --version
 
 # Install PHP extensions
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/

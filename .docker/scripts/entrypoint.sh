@@ -3,6 +3,11 @@
 # Source the enviroment variables
 . `pwd`/../.env
 
+
+# Set uid of host machine
+usermod --non-unique --uid ${HOST_UID} www-data
+groupmod --non-unique --gid ${HOST_GID} www-data
+
 # Clone Nextcloud repository, if needed
 if [ ! -d ".git" ]; then
     git clone --progress --single-branch --depth 1 --branch "${VERSION_NEXTCLOUD}" --recurse-submodules -j 4 https://github.com/nextcloud/server /tmp/nextcloud

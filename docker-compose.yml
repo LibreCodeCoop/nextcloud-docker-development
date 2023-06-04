@@ -38,6 +38,8 @@ services:
       - ./volumes/nextcloud:/var/www/html
     restart: unless-stopped
     environment:
+      - HOST_UID=${HOST_UID:-1000}
+      - HOST_GID=${HOST_GID:-1000}
       - DEFAULT_PHONE_REGION
       - NEXTCLOUD_ADMIN_USER
       - NEXTCLOUD_ADMIN_PASSWORD
