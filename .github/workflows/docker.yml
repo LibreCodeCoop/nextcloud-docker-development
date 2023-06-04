@@ -6,7 +6,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
 
 
 jobs:
@@ -53,7 +53,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           push: false
-          context: docker/
+          context: .docker/
           platforms: linux/amd64,linux/arm64
           file: ${{ steps.dockerfile.outputs.DOCKERFILE }}
           tags: |
@@ -65,7 +65,7 @@ jobs:
         if: github.ref == 'refs/heads/master'
         with:
           push: true
-          context: docker/
+          context: .docker/
           platforms: linux/amd64,linux/arm64
           file: ${{ steps.dockerfile.outputs.DOCKERFILE }}
           tags: |
