@@ -8,19 +8,20 @@ RUN apt-get update \
         procps \
         rsync \
         unzip \
-        ghostscript
-
-# cron
-RUN apt-get install -y \
+        # works with PDF files
+        ghostscript \
+        # cron
         busybox-static \
     && mkdir -p /var/spool/cron/crontabs \
-    && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data
-
-# Install node
-RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
-    && apt install --no-install-recommends -y nodejs \
+    && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data \
+    # Install node
+    && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
+    && apt-get install --no-install-recommends -y nodejs \
     && node --version \
-    && npm --version
+    && npm --version \
+    # Set uid of host machine
+    && usermod --non-unique --uid 1000 www-data \
+    && groupmod --non-unique --gid 1000 www-data
 
 # Install PHP extensions
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
@@ -47,9 +48,6 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     zip \
     && rm /usr/local/bin/install-php-extensions \
     && sed -i'' 's|.*<policy domain="coder".*"PDF".*|<policy domain="coder" rights="read \| write" pattern="PDF" />|g' /etc/ImageMagick-6/policy.xml
-
-RUN usermod --non-unique --uid 1000 www-data \
-    && groupmod --non-unique --gid 1000 www-data
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
