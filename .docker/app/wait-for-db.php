@@ -1,13 +1,21 @@
 #!/usr/bin/env php
 <?php
-$dbName = (getenv('DB_TYPE') === 'mysql' ? '🐬' : '🐘' ) . getenv('DB_TYPE');
+$dbName = (getenv('DB_HOST') === 'mysql' ? '🐬' : '🐘' ) . getenv('DB_HOST');
 
 echo "⌛ Waiting for database $dbName\n";
 
 function dbIsUp(string $dbName): bool {
     try {
-        $dsn = getenv('DB_TYPE') . ':dbname='.getenv('DB_NAME').';host='.getenv('DB_HOST');
-        new PDO($dsn, getenv('DB_USER'), getenv('DB_PASSWORD'));
+        if (getenv('DB_HOST') === 'mysql') {
+            $dsn = getenv('DB_HOST') . ':dbname='.getenv('MYSQL_DATABASE').';host='.getenv('DB_HOST');
+            new PDO($dsn, getenv('MYSQL_USER'), getenv('MYSQL_PASSWORD'));
+        } elseif (getenv('DB_HOST') === 'pgsql') {
+            $dsn = getenv('DB_HOST') . ':dbname='.getenv('POSTGRES_DB').';host='.getenv('DB_HOST');
+            new PDO($dsn, getenv('POSTGRES_USER'), getenv('POSTGRES_PASSWORD'));
+        } else {
+            // Will use SQLite
+            return true;
+        }
     } catch(Exception $e) {
         echo "⛔ Unable to conect to $dbName server: " . $e->getMessage()."\n";
         return false;

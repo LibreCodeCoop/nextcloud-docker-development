@@ -18,7 +18,13 @@ php /var/www/scripts/wait-for-db.php
 
 # Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
-    runuser -u www-data -- php occ maintenance:install --verbose --database=${DB_TYPE} --database-name=${DB_NAME} --database-host=${DB_HOST} --database-port= --database-user=${DB_USER} --database-pass=${DB_PASSWORD} --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
+    if [[ ${DB_HOST} === 'mysql' ]]; then
+        runuser -u www-data -- php occ maintenance:install --verbose --database=${DB_HOST} --database-name=${MYSQL_DATABASE} --database-host=${DB_HOST} --database-port= --database-user=${MYSQL_USER} --database-pass=${MYSQL_PASSWORD} --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
+    elif [[ ${DB_HOST} === 'pgsql' ]]; then
+        runuser -u www-data -- php occ maintenance:install --verbose --database=${DB_HOST} --database-name=${POSTGRES_DB} --database-host=${DB_HOST} --database-port= --database-user=${POSTGRES_USER} --database-pass=${POSTGRES_PASSWORD} --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
+    else
+        runuser -u www-data -- php occ maintenance:install --verbose --admin-user=${NEXTCLOUD_ADMIN_USER} --admin-pass=${NEXTCLOUD_ADMIN_PASSWORD} --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
+    fi
 
     runuser -u www-data -- php occ config:import <<EOF
 {
