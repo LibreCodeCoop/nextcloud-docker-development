@@ -1,23 +1,30 @@
 #!/usr/bin/env php
 <?php
-function dbIsUp() {
+$dbName = (getenv('DB_HOST') === 'mysql' ? '🐬' : '🐘' ) . getenv('DB_HOST');
+
+echo "⌛ Waiting for database $dbName\n";
+
+function dbIsUp(string $dbName): bool {
     try {
-        if ( getenv('POSTGRES_DB') && getenv('POSTGRES_USER') && getenv('POSTGRES_PASSWORD') && getenv('POSTGRES_HOST') ) {
-            $dsn = 'pgsql:dbname='.getenv('POSTGRES_DB').';host='.getenv('POSTGRES_HOST');
-            echo "Connecting to Postgres...\n";
-            new PDO($dsn, getenv('POSTGRES_USER'), getenv('POSTGRES_PASSWORD'));
-        } elseif ( getenv('MYSQL_DATABASE') && getenv('MYSQL_USER') && getenv('MYSQL_PASSWORD') && getenv('MYSQL_HOST') ) {
-            $dsn = 'mysql:dbname='.getenv('MYSQL_DATABASE').';host='.getenv('MYSQL_HOST');
-            echo "Connecting to MySQL...\n";
+        if (getenv('DB_HOST') === 'mysql') {
+            $dsn = getenv('DB_HOST') . ':dbname='.getenv('MYSQL_DATABASE').';host='.getenv('DB_HOST');
             new PDO($dsn, getenv('MYSQL_USER'), getenv('MYSQL_PASSWORD'));
+        } elseif (getenv('DB_HOST') === 'pgsql') {
+            $dsn = getenv('DB_HOST') . ':dbname='.getenv('POSTGRES_DB').';host='.getenv('DB_HOST');
+            new PDO($dsn, getenv('POSTGRES_USER'), getenv('POSTGRES_PASSWORD'));
+        } else {
+            // Will use SQLite
+            return true;
         }
     } catch(Exception $e) {
-        echo $e->getMessage()."\n";
+        echo "⛔ Unable to conect to $dbName server: " . $e->getMessage()."\n";
         return false;
     }
     return true;
 }
-while(!dbIsUp()) {
+
+while(!dbIsUp($dbName)) {
     sleep(1);
 }
-echo "DB OK\n";
+
+echo "✅ Database $dbName ready\n";

@@ -1,13 +1,13 @@
 services:
-  postgres:
+  pgsql:
     image: postgres:13-alpine
     restart: unless-stopped
     volumes:
       - ./volumes/postgres/data:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD
-      - POSTGRES_DB
-      - POSTGRES_USER
+      - POSTGRES_DB=${POSTGRES_DB:-nextcloud}
+      - POSTGRES_USER=${POSTGRES_USER:-nextcloud}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nextcloud}
     ports:
       - 127.0.0.1:5432:5432
     command: postgres -c log_statement=all
@@ -24,11 +24,10 @@ services:
     restart: unless-stopped
     environment:
       - TZ
-      - MYSQL_HOST
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_DATABASE
-      - MYSQL_USER
-      - MYSQL_PASSWORD
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-nextcloud}
+      - MYSQL_USER=${MYSQL_USER:-nextcloud}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
   nextcloud:
     build:
       context: .docker/app
@@ -48,15 +47,13 @@ services:
       - DEFAULT_PHONE_REGION
       - NEXTCLOUD_ADMIN_USER
       - NEXTCLOUD_ADMIN_PASSWORD
-      - POSTGRES_DB
-      - POSTGRES_USER
-      - POSTGRES_PASSWORD
-      - POSTGRES_HOST
-      - MYSQL_HOST
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_DATABASE
-      - MYSQL_USER
-      - MYSQL_PASSWORD
+      - DB_HOST=${DB_HOST:-mysql}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-nextcloud}
+      - MYSQL_USER=${MYSQL_USER:-nextcloud}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
+      - POSTGRES_DB=${POSTGRES_DB:-nextcloud}
+      - POSTGRES_USER=${POSTGRES_USER:-nextcloud}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nextcloud}
       - VERSION_NEXTCLOUD
       - AUTOINSTALL
       - XDEBUG_CONFIG
