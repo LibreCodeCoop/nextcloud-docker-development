@@ -69,6 +69,10 @@ EOF
     runuser -u www-data -- php occ config:app:set core backgroundjobs_mode      --value "cron"
 fi
 
+# Run cron
+exec busybox crond -f -l 0 -L /dev/stdout > /dev/null 2>&1 &
+runuser -u www-data -- php -f /var/www/html/cron.php
+
 # Start PHP-FPM
 if [[ "$HTTP_PORT" != 80 ]]; then
     echo "💙 Nextclud is up! Access http://localhost:$HTTP_PORT"
