@@ -29,21 +29,17 @@ services:
       - MYSQL_USER=${MYSQL_USER:-nextcloud}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
   nextcloud:
-    build:
-      context: .docker/app
-      args:
-        version_php: ${VERSION_PHP}
-        version_node: ${VERSION_NODE}
-        host_uid: ${UID}
-        host_gid: ${GID}
+    image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-80}:latest
     volumes:
-      - ./.docker/app/wait-for-db.php:/var/www/scripts/wait-for-db.php
+      - ./.docker/scripts/wait-for-db.php:/var/www/scripts/wait-for-db.php
       - ./.env:/var/www/.env
       - ~/.composer:/root/.composer/
       - ~/.npm:/root/.npm/
       - ./volumes/nextcloud:/var/www/html
     restart: unless-stopped
     environment:
+      - HOST_UID=${HOST_UID:-1000}
+      - HOST_GID=${HOST_GID:-1000}
       - DEFAULT_PHONE_REGION
       - NEXTCLOUD_ADMIN_USER
       - NEXTCLOUD_ADMIN_PASSWORD
