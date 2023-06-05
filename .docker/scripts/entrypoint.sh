@@ -1,8 +1,7 @@
 #!/bin/bash
 
 # Source the enviroment variables
-. `pwd`/../.env
-
+. $(pwd)/../.env
 
 # Set uid of host machine
 usermod --non-unique --uid ${HOST_UID} www-data
