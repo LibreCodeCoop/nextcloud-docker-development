@@ -46,7 +46,7 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
             },
             {
                 "path":"/var/www/html/apps-writable",
-                "url":"/apps-extra",
+                "url":"/apps-writable",
                 "writable":true
             }
         ]
