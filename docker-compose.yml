@@ -32,9 +32,8 @@ services:
     image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-80}:latest
     volumes:
       - ./.docker/scripts/wait-for-db.php:/var/www/scripts/wait-for-db.php
-      - ./.env:/var/www/.env
-      - ~/.composer:/root/.composer/
-      - ~/.npm:/root/.npm/
+      - ~/.composer:/var/www/.composer/
+      - ~/.npm:/var/www/.npm/
       - ./volumes/nextcloud:/var/www/html
     restart: unless-stopped
     environment:
