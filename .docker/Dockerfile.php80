@@ -52,4 +52,5 @@ COPY config/php.ini /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www/html
 COPY scripts/* /var/www/scripts/
+COPY bin/* /usr/local/bin/
 ENTRYPOINT [ "bash", "/var/www/scripts/entrypoint.sh" ]

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ "$(whoami)" = "www-data" ]; then
+    # shellcheck disable=SC2068
+    /var/www/html/occ $@
+else
+    # shellcheck disable=SC2068
+    runuser -u www-data -- /var/www/html/occ $@
+fi

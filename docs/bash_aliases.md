@@ -24,7 +24,7 @@ source ~/.bashrc
 ## Sample ~/.bash_aliases file
 
 ```bash
-alias occ='docker compose exec -u www-data nextcloud ./occ'
+alias occ='docker compose exec -u www-data nextcloud occ'
 alias nextcloud-mysql='docker compose up nextcloud mysql nginx mailhog redis'
 alias nextcloud-pgsql='docker compose up nextcloud pgsql nginx mailhog redis'
 ```
