@@ -16,7 +16,7 @@ services:
     cap_add:
       - SYS_NICE  # CAP_SYS_NICE
     volumes:
-      - ./.docker/mysql/conf:/etc/mysql/conf.d
+      - ./.docker/config/mysql:/etc/mysql/conf.d
       - ./volumes/mysql/dump:/docker-entrypoint-initdb.d
       - ./volumes/mysql/data:/var/lib/mysql
     ports:
