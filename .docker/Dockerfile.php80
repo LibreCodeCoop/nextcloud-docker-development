@@ -48,7 +48,7 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
-COPY config/php.ini /usr/local/etc/php/conf.d/
+COPY config/php/* /usr/local/etc/php/conf.d/
 
 WORKDIR /var/www/html
 COPY scripts/* /var/www/scripts/
