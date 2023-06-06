@@ -1,11 +1,8 @@
 #!/bin/bash
 
-# Source the enviroment variables
-. $(pwd)/../.env
-
 # Set uid of host machine
-usermod --non-unique --uid ${HOST_UID} www-data
-groupmod --non-unique --gid ${HOST_GID} www-data
+usermod --non-unique --uid "${HOST_UID}" www-data
+groupmod --non-unique --gid "${HOST_GID}" www-data
 
 # Clone Nextcloud repository, if needed
 if [ ! -d ".git" ]; then
@@ -27,7 +24,7 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     elif [[ "${DB_HOST}" == 'pgsql' ]]; then
         runuser -u www-data -- php occ maintenance:install --verbose --database="${DB_HOST}" --database-name="${POSTGRES_DB}" --database-host="${DB_HOST}" --database-port= --database-user="${POSTGRES_USER}" --database-pass="${POSTGRES_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
     else
-        runuser -u www-data -- php occ maintenance:install --verbose --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email=${NEXTCLOUD_ADMIN_EMAIL}
+        runuser -u www-data -- php occ maintenance:install --verbose --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
     fi
 
     runuser -u www-data -- php occ config:import <<EOF
@@ -67,7 +64,7 @@ EOF
 
     runuser -u www-data -- php occ config:system:set mail_from_address          --value "${MAIL_FROM_ADDRESS}"
     runuser -u www-data -- php occ config:system:set mail_domain                --value "${MAIL_DOMAIN}"
-    runuser -u www-data -- php occ config:system:set mail_smtpport              --value ${MAIL_SMTPPORT} --type integer
+    runuser -u www-data -- php occ config:system:set mail_smtpport              --value "${MAIL_SMTPPORT}" --type integer
     runuser -u www-data -- php occ config:system:set mail_smtphost              --value "${MAIL_SMTPHOST}"
 
     runuser -u www-data -- php occ config:app:set core backgroundjobs_mode      --value "cron"
