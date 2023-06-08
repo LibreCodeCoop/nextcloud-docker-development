@@ -14,9 +14,6 @@ if [ ! -d ".git" ]; then
     chown -R www-data:www-data .
 fi
 
-# Disable xdebug only at scope of this script
-export XDEBUG_MODE=off
-
 # Wait for database
 php /var/www/scripts/wait-for-db.php
 
