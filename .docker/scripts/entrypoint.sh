@@ -71,6 +71,13 @@ EOF
     occ config:system:set mail_smtphost              --value "${MAIL_SMTPHOST}"
 
     occ config:app:set core backgroundjobs_mode      --value "cron"
+
+    if [ ! -d "apps-extra/hmr_enabler" ]; then
+        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/hmr_enabler apps-extra/hmr_enabler
+        composer -d apps-extra/hmr_enambler/ i
+        occ app:enable hmr_enabler
+    fi
+
     echo "🥳 Setup completed !!!"
 fi
 
