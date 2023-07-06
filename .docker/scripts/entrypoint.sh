@@ -78,6 +78,16 @@ EOF
         occ app:enable hmr_enabler
     fi
 
+    if [ ! -d "apps-extra/viewer" ]; then
+        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/viewer apps-extra/viewer
+        cd apps-extra/viewer
+        composer i
+        npm ci
+        npm run build
+        cd -
+        occ app:enable viewer
+    fi
+
     echo "🥳 Setup completed !!!"
 fi
 
