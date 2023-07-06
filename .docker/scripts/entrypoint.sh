@@ -80,11 +80,11 @@ EOF
 
     if [ ! -d "apps-extra/viewer" ]; then
         git clone --progress --single-branch --depth 1 https://github.com/nextcloud/viewer apps-extra/viewer
-        cd apps-extra/viewer
+        cd apps-extra/viewer || exit
         composer i
         npm ci
         npm run build
-        cd -
+        cd ../../ || exit
         occ app:enable viewer
     fi
 
