@@ -15,7 +15,7 @@ RUN apt-get update \
     && mkdir -p /var/spool/cron/crontabs \
     && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data \
     # Install node
-    && curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install --no-install-recommends -y nodejs \
     && node --version \
     && npm --version
