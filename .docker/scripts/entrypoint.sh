@@ -8,6 +8,7 @@ groupmod --non-unique --gid "${HOST_GID}" www-data
 if [ ! -d ".git" ]; then
     git clone --progress --single-branch --depth 1 --branch "${VERSION_NEXTCLOUD}" --recurse-submodules -j 4 https://github.com/nextcloud/server /tmp/nextcloud
     rsync -r /tmp/nextcloud/ .
+    rm -rf /tmp/nextcloud
     mkdir data
     mkdir apps-writable
     mkdir apps-extra
@@ -70,6 +71,23 @@ EOF
     occ config:system:set mail_smtphost              --value "${MAIL_SMTPHOST}"
 
     occ config:app:set core backgroundjobs_mode      --value "cron"
+
+    if [ ! -d "apps-extra/hmr_enabler" ]; then
+        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/hmr_enabler apps-extra/hmr_enabler
+        composer -d apps-extra/hmr_enambler/ i
+        occ app:enable hmr_enabler
+    fi
+
+    if [ ! -d "apps-extra/viewer" ]; then
+        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/viewer apps-extra/viewer
+        cd apps-extra/viewer || exit
+        composer i
+        npm ci
+        npm run build
+        cd ../../ || exit
+        occ app:enable viewer
+    fi
+
     echo "🥳 Setup completed !!!"
 fi
 
