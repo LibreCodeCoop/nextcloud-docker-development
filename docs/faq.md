@@ -20,11 +20,16 @@ This will delete the database and Nextcloud volumes. Before do a backup of all t
 ## Using IDE
 ### Workspace folder
 
-- To work with PHP, I recommend to open in folder `volumes/nextcloud`
-- To work only with frontend, you can directly open the folder of app that you are working
+- To work with PHP, I recommend to open your IDE in folder `volumes/nextcloud`
+- To work only with frontend, you can directly open the folder of app that you are working but I recommend to open the folder `volumes/nextcloud` to be possible look the code of other apps or server.
 
-### Use xdebug on VSCode or Codium
-
+### Xdebug on VSCode or Codium
+#### Configuring environment
+- Create a .env file at root folder with this content:
+  ```env
+  XDEBUG_CONFIG=client_host=172.17.0.1 client_port=9003 start_with_request=yes
+  ```
+#### Configuring IDE
 - Open the IDE on folder `volumes/nextcloud`
 - setup the extension [PHP Debug](https://marketplace.visualstudio.com/items?itemName=xdebug.php-debug) or [PHP Extension Pack](https://marketplace.visualstudio.com/items?itemName=xdebug.php-pack)
 - Press `F5` to start debugging or go to "`Run > Start debugging`"
