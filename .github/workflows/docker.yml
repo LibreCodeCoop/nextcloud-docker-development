@@ -21,6 +21,8 @@ jobs:
       matrix:
         container:
           - php80
+          - php81
+          - php82
     permissions:
       packages: write
       contents: read
