@@ -27,6 +27,7 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     exif \
     imagick \
     intl \
+    memcache \
     memcached \
     mysqli \
     opcache \
