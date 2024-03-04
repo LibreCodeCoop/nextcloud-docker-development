@@ -47,8 +47,8 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     # pevent errors when try to create files at /var/www with user www-data
     && chown -R www-data /var/www
 
-COPY --from=node:20.5-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY --from=node:20.5-slim /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:20.11-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=node:20.11-slim /usr/local/bin/node /usr/local/bin/node
 RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
