@@ -3,13 +3,12 @@ FROM php:8.0-fpm
 RUN apt-get update \
     && apt-get install -y \
         git \
+        jq \
         libicu-dev \
         libzip-dev \
         procps \
         rsync \
         unzip \
-        # works with PDF files
-        ghostscript \
         # cron
         busybox-static \
     && mkdir -p /var/spool/cron/crontabs \
@@ -22,6 +21,7 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     apcu \
     bcmath \
     bz2 \
+    gettext \
     gd \
     gmp \
     exif \
@@ -34,6 +34,7 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     pcntl \
     pdo \
     pdo_mysql \
+    pdo_pgsql \
     pgsql \
     redis \
     sockets \
