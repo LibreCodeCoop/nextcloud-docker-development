@@ -21,6 +21,7 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     apcu \
     bcmath \
     bz2 \
+    gettext \
     gd \
     gmp \
     exif \
