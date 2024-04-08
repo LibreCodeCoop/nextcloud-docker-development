@@ -8,8 +8,6 @@ RUN apt-get update \
         procps \
         rsync \
         unzip \
-        # works with PDF files
-        ghostscript \
         # cron
         busybox-static \
     && mkdir -p /var/spool/cron/crontabs \
