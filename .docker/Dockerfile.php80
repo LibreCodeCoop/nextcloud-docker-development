@@ -48,9 +48,12 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     # pevent errors when try to create files at /var/www with user www-data
     && chown -R www-data /var/www
 
-COPY --from=node:20.11-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY --from=node:20.11-slim /usr/local/bin/node /usr/local/bin/node
-RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+# Install NVM
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash \
+    && export NVM_DIR="/root/.nvm" \
+    && . "$NVM_DIR/nvm.sh" \
+    && nvm install 14 && nvm install 16 && nvm install 20 \
+    && nvm alias default 20
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY config/php/* /usr/local/etc/php/conf.d/
