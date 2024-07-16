@@ -64,7 +64,7 @@ services:
       - host.docker.internal:host-gateway
   nginx:
     image: ghcr.io/librecodecoop/nextcloud-dev-nginx:latest
-    # build: .docker/web
+    # build: .docker/nginx
     restart: unless-stopped
     volumes:
       - ./volumes/nextcloud:/var/www/html:ro

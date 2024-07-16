@@ -44,8 +44,7 @@ jobs:
       - name: Set dockerfile path
         id: dockerfile
         run: |
-          NAME="web"
-          DOCKERFILE=$([[ -f ".docker/$NAME/Dockerfile" ]] && echo ".docker/$NAME/Dockerfile" || echo ".docker/Dockerfile.$NAME")
+          DOCKERFILE=$(echo ".docker/Dockerfile.nginx")
           echo "DOCKERFILE=$DOCKERFILE" >> $GITHUB_OUTPUT
       - name: Build container image
         uses: docker/build-push-action@v5
