@@ -104,4 +104,4 @@ if [[ "$HTTP_PORT" != 80 ]]; then
 else
     echo "💙 Nextclud is up! Access http://localhost"
 fi
-php-fpm
+exec "$@"
