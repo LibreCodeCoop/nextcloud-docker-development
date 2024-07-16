@@ -76,7 +76,7 @@ EOF
 
     if [ ! -d "apps-extra/hmr_enabler" ]; then
         git clone --progress --single-branch --depth 1 https://github.com/nextcloud/hmr_enabler apps-extra/hmr_enabler
-        composer -d apps-extra/hmr_enambler/ i
+        composer -d apps-extra/hmr_enabler/ i
         occ app:enable hmr_enabler
     fi
 
@@ -104,4 +104,4 @@ if [[ "$HTTP_PORT" != 80 ]]; then
 else
     echo "💙 Nextclud is up! Access http://localhost"
 fi
-php-fpm
+exec "$@"

@@ -31,7 +31,8 @@ services:
   nextcloud:
     image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-82}:latest
     # build:
-    #   context: ./.docker/Dockerfile.php82
+    #   context: .docker/
+    #   dockerfile: Dockerfile.php${PHP_VERSION:-82}
     volumes:
       - ./.docker/scripts/wait-for-db.php:/var/www/scripts/wait-for-db.php
       - ~/.composer:/var/www/.composer/

@@ -63,3 +63,4 @@ COPY bin/* /usr/local/bin/
 WORKDIR /var/www/html
 
 ENTRYPOINT [ "bash", "/var/www/scripts/entrypoint.sh" ]
+CMD ["php-fpm"]
