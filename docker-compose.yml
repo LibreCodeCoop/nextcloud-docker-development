@@ -30,6 +30,8 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
   nextcloud:
     image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-82}:latest
+    # build:
+    #   context: ./.docker/Dockerfile.php82
     volumes:
       - ./.docker/scripts/wait-for-db.php:/var/www/scripts/wait-for-db.php
       - ~/.composer:/var/www/.composer/
@@ -61,7 +63,8 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
   nginx:
-    build: .docker/web
+    image: ghcr.io/librecodecoop/nextcloud-dev-nginx:latest
+    # build: .docker/web
     restart: unless-stopped
     volumes:
       - ./volumes/nextcloud:/var/www/html:ro
