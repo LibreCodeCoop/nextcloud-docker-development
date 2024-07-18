@@ -7,7 +7,6 @@ RUN apt-get update \
         libicu-dev \
         libzip-dev \
         procps \
-        rsync \
         unzip \
         # cron
         busybox-static \
@@ -59,6 +58,8 @@ COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY config/php/* /usr/local/etc/php/conf.d/
 COPY scripts/* /var/www/scripts/
 COPY bin/* /usr/local/bin/
+
+VOLUME /var/www/html
 
 WORKDIR /var/www/html
 
