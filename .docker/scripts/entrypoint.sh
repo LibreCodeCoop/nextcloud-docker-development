@@ -6,9 +6,7 @@ groupmod --non-unique --gid "${HOST_GID}" www-data
 
 # Clone Nextcloud repository, if needed
 if [ ! -d ".git" ]; then
-    git clone --progress --single-branch --depth 1 --branch "${VERSION_NEXTCLOUD}" --recurse-submodules -j 4 https://github.com/nextcloud/server /tmp/nextcloud
-    rsync -r /tmp/nextcloud/ .
-    rm -rf /tmp/nextcloud
+    git clone --progress --single-branch --depth 1 --branch "${VERSION_NEXTCLOUD}" --recurse-submodules -j 4 https://github.com/nextcloud/server /var/www/html
     mkdir data
     mkdir apps-writable
     mkdir apps-extra
