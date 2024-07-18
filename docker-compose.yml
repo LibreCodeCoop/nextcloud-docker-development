@@ -13,12 +13,9 @@ services:
     command: postgres -c log_statement=all
   mysql:
     image: mysql
-    cap_add:
-      - SYS_NICE  # CAP_SYS_NICE
     volumes:
-      - ./.docker/config/mysql:/etc/mysql/conf.d
-      - ./volumes/mysql/dump:/docker-entrypoint-initdb.d
-      - ./volumes/mysql/data:/var/lib/mysql
+      - mysql-init:/docker-entrypoint-initdb.d
+      - mysql-data:/var/lib/mysql
     ports:
       - 127.0.0.1:3306:3306
     restart: unless-stopped
@@ -78,3 +75,6 @@ services:
       - 127.0.0.1:${MAILHOG_PORT:-8025}:8025
   redis:
     image: redis
+volumes:
+  mysql-init:
+  mysql-data:
