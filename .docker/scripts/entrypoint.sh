@@ -14,7 +14,9 @@ if [ ! -d ".git" ]; then
     git submodule update --init --recursive
     mkdir data
     mkdir apps-writable
-    mkdir apps-extra
+    if [ ! -d "apps-extra" ]; then
+        mkdir apps-extra
+    fi
     chown -R www-data:www-data .
 fi
 
