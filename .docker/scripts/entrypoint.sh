@@ -11,6 +11,7 @@ if [ ! -d ".git" ]; then
     git fetch --depth=1 origin "${VERSION_NEXTCLOUD}"
     git checkout "${VERSION_NEXTCLOUD}"
     git submodule update --init --recursive
+    git config --global --add safe.directory /var/www/html
     mkdir data
     mkdir apps-writable
     mkdir apps-extra
