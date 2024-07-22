@@ -12,13 +12,12 @@ if [ ! -d ".git" ]; then
     git fetch --depth=1 origin "${VERSION_NEXTCLOUD}"
     git checkout "${VERSION_NEXTCLOUD}"
     git submodule update --init --recursive
-    mkdir data
-    mkdir apps-writable
-    if [ ! -d "apps-extra" ]; then
-        mkdir apps-extra
-    fi
-    chown -R www-data:www-data .
 fi
+
+mkdir -p data
+mkdir -p apps-writable
+mkdir -p config
+mkdir -p apps-extra
 
 # Wait for database
 php /var/www/scripts/wait-for-db.php
@@ -26,6 +25,7 @@ php /var/www/scripts/wait-for-db.php
 # Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     echo "⌛️ Starting installation ..."
+    chown -R www-data:www-data .
     if [[ ${DB_HOST} == 'mysql' ]]; then
         occ maintenance:install --verbose --database="${DB_HOST}" --database-name="${MYSQL_DATABASE}" --database-host="${DB_HOST}" --database-port= --database-user="${MYSQL_USER}" --database-pass="${MYSQL_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
     elif [[ "${DB_HOST}" == 'pgsql' ]]; then
