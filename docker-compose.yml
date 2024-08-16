@@ -14,8 +14,8 @@ services:
   mysql:
     image: mysql
     volumes:
-      - mysql-init:/docker-entrypoint-initdb.d
-      - mysql-data:/var/lib/mysql
+      - ./volumes/mysql/init:/docker-entrypoint-initdb.d
+      - ./volumes/mysql/data:/var/lib/mysql
     ports:
       - 127.0.0.1:3306:3306
     restart: unless-stopped
@@ -75,6 +75,4 @@ services:
       - 127.0.0.1:${MAILHOG_PORT:-8025}:8025
   redis:
     image: redis
-volumes:
-  mysql-init:
-  mysql-data:
+
