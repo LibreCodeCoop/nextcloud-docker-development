@@ -1,18 +1,5 @@
 FROM php:8.1-fpm
 
-RUN apt-get update \
-    && apt-get install -y \
-        git \
-        jq \
-        libicu-dev \
-        libzip-dev \
-        procps \
-        unzip \
-        # cron
-        busybox-static \
-    && mkdir -p /var/spool/cron/crontabs \
-    && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data
-
 # Install PHP extensions
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
@@ -41,20 +28,36 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     sysvsem \
     xdebug \
     zip \
+    @composer \
     && rm /usr/local/bin/install-php-extensions \
     # make possible ImageMagic handle PDF files
     && sed -i'' 's|.*<policy domain="coder".*"PDF".*|<policy domain="coder" rights="read \| write" pattern="PDF" />|g' /etc/ImageMagick-6/policy.xml \
     # pevent errors when try to create files at /var/www with user www-data
     && chown -R www-data /var/www
 
+# Run separate to prevent build all extensions
+RUN apt-get update \
+    && apt-get install -y \
+        git \
+        jq \
+        libicu-dev \
+        libzip-dev \
+        poppler-utils \
+        procps \
+        unzip \
+        # cron
+        busybox-static \
+    && mkdir -p /var/spool/cron/crontabs \
+    && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install NVM
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash \
     && export NVM_DIR="/root/.nvm" \
     && . "$NVM_DIR/nvm.sh" \
-    && nvm install 14 && nvm install 16 && nvm install 20 \
+    && nvm install 20 \
     && nvm alias default 20
 
-COPY --from=composer /usr/bin/composer /usr/bin/composer
 COPY config/php/* /usr/local/etc/php/conf.d/
 COPY scripts/* /var/www/scripts/
 COPY bin/* /usr/local/bin/
