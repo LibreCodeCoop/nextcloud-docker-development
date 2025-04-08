@@ -1,5 +1,27 @@
 FROM php:8.3-fpm
 
+RUN apt-get update \
+    && apt-get install -y \
+        busybox-static \
+        git \
+        jq \
+        libicu-dev \
+        libzip-dev \
+        locales \
+        poppler-utils \
+        procps \
+        unzip \
+        # cron
+    && mkdir -p /var/spool/cron/crontabs \
+    && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data \
+    && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+    && locale-gen \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
 # Install PHP extensions
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
@@ -32,22 +54,6 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     && rm /usr/local/bin/install-php-extensions \
     # pevent errors when try to create files at /var/www with user www-data
     && chown -R www-data /var/www
-
-# Run separate to prevent build all extensions
-RUN apt-get update \
-    && apt-get install -y \
-        git \
-        jq \
-        libicu-dev \
-        libzip-dev \
-        poppler-utils \
-        procps \
-        unzip \
-        # cron
-        busybox-static \
-    && mkdir -p /var/spool/cron/crontabs \
-    && echo '*/5 * * * * php -f /var/www/html/cron.php' > /var/spool/cron/crontabs/www-data \
-    && rm -rf /var/lib/apt/lists/*
 
 # Install NVM
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash \
