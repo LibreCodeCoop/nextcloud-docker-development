@@ -7,7 +7,7 @@ An development apps environment for Nextcloud.
 Run the command:
 
 ```bash
-docker compose up nextcloud mysql nginx mailhog redis
+docker compose up nextcloud mysql nginx mailpit redis
 ```
 
 * [Advanced setup](docs/advanced-setup.md)

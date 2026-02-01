@@ -25,8 +25,8 @@ source ~/.bashrc
 
 ```bash
 alias occ='docker compose exec -u www-data nextcloud occ'
-alias nextcloud-mysql='docker compose up nextcloud mysql nginx mailhog redis'
-alias nextcloud-pgsql='docker compose up nextcloud pgsql nginx mailhog redis'
+alias nextcloud-mysql='docker compose up nextcloud mysql nginx mailpit redis'
+alias nextcloud-pgsql='docker compose up nextcloud pgsql nginx mailpit redis'
 ```
 
 ⬅️ [Back to index](../README.md)
