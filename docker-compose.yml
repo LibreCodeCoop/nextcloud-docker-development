@@ -71,6 +71,7 @@ services:
       - ./volumes/nginx/includes:/etc/nginx/conf.d/includes/
     ports:
       - 127.0.0.1:${HTTP_PORT:-80}:80
+      - 127.0.0.1:443:443
   mailpit:
     image: axllent/mailpit
     ports:
