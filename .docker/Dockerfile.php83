@@ -59,8 +59,10 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash \
     && export NVM_DIR="/root/.nvm" \
     && . "$NVM_DIR/nvm.sh" \
-    && nvm install 22 \
-    && nvm alias default 22
+    && nvm install 24 \
+    && nvm alias default 24 \
+    && echo 'export NVM_DIR="/root/.nvm"' > /etc/profile.d/nvm.sh \
+    && echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /etc/profile.d/nvm.sh
 
 COPY config/php/* /usr/local/etc/php/conf.d/
 COPY scripts/* /var/www/scripts/
