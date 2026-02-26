@@ -97,6 +97,17 @@ EOF
         occ app:enable viewer
     fi
 
+    if [ ! -d "apps-extra/files_pdfviewer" ]; then
+        echo "⌛️ Installing files_pdfviewer app..."
+        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/files_pdfviewer apps-extra/files_pdfviewer
+        cd apps-extra/files_pdfviewer || exit
+        composer i
+        npm ci
+        npm run build
+        cd ../../ || exit
+        occ app:enable files_pdfviewer
+    fi
+
     echo "🥳 Setup completed !!!"
 fi
 
