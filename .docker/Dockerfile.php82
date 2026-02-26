@@ -61,6 +61,10 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | ba
     && . "$NVM_DIR/nvm.sh" \
     && nvm install 24 \
     && nvm alias default 24 \
+    && NODE_VERSION="$(nvm version default)" \
+    && ln -s "$NVM_DIR/versions/node/$NODE_VERSION/bin/node" /usr/local/bin/node \
+    && ln -s "$NVM_DIR/versions/node/$NODE_VERSION/bin/npm" /usr/local/bin/npm \
+    && ln -s "$NVM_DIR/versions/node/$NODE_VERSION/bin/npx" /usr/local/bin/npx \
     && echo 'export NVM_DIR="/root/.nvm"' > /etc/profile.d/nvm.sh \
     && echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> /etc/profile.d/nvm.sh
 
