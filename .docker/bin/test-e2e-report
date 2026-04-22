@@ -1,0 +1,55 @@
+#!/bin/bash
+# Visualize HTML test report
+
+# Detect app path: use first argument, or APP_PATH env, or try to detect from current directory
+if [ -n "$1" ] && [ -d "$1" ]; then
+    APP_PATH="$1"
+    shift
+elif [ -n "$1" ] && [ -d "volumes/nextcloud/$1" ]; then
+    # Try with volumes/nextcloud prefix
+    APP_PATH="volumes/nextcloud/$1"
+    shift
+elif [ -n "$APP_PATH" ]; then
+    APP_PATH="$APP_PATH"
+elif [ -f "package.json" ] && [ -f "appinfo/info.xml" ]; then
+    # We're inside an app directory
+    APP_PATH="."
+else
+    echo "Usage: test-e2e-report <app-path>"
+    echo "Or set APP_PATH environment variable"
+    echo "Or run from within an app directory"
+    exit 1
+fi
+
+# Resolve the absolute path
+if [[ "$APP_PATH" == "." ]]; then
+    CONTAINER_PATH=$(pwd)
+else
+    CONTAINER_PATH=$(cd "$APP_PATH" 2>/dev/null && pwd) || {
+        echo "Error: Directory not found: $APP_PATH"
+        exit 1
+    }
+fi
+
+# Determine the relative path for the container
+# Support paths like: volumes/nextcloud/apps-extra/libresign or apps-extra/libresign
+if [[ "$CONTAINER_PATH" =~ volumes/nextcloud(.*)$ ]]; then
+    RELATIVE_PATH="${BASH_REMATCH[1]}"
+    RELATIVE_PATH="${RELATIVE_PATH#/}"
+else
+    # Assume it's a path relative to nextcloud root
+    RELATIVE_PATH="${CONTAINER_PATH##*/volumes/nextcloud/}"
+    if [[ "$RELATIVE_PATH" == "$CONTAINER_PATH" ]]; then
+        # Not in volumes/nextcloud, assume it's an app path at the root
+        RELATIVE_PATH="${CONTAINER_PATH##*php82-master/}"
+    fi
+fi
+
+WORKSPACE="/var/www/html/$RELATIVE_PATH"
+
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+echo -e "${BLUE}📊 Opening Playwright report for: $RELATIVE_PATH${NC}"
+
+docker compose exec -w "$WORKSPACE" playwright npx playwright show-report

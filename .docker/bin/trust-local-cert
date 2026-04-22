@@ -1,0 +1,33 @@
+#!/bin/sh
+
+set -eu
+
+ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+cd "$ROOT_DIR"
+
+container_id=$(docker compose ps -q nginx)
+if [ -z "$container_id" ]; then
+	echo "The nginx service is not running. Start the environment first." >&2
+	exit 1
+fi
+
+container_status=$(docker inspect --format='{{.State.Status}}' "$container_id" 2>/dev/null)
+if [ "$container_status" != "running" ]; then
+	echo "The nginx container is not running (status: ${container_status:-unknown}). Start the environment first." >&2
+	exit 1
+fi
+
+cert_path_in_container=/certs/nextcloud.pem
+tmp_pem=$(mktemp /tmp/nextcloud-cert.XXXXXX.pem)
+tmp_crt=$(mktemp /tmp/nextcloud-cert.XXXXXX.crt)
+trap 'rm -f "$tmp_pem" "$tmp_crt"' EXIT
+
+docker cp "$container_id:$cert_path_in_container" "$tmp_pem"
+openssl x509 -in "$tmp_pem" -out "$tmp_crt"
+
+mkdir -p "$HOME/.pki/nssdb"
+certutil -d sql:"$HOME/.pki/nssdb" -N --empty-password >/dev/null 2>&1 || true
+certutil -d sql:"$HOME/.pki/nssdb" -D -n "Nextcloud Localhost" >/dev/null 2>&1 || true
+certutil -d sql:"$HOME/.pki/nssdb" -A -t "P,," -n "Nextcloud Localhost" -i "$tmp_crt"
+
+echo "Trusted Nextcloud Localhost certificate in $HOME/.pki/nssdb"

@@ -1,0 +1,68 @@
+#!/bin/bash
+# Playwright with debug profile - see tests in real-time via browser at http://localhost:9323
+
+# Detect app path: use first argument, or APP_PATH env, or try to detect from current directory
+if [ -n "$1" ] && [ -d "$1" ]; then
+    APP_PATH="$1"
+    shift
+elif [ -n "$1" ] && [ -d "volumes/nextcloud/$1" ]; then
+    APP_PATH="volumes/nextcloud/$1"
+    shift
+elif [ -n "$APP_PATH" ]; then
+    APP_PATH="$APP_PATH"
+elif [ -f "package.json" ] && [ -f "appinfo/info.xml" ]; then
+    APP_PATH="."
+else
+    echo "Usage: test-e2e-headed <app-path>"
+    echo "Or set APP_PATH environment variable"
+    echo "Or run from within an app directory"
+    exit 1
+fi
+
+# Resolve the absolute path
+if [[ "$APP_PATH" == "." ]]; then
+    CONTAINER_PATH=$(pwd)
+else
+    CONTAINER_PATH=$(cd "$APP_PATH" 2>/dev/null && pwd) || {
+        echo "Error: Directory not found: $APP_PATH"
+        exit 1
+    }
+fi
+
+# Determine the relative path for the container
+if [[ "$CONTAINER_PATH" =~ volumes/nextcloud(.*)$ ]]; then
+    RELATIVE_PATH="${BASH_REMATCH[1]}"
+    RELATIVE_PATH="${RELATIVE_PATH#/}"
+else
+    RELATIVE_PATH="${CONTAINER_PATH##*/volumes/nextcloud/}"
+    if [[ "$RELATIVE_PATH" == "$CONTAINER_PATH" ]]; then
+        RELATIVE_PATH="${CONTAINER_PATH##*php82-master/}"
+    fi
+fi
+
+WORKSPACE="/var/www/html/$RELATIVE_PATH"
+
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${BLUE}🎭 Starting Playwright debug mode for: $RELATIVE_PATH${NC}"
+echo -e "${GREEN}🌐 UI available at: http://localhost:9323${NC}"
+echo -e "${YELLOW}   - Inspector will help debug test steps${NC}"
+echo ""
+
+# Start container with debug profile
+docker compose --profile debug up -d playwright-headed
+
+# Wait for container
+sleep 2
+
+# Install dependencies if needed
+if ! docker compose exec -T playwright-headed test -d "${WORKSPACE}/node_modules/@playwright" 2>/dev/null; then
+    echo "Installing Playwright dependencies..."
+    docker compose exec -w "$WORKSPACE" playwright-headed npm ci
+fi
+
+# Run with UI/inspect mode
+docker compose exec -w "$WORKSPACE" playwright-headed npx playwright test --ui --ui-host=0.0.0.0 --ui-port=9323 "$@"

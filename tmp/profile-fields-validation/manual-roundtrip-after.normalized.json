@@ -1,0 +1,60 @@
+{
+  "definitions": [
+    {
+      "active": true,
+      "admin_only": false,
+      "created_at": "2026-03-14T02:22:41+00:00",
+      "field_key": "test",
+      "id": 318,
+      "initial_visibility": "private",
+      "label": "Test",
+      "sort_order": 1,
+      "type": "text",
+      "updated_at": "2026-03-14T02:22:41+00:00",
+      "user_editable": true,
+      "user_visible": true
+    },
+    {
+      "active": true,
+      "admin_only": false,
+      "created_at": "2026-03-13T17:19:23+00:00",
+      "field_key": "cpf",
+      "id": 319,
+      "initial_visibility": "private",
+      "label": "CPF",
+      "sort_order": 10,
+      "type": "text",
+      "updated_at": "2026-03-13T17:19:23+00:00",
+      "user_editable": false,
+      "user_visible": true
+    }
+  ],
+  "exported_at": "2026-03-16T16:31:34+00:00",
+  "schema_version": 1,
+  "values": [
+    {
+      "current_visibility": "public",
+      "field_definition_id": 318,
+      "field_key": "test",
+      "id": 386,
+      "updated_at": "2026-03-14T12:30:33+00:00",
+      "updated_by_uid": "admin",
+      "user_uid": "admin",
+      "value": {
+        "value": null
+      }
+    },
+    {
+      "current_visibility": "private",
+      "field_definition_id": 319,
+      "field_key": "cpf",
+      "id": 385,
+      "updated_at": "2026-03-14T02:22:15+00:00",
+      "updated_by_uid": "admin",
+      "user_uid": "admin",
+      "value": {
+        "value": "999.999.999-99"
+      }
+    }
+  ]
+}
