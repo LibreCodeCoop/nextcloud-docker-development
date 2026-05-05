@@ -61,9 +61,10 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
   nginx:
-    build:
-      context: .docker
-      dockerfile: Dockerfile.nginx
+    image: ghcr.io/librecodecoop/nextcloud-dev-nginx:latest
+    # build:
+    #   context: .docker/
+    #   dockerfile: Dockerfile.nginx
     restart: unless-stopped
     depends_on:
       - nextcloud
@@ -83,7 +84,6 @@ services:
   eurooffice:
     image: ghcr.io/euro-office/documentserver:latest
     restart: always
-    profiles: ["eurooffice"]
     volumes:
       - ./volumes/eurooffice:/home/eurooffice/.eurooffice
       - ./volumes/eurooffice/local.json:/etc/onlyoffice/documentserver/local.json
