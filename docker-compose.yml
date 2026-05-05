@@ -84,7 +84,6 @@ services:
   eurooffice:
     image: ghcr.io/euro-office/documentserver:latest
     restart: always
-    profiles: ["eurooffice"]
     volumes:
       - ./volumes/eurooffice:/home/eurooffice/.eurooffice
       - ./volumes/eurooffice/local.json:/etc/onlyoffice/documentserver/local.json
