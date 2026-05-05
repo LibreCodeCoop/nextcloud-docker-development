@@ -10,7 +10,7 @@ elif [ -n "$1" ] && [ -d "volumes/nextcloud/$1" ]; then
     APP_PATH="volumes/nextcloud/$1"
     shift
 elif [ -n "$APP_PATH" ]; then
-    APP_PATH="$APP_PATH"
+    :
 elif [ -f "package.json" ] && [ -f "appinfo/info.xml" ]; then
     # We're inside an app directory
     APP_PATH="."
@@ -49,7 +49,6 @@ else
     fi
 fi
 
-CONTAINER="nextcloud-playwright"
 WORKSPACE="/var/www/html/$RELATIVE_PATH"
 
 GREEN='\033[0;32m'

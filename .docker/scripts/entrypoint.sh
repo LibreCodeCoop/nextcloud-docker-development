@@ -22,16 +22,34 @@ mkdir -p apps-extra
 # Wait for database
 php /var/www/scripts/wait-for-db.php
 
+install_cmd_status=0
+
 # Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     echo "⌛️ Starting installation ..."
     chown -R www-data:www-data .
     if [[ ${DB_HOST} == 'mysql' ]]; then
         occ maintenance:install --verbose --database="${DB_HOST}" --database-name="${MYSQL_DATABASE}" --database-host="${DB_HOST}" --database-port= --database-user="${MYSQL_USER}" --database-pass="${MYSQL_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
+        install_cmd_status=$?
     elif [[ "${DB_HOST}" == 'pgsql' ]]; then
         occ maintenance:install --verbose --database="${DB_HOST}" --database-name="${POSTGRES_DB}" --database-host="${DB_HOST}" --database-port= --database-user="${POSTGRES_USER}" --database-pass="${POSTGRES_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
+        install_cmd_status=$?
     else
         occ maintenance:install --verbose --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
+        install_cmd_status=$?
+    fi
+
+    if [[ ${install_cmd_status} -ne 0 ]]; then
+        db_reset_hint="volumes/nextcloud/config and volumes/nextcloud/data"
+        if [[ ${DB_HOST} == 'mysql' ]]; then
+            db_reset_hint="volumes/mysql/data, ${db_reset_hint}"
+        elif [[ ${DB_HOST} == 'pgsql' ]]; then
+            db_reset_hint="volumes/postgres/data, ${db_reset_hint}"
+        fi
+
+        echo "❌ Installation failed. Check the logs above for the exact reason."
+        echo "   If this is a local reset issue, remove: ${db_reset_hint}"
+        exit ${install_cmd_status}
     fi
 
     echo "🔧 Making initial config ..."
@@ -109,6 +127,11 @@ EOF
     fi
 
     echo "🥳 Setup completed !!!"
+fi
+
+if ! occ status | grep -q 'installed: true'; then
+    echo "❌ Nextcloud is not installed. Skipping startup tasks and stopping container."
+    exit 1
 fi
 
 # Run cron

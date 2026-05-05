@@ -5,7 +5,7 @@
 ### Reset entire setup?
 
 - Go down the containers
-- Remove the folder volumes
+- Remove persisted volumes (`volumes/mysql/data`, `volumes/nextcloud/config` and `volumes/nextcloud/data`) or remove the entire `volumes` folder
 - Go up the containers
 
 This will delete the database and Nextcloud volumes. Before do a backup of all that you don't want to lost, by example `volumes/nextcloud/config/config.php`
