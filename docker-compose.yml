@@ -61,7 +61,6 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
   nginx:
-    # image: ghcr.io/librecodecoop/nextcloud-dev-nginx:latest
     build:
       context: .docker
       dockerfile: Dockerfile.nginx
