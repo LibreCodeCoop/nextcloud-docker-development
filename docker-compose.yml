@@ -65,6 +65,8 @@ services:
       context: .docker
       dockerfile: Dockerfile.nginx
     restart: unless-stopped
+    depends_on:
+      - nextcloud
     volumes:
       - ./volumes/nextcloud:/var/www/html:ro
       - ./volumes/nginx/includes:/etc/nginx/conf.d/includes/
