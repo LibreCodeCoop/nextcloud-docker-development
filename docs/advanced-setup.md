@@ -6,7 +6,7 @@ You can customize the environment before first run changing some environments en
 
 Create an `.env` file and add values on your needs.
 
-`VERSION_NEXTCLOUD` To this environment recommend to use the branch `master`. If you need to work with old version of server, use other branch of [Nextcloud server repository](https://github.com/nextcloud/server).
+`VERSION_NEXTCLOUD` For this environment, the recommended branch is `stable33`. If you need to work with another Nextcloud server version, use the matching branch from the [Nextcloud server repository](https://github.com/nextcloud/server).
 
 ## PHP custom settings
 

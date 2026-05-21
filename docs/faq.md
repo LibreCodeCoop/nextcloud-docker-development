@@ -14,7 +14,7 @@ This will delete the database and Nextcloud volumes. Before do a backup of all t
 
 - ```bash
   cd volumes/nextcloud
-  git pull origin master
+  git pull origin stable33
   ```
 
 ## Using IDE
