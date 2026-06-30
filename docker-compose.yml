@@ -12,7 +12,9 @@ services:
       - 127.0.0.1:5432:5432
     command: postgres -c log_statement=all
   mysql:
-    image: mysql
+    # Pin to 8.4: mysql:latest currently resolves to 9.x, and Nextcloud autoinstall
+    # runs with the application user, which cannot read mysql.component there.
+    image: mysql:8.4
     volumes:
       - ./volumes/mysql/init:/docker-entrypoint-initdb.d
       - ./volumes/mysql/data:/var/lib/mysql
