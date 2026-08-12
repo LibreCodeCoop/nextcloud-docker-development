@@ -1,0 +1,71 @@
+name: Docker Compose config
+
+on:
+  pull_request:
+    paths:
+      - docker-compose.yml
+      - .docker/database-services.yml
+      - docs/advanced-setup.md
+      - .github/workflows/docker-compose-config.yml
+  push:
+    branches:
+      - main
+    paths:
+      - docker-compose.yml
+      - .docker/database-services.yml
+      - docs/advanced-setup.md
+      - .github/workflows/docker-compose-config.yml
+
+jobs:
+  validate:
+    name: Validate Docker Compose config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Validate default Compose configuration
+        run: |
+          set -eu
+          docker compose config --format json > /tmp/compose-default.json
+          jq -e '
+            .services.database.image == "mysql:8.4" and
+            .services.nextcloud.environment.DB_HOST == "mysql" and
+            (.services.nextcloud.depends_on | has("database")) and
+            (.services.database.ports | all(.host_ip == "127.0.0.1")) and
+            (.services.nginx.ports | all(.host_ip == "127.0.0.1")) and
+            (.services.mailpit.ports | all(.host_ip == "127.0.0.1")) and
+            (.services.nginx.ports | any(.target == 80 and .published == "80-99")) and
+            (.services.nginx.ports | any(.target == 443 and .published == "443-462"))
+          ' /tmp/compose-default.json
+
+      - name: Validate PostgreSQL configuration
+        run: |
+          set -eu
+          DB_HOST=pgsql docker compose config --format json > /tmp/compose-pgsql.json
+          jq -e '
+            .services.database.image == "postgres:13-alpine" and
+            .services.nextcloud.environment.DB_HOST == "pgsql" and
+            (.services.nextcloud.depends_on | has("database")) and
+            (.services | has("mysql") | not) and
+            (.services | has("pgsql") | not)
+          ' /tmp/compose-pgsql.json
+
+      - name: Validate port overrides
+        run: |
+          set -eu
+          HTTP_PORT=9000 HTTPS_PORT=9443 docker compose config --format json > /tmp/compose-overrides.json
+          jq -e '
+            (.services.nginx.ports | any(.target == 80 and .published == "9000" and .host_ip == "127.0.0.1")) and
+            (.services.nginx.ports | any(.target == 443 and .published == "9443" and .host_ip == "127.0.0.1"))
+          ' /tmp/compose-overrides.json
+
+      - name: Validate profiles and network binding override
+        run: |
+          set -eu
+          IP_BIND=0.0.0.0 docker compose --profile playwright --profile eurooffice config --format json > /tmp/compose-profiles.json
+          jq -e '
+            (.services | has("playwright")) and
+            (.services | has("eurooffice")) and
+            (.services.database.ports | all(.host_ip == "0.0.0.0")) and
+            (.services.nginx.ports | all(.host_ip == "0.0.0.0"))
+          ' /tmp/compose-profiles.json
