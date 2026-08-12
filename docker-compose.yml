@@ -68,7 +68,6 @@ services:
       - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-master}
       - AUTOINSTALL=${AUTOINSTALL:-1}
       - XDEBUG_CONFIG
-      - HTTP_PORT=${HTTP_PORT:-80}
     extra_hosts:
       - host.docker.internal:host-gateway
   nginx:
