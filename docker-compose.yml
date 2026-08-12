@@ -43,6 +43,7 @@ services:
     #   dockerfile: Dockerfile.php${PHP_VERSION:-83}
     volumes:
       - ./.docker/scripts/wait-for-db.php:/var/www/scripts/wait-for-db.php
+      - ./volumes/php:/var/www/php-config
       - ~/.composer:/var/www/.composer/
       - ~/.npm:/var/www/.npm/
       - ./volumes/nextcloud:/var/www/html
@@ -68,6 +69,7 @@ services:
       - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-master}
       - AUTOINSTALL=${AUTOINSTALL:-1}
       - XDEBUG_CONFIG
+      - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/var/www/php-config
     extra_hosts:
       - host.docker.internal:host-gateway
   nginx:
