@@ -3,7 +3,7 @@ services:
     image: postgres:13-alpine
     volumes:
       - ./volumes/postgres/data:/var/lib/postgresql/data
-      - ./.docker/entrypoints/database-provider.sh:/usr/local/bin/database-provider.sh:ro
+      - ./.docker/scripts/database-provider.sh:/usr/local/bin/database-provider.sh:ro
     environment:
       - DB_HOST=${DB_HOST:-mysql}
       - POSTGRES_DB=${POSTGRES_DB:-nextcloud}
@@ -22,7 +22,7 @@ services:
     volumes:
       - ./volumes/mysql/init:/docker-entrypoint-initdb.d
       - ./volumes/mysql/data:/var/lib/mysql
-      - ./.docker/entrypoints/database-provider.sh:/usr/local/bin/database-provider.sh:ro
+      - ./.docker/scripts/database-provider.sh:/usr/local/bin/database-provider.sh:ro
     ports:
       - target: 3306
         published: "3306-3325"
