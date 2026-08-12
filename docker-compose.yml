@@ -3,13 +3,13 @@ services:
     image: postgres:13-alpine
     volumes:
       - ./volumes/postgres/data:/var/lib/postgresql/data
-      - ./.docker/scripts/database-provider.sh:/usr/local/bin/database-provider.sh:ro
+      - ./.docker/scripts/database-entrypoint.sh:/usr/local/bin/database-entrypoint.sh:ro
     environment:
       - DB_HOST=${DB_HOST:-mysql}
       - POSTGRES_DB=${POSTGRES_DB:-nextcloud}
       - POSTGRES_USER=${POSTGRES_USER:-nextcloud}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nextcloud}
-    entrypoint: ["/bin/sh", "/usr/local/bin/database-provider.sh", "pgsql", "docker-entrypoint.sh"]
+    entrypoint: ["/bin/sh", "/usr/local/bin/database-entrypoint.sh", "pgsql", "docker-entrypoint.sh"]
     ports:
       - target: 5432
         published: "5432-5451"
@@ -22,12 +22,12 @@ services:
     volumes:
       - ./volumes/mysql/init:/docker-entrypoint-initdb.d
       - ./volumes/mysql/data:/var/lib/mysql
-      - ./.docker/scripts/database-provider.sh:/usr/local/bin/database-provider.sh:ro
+      - ./.docker/scripts/database-entrypoint.sh:/usr/local/bin/database-entrypoint.sh:ro
     ports:
       - target: 3306
         published: "3306-3325"
         host_ip: 127.0.0.1
-    entrypoint: ["/bin/sh", "/usr/local/bin/database-provider.sh", "mysql", "docker-entrypoint.sh"]
+    entrypoint: ["/bin/sh", "/usr/local/bin/database-entrypoint.sh", "mysql", "docker-entrypoint.sh"]
     command: ["mysqld"]
     environment:
       - DB_HOST=${DB_HOST:-mysql}
