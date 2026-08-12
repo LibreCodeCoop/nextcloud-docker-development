@@ -20,6 +20,11 @@ MySQL is used by default:
 docker compose up
 ```
 
+The supported `DB_HOST` values are:
+
+- `mysql`
+- `pgsql`
+
 To use PostgreSQL:
 
 ```bash
