@@ -4,8 +4,8 @@ services:
     # runs with the application user, which cannot read mysql.component there.
     image: mysql:8.4
     volumes:
-      - ./volumes/mysql/init:/docker-entrypoint-initdb.d
-      - ./volumes/mysql/data:/var/lib/mysql
+      - ../volumes/mysql/init:/docker-entrypoint-initdb.d
+      - ../volumes/mysql/data:/var/lib/mysql
     ports:
       - target: 3306
         published: "3306-3325"
@@ -20,7 +20,7 @@ services:
   pgsql:
     image: postgres:13-alpine
     volumes:
-      - ./volumes/postgres/data:/var/lib/postgresql/data
+      - ../volumes/postgres/data:/var/lib/postgresql/data
     ports:
       - target: 5432
         published: "5432-5451"
