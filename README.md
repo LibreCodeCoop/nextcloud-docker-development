@@ -2,6 +2,9 @@
 
 A Docker Compose-based development environment for Nextcloud.
 
+> [!WARNING]
+> This environment is intended for development only. It uses default credentials and insecure development settings and must not be used in production.
+
 ## Quick start
 
 Start the basic environment with MySQL:
