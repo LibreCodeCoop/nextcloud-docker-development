@@ -8,7 +8,7 @@ An `.env` file is optional. Variables can also be provided inline:
 
 ```bash
 VERSION_NEXTCLOUD=stable33 docker compose up
-````
+```
 
 By default, `VERSION_NEXTCLOUD` uses `master`. To use another Nextcloud version, set it to the corresponding branch from the [Nextcloud server repository](https://github.com/nextcloud/server).
 
