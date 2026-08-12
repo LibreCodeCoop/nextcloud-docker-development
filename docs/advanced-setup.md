@@ -2,7 +2,7 @@
 
 ## Environments
 
-You can customize the environment before first run changing some environments entries.
+You can customize the environment before first run by changing environment entries.
 
 An `.env` file is optional. You can also set values inline, for example `VERSION_NEXTCLOUD=stable33 docker compose up`.
 
