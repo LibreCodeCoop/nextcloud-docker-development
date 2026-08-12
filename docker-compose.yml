@@ -1,41 +1,12 @@
 services:
-  pgsql:
-    image: postgres:13-alpine
-    volumes:
-      - ./volumes/postgres/data:/var/lib/postgresql/data
-      - ./.docker/scripts/database-entrypoint.sh:/usr/local/bin/database-entrypoint.sh:ro
-    environment:
-      - DB_HOST=${DB_HOST:-mysql}
-      - POSTGRES_DB=${POSTGRES_DB:-nextcloud}
-      - POSTGRES_USER=${POSTGRES_USER:-nextcloud}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nextcloud}
-    entrypoint: ["/bin/sh", "/usr/local/bin/database-entrypoint.sh", "pgsql", "docker-entrypoint.sh"]
-    ports:
-      - target: 5432
-        published: "5432-5451"
-        host_ip: 127.0.0.1
-    command: ["postgres", "-c", "log_statement=all"]
-  mysql:
-    # Pin to 8.4: mysql:latest currently resolves to 9.x, and Nextcloud autoinstall
-    # runs with the application user, which cannot read mysql.component there.
-    image: mysql:8.4
-    volumes:
-      - ./volumes/mysql/init:/docker-entrypoint-initdb.d
-      - ./volumes/mysql/data:/var/lib/mysql
-      - ./.docker/scripts/database-entrypoint.sh:/usr/local/bin/database-entrypoint.sh:ro
-    ports:
-      - target: 3306
-        published: "3306-3325"
-        host_ip: 127.0.0.1
-    entrypoint: ["/bin/sh", "/usr/local/bin/database-entrypoint.sh", "mysql", "docker-entrypoint.sh"]
-    command: ["mysqld"]
-    environment:
-      - DB_HOST=${DB_HOST:-mysql}
-      - TZ=${TZ:-CET}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-nextcloud}
-      - MYSQL_USER=${MYSQL_USER:-nextcloud}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
+  database:
+    extends:
+      file: .docker/database-services.yml
+      service: ${DB_HOST:-mysql}
+    networks:
+      default:
+        aliases:
+          - ${DB_HOST:-mysql}
   nextcloud:
     image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-83}:latest
     # build:
@@ -48,6 +19,8 @@ services:
       - ~/.npm:/var/www/.npm/
       - ./volumes/nextcloud:/var/www/html
     restart: unless-stopped
+    depends_on:
+      - database
     environment:
       - HOST_UID=${HOST_UID:-1000}
       - HOST_GID=${HOST_GID:-1000}
