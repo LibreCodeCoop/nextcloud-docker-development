@@ -42,6 +42,7 @@ services:
       - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-master}
       - AUTOINSTALL=${AUTOINSTALL:-1}
       - XDEBUG_CONFIG
+      - XDEBUG_MODE
       - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/var/www/php-config
     extra_hosts:
       - host.docker.internal:host-gateway
