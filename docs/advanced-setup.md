@@ -12,6 +12,14 @@ VERSION_NEXTCLOUD=stable33 docker compose up
 
 By default, `VERSION_NEXTCLOUD` uses `master`. To use another Nextcloud version, set it to the corresponding branch from the [Nextcloud server repository](https://github.com/nextcloud/server).
 
+Xdebug can be configured with its native `XDEBUG_MODE` variable:
+
+```bash
+XDEBUG_MODE=debug docker compose up
+XDEBUG_MODE=develop,debug docker compose up
+XDEBUG_MODE=coverage docker compose up
+```
+
 ## Database
 
 MySQL is used by default:
