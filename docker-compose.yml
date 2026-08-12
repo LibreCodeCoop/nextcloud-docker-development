@@ -1,32 +1,12 @@
 services:
-  pgsql:
-    image: postgres:13-alpine
-    restart: unless-stopped
-    volumes:
-      - ./volumes/postgres/data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB:-nextcloud}
-      - POSTGRES_USER=${POSTGRES_USER:-nextcloud}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nextcloud}
-    ports:
-      - 127.0.0.1:5432:5432
-    command: postgres -c log_statement=all
-  mysql:
-    # Pin to 8.4: mysql:latest currently resolves to 9.x, and Nextcloud autoinstall
-    # runs with the application user, which cannot read mysql.component there.
-    image: mysql:8.4
-    volumes:
-      - ./volumes/mysql/init:/docker-entrypoint-initdb.d
-      - ./volumes/mysql/data:/var/lib/mysql
-    ports:
-      - 127.0.0.1:3306:3306
-    restart: unless-stopped
-    environment:
-      - TZ=${TZ:-CET}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-nextcloud}
-      - MYSQL_USER=${MYSQL_USER:-nextcloud}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
+  database:
+    extends:
+      file: .docker/database-services.yml
+      service: ${DB_HOST:-mysql}
+    networks:
+      default:
+        aliases:
+          - ${DB_HOST:-mysql}
   nextcloud:
     image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-83}:latest
     # build:
@@ -34,10 +14,13 @@ services:
     #   dockerfile: Dockerfile.php${PHP_VERSION:-83}
     volumes:
       - ./.docker/scripts/wait-for-db.php:/var/www/scripts/wait-for-db.php
+      - ./volumes/php:/var/www/php-config
       - ~/.composer:/var/www/.composer/
       - ~/.npm:/var/www/.npm/
       - ./volumes/nextcloud:/var/www/html
     restart: unless-stopped
+    depends_on:
+      - database
     environment:
       - HOST_UID=${HOST_UID:-1000}
       - HOST_GID=${HOST_GID:-1000}
@@ -56,10 +39,11 @@ services:
       - MAIL_DOMAIN=${MAIL_DOMAIN:-nextcloud.test}
       - MAIL_SMTPPORT=${MAIL_SMTPPORT:-1025}
       - MAIL_SMTPHOST=${MAIL_SMTPHOST:-mailpit}
-      - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-stable33}
+      - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-master}
       - AUTOINSTALL=${AUTOINSTALL:-1}
       - XDEBUG_CONFIG
-      - HTTP_PORT=${HTTP_PORT:-80}
+      - XDEBUG_MODE
+      - PHP_INI_SCAN_DIR=/usr/local/etc/php/conf.d:/var/www/php-config
     extra_hosts:
       - host.docker.internal:host-gateway
   nginx:
@@ -75,23 +59,33 @@ services:
       - ./volumes/nginx/includes:/etc/nginx/conf.d/includes/
       - ./volumes/nginx/certs:/certs
     ports:
-      - ${HTTP_PORT:-80}:80
-      - 443:443
+      - target: 80
+        published: "${HTTP_PORT:-80-99}"
+        host_ip: ${IP_BIND:-127.0.0.1}
+      - target: 443
+        published: "${HTTPS_PORT:-443-462}"
+        host_ip: ${IP_BIND:-127.0.0.1}
   mailpit:
     image: axllent/mailpit
     ports:
-      - 127.0.0.1:${MAILHOG_PORT:-8025}:8025
+      - target: 8025
+        published: "${MAILHOG_PORT:-8025-8044}"
+        host_ip: ${IP_BIND:-127.0.0.1}
   redis:
     image: redis
   eurooffice:
     image: ghcr.io/euro-office/documentserver:latest
+    profiles:
+      - eurooffice
     restart: always
     volumes:
       - ./volumes/eurooffice:/home/eurooffice/.eurooffice
       - ./volumes/eurooffice/local.json:/etc/onlyoffice/documentserver/local.json
       - ./volumes/nextcloud/apps-extra/eurooffice-plugin:/var/www/onlyoffice/documentserver/sdkjs-plugins/libresign:ro
     ports:
-      - 8080:80
+      - target: 80
+        published: "8080-8099"
+        host_ip: ${IP_BIND:-127.0.0.1}
     environment:
       - EXAMPLE_ENABLED=true
       - JWT_SECRET=${JWT_SECRET:-my_jwt_secret}
@@ -101,13 +95,16 @@ services:
       - host.docker.internal:host-gateway
   playwright:
     image: mcr.microsoft.com/playwright:v1.59.1-noble
-    container_name: nextcloud-playwright
+    profiles:
+      - playwright
     user: pwuser
     volumes:
       - ./volumes/nextcloud:/var/www/html
     working_dir: /var/www/html
     ports:
-      - 127.0.0.1:9323:9323
+      - target: 9323
+        published: "9323-9342"
+        host_ip: ${IP_BIND:-127.0.0.1}
     environment:
       - PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://nginx}
       - NODE_ENV=test
@@ -120,15 +117,21 @@ services:
       - default
   signal-gateway:
     image: bbernhard/signal-cli-rest-api:latest
+    profiles:
+      - signal
     restart: unless-stopped
     ports:
-      - 127.0.0.1:5001:8080
+      - target: 8080
+        published: "5001-5020"
+        host_ip: ${IP_BIND:-127.0.0.1}
     volumes:
       - ./volumes/signal:/home/.local/share/signal-cli
     environment:
       - LOG_LEVEL=info
   whatsapp.web:
     image: aldinokemal2104/go-whatsapp-web-multidevice
+    profiles:
+      - whatsapp
     restart: unless-stopped
     environment:
       - APP_PORT=3000

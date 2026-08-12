@@ -1,23 +1,24 @@
 # Nextcloud development environment
 
-An development apps environment for Nextcloud.
+A Docker Compose-based development environment for Nextcloud.
 
-## Development environment
+> [!WARNING]
+> This environment is intended for development only. It uses default credentials and insecure development settings and must not be used in production.
 
-Run the command:
+## Quick start
+
+Start the basic environment with MySQL:
 
 ```bash
-docker compose up nextcloud mysql nginx mailpit redis
+docker compose up
 ```
 
-* [Advanced setup](docs/advanced-setup.md)
-  * [Environments](docs/advanced-setup.md#environments)
-  * [PHP custom settings](docs/advanced-setup.md#php-custom-settings)
-* [App development](docs/apps-development.md)
-  * [Sample](docs/apps-development.md#samble)
-* [FAQ](docs/faq.md)
-  * [Reset setup](docs/faq.md#reset-setup)
-  * [Upgrade to newest commits of server repository](docs/faq.md#upgrade-to-newest-commits-of-server-repository)
-  * [Using IDE](docs/faq.md#using-ide)
-  * [Fix permissions](docs/faq.md#fix-permissions)
-  * [Simplify commands with alias](docs/bash_aliases.md)
+For PostgreSQL, optional services, dynamic host ports, multiple environments,
+and other advanced configuration, see the
+[advanced setup guide](docs/advanced-setup.md).
+
+## More documentation
+
+- [Advanced setup](docs/advanced-setup.md)
+- [App development](docs/apps-development.md)
+- [FAQ](docs/faq.md)
