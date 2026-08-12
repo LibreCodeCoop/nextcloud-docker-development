@@ -103,7 +103,6 @@ services:
       - host.docker.internal:host-gateway
   playwright:
     image: mcr.microsoft.com/playwright:v1.59.1-noble
-    container_name: nextcloud-playwright
     profiles:
       - playwright
     user: pwuser
