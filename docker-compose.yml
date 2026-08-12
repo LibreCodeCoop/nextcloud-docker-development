@@ -85,6 +85,8 @@ services:
     image: redis
   eurooffice:
     image: ghcr.io/euro-office/documentserver:latest
+    profiles:
+      - eurooffice
     restart: always
     volumes:
       - ./volumes/eurooffice:/home/eurooffice/.eurooffice
@@ -102,6 +104,8 @@ services:
   playwright:
     image: mcr.microsoft.com/playwright:v1.59.1-noble
     container_name: nextcloud-playwright
+    profiles:
+      - playwright
     user: pwuser
     volumes:
       - ./volumes/nextcloud:/var/www/html
@@ -120,6 +124,8 @@ services:
       - default
   signal-gateway:
     image: bbernhard/signal-cli-rest-api:latest
+    profiles:
+      - signal
     restart: unless-stopped
     ports:
       - 127.0.0.1:5001:8080
@@ -129,6 +135,8 @@ services:
       - LOG_LEVEL=info
   whatsapp.web:
     image: aldinokemal2104/go-whatsapp-web-multidevice
+    profiles:
+      - whatsapp
     restart: unless-stopped
     environment:
       - APP_PORT=3000
