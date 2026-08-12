@@ -9,7 +9,7 @@ services:
     ports:
       - target: 3306
         published: "3306-3325"
-        host_ip: 127.0.0.1
+        host_ip: ${IP_BIND:-127.0.0.1}
     command: ["mysqld"]
     environment:
       - TZ=${TZ:-CET}
@@ -24,7 +24,7 @@ services:
     ports:
       - target: 5432
         published: "5432-5451"
-        host_ip: 127.0.0.1
+        host_ip: ${IP_BIND:-127.0.0.1}
     command: ["postgres", "-c", "log_statement=all"]
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-nextcloud}

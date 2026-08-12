@@ -97,8 +97,16 @@ http://localhost
 A specific host port can still be requested explicitly:
 
 ```bash
-HTTP_PORT=9000 docker compose up
+HTTP_PORT=9000 HTTPS_PORT=9443 docker compose up
 ```
+
+By default, published services bind to `127.0.0.1`. To expose them on other host interfaces, set:
+
+```bash
+IP_BIND=0.0.0.0 docker compose up
+```
+
+HTTP and HTTPS use automatic ranges beginning at ports `80` and `443` when no override is provided. The example above forces `host:9000 -> container:80` and `host:9443 -> container:443`.
 
 ## PHP custom settings
 
