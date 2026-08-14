@@ -24,6 +24,12 @@ php /var/www/scripts/wait-for-db.php
 
 install_cmd_status=0
 
+# An empty or incomplete config.php (interrupted install) must not block a new installation
+if [[ -f "config/config.php" ]] && ! grep -qE "'installed'[[:space:]]*=>[[:space:]]*true" config/config.php; then
+    echo "⚠️  Found an empty or incomplete config/config.php. Removing it to install from scratch."
+    rm -f config/config.php
+fi
+
 # Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     echo "⌛️ Starting installation ..."
