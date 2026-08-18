@@ -45,7 +45,7 @@ published_port() {
 	printf '%s\n' "${mapping##*:}"
 }
 
-prepare_environment_banner() {
+report_environment_ready() {
 	selector_http_port="$1"
 	selector_https_port="$2"
 	mailpit_port="$(published_port mailpit 8025)"
@@ -60,7 +60,7 @@ prepare_environment_banner() {
 		-e ENV_EUROOFFICE_PORT="$eurooffice_port" \
 		-e ENV_PLAYWRIGHT_PORT="$playwright_port" \
 		-e ENV_SIGNAL_PORT="$signal_port" \
-		nextcloud sh /var/www/scripts/report-environment-ready --prepare
+		nextcloud sh /var/www/scripts/report-environment-ready
 }
 
 if [ "${HTTP_PORT+x}" = x ] || [ "${HTTPS_PORT+x}" = x ]; then
@@ -75,8 +75,8 @@ if [ "${HTTP_PORT+x}" = x ] || [ "${HTTPS_PORT+x}" = x ]; then
 		exit "$status"
 	fi
 	echo 'nginx started with explicit ports.'
-	if ! prepare_environment_banner "${HTTP_PORT:-80}" "${HTTPS_PORT:-443}"; then
-		echo 'Could not prepare environment banner.' >&2
+	if ! report_environment_ready "${HTTP_PORT:-80}" "${HTTPS_PORT:-443}"; then
+		echo 'Could not print environment banner.' >&2
 	fi
 	exit 0
 fi
@@ -95,8 +95,8 @@ while [ "$offset" -le 19 ]; do
 
 	if [ "$status" -eq 0 ]; then
 		echo "nginx started with HTTP ${http_port} / HTTPS ${https_port}."
-		if ! prepare_environment_banner "$http_port" "$https_port"; then
-			echo 'Could not prepare environment banner.' >&2
+		if ! report_environment_ready "$http_port" "$https_port"; then
+			echo 'Could not print environment banner.' >&2
 		fi
 		exit 0
 	fi
