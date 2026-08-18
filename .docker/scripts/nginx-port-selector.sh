@@ -60,7 +60,15 @@ report_environment_ready() {
 		-e ENV_EUROOFFICE_PORT="$eurooffice_port" \
 		-e ENV_PLAYWRIGHT_PORT="$playwright_port" \
 		-e ENV_SIGNAL_PORT="$signal_port" \
+		-e ENV_ADMIN_USER="$NEXTCLOUD_ADMIN_USER" \
+		-e ENV_ADMIN_PASSWORD="$NEXTCLOUD_ADMIN_PASSWORD" \
+		-e ENV_NEXTCLOUD_BRANCH="$VERSION_NEXTCLOUD" \
 		nextcloud sh /var/www/scripts/report-environment-ready
+}
+
+exit_successfully() {
+	echo '✅ Port selection complete. Exiting normally.'
+	exit 0
 }
 
 if [ "${HTTP_PORT+x}" = x ] || [ "${HTTPS_PORT+x}" = x ]; then
@@ -78,7 +86,7 @@ if [ "${HTTP_PORT+x}" = x ] || [ "${HTTPS_PORT+x}" = x ]; then
 	if ! report_environment_ready "${HTTP_PORT:-80}" "${HTTPS_PORT:-443}"; then
 		echo 'Could not print environment banner.' >&2
 	fi
-	exit 0
+	exit_successfully
 fi
 
 offset=0
@@ -98,7 +106,7 @@ while [ "$offset" -le 19 ]; do
 		if ! report_environment_ready "$http_port" "$https_port"; then
 			echo 'Could not print environment banner.' >&2
 		fi
-		exit 0
+		exit_successfully
 	fi
 
 	if ! printf '%s\n' "$output" | grep -Eiq \
