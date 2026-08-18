@@ -3,7 +3,7 @@
 set -eu
 
 compose_project() {
-	docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "$HOSTNAME"
+	docker inspect --format '{{ index .Config.Labels "com.docker.compose.project" }}' "$(hostname)"
 }
 
 project="$(compose_project)"
@@ -60,7 +60,7 @@ prepare_environment_banner() {
 		-e ENV_EUROOFFICE_PORT="$eurooffice_port" \
 		-e ENV_PLAYWRIGHT_PORT="$playwright_port" \
 		-e ENV_SIGNAL_PORT="$signal_port" \
-		nextcloud /usr/local/bin/report-environment-ready --prepare
+		nextcloud sh /var/www/scripts/report-environment-ready --prepare
 }
 
 if [ "${HTTP_PORT+x}" = x ] || [ "${HTTPS_PORT+x}" = x ]; then
