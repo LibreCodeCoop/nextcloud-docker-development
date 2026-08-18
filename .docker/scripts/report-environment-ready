@@ -1,0 +1,86 @@
+#!/bin/sh
+
+set -eu
+
+banner_file=/tmp/nextcloud-environment-ready
+fpm_marker=/tmp/nextcloud-fpm-started
+
+load_banner() {
+	[ -f "$banner_file" ] || return 1
+	# The file is created by this script from numeric Docker port mappings.
+	. "$banner_file"
+}
+
+url() {
+	port="$1"
+	base="$2"
+	if [ "$port" = "80" ] || [ "$port" = "443" ]; then
+		printf '%s' "$base"
+	else
+		printf '%s:%s' "$base" "$port"
+	fi
+}
+
+emit_banner() {
+	load_banner || return 1
+	http_port="${ENV_HTTP_PORT:-}"
+	https_port="${ENV_HTTPS_PORT:-}"
+
+	{
+	echo
+	echo '💙 Nextcloud development environment is ready!'
+	echo
+
+	[ -z "$http_port" ] || printf 'Nextcloud:  %s\n' "$(url "$http_port" http://localhost)"
+	[ -z "$https_port" ] || printf 'HTTPS:      %s\n' "$(url "$https_port" https://localhost)"
+	[ -z "${ENV_MAILPIT_PORT:-}" ] || printf 'Mailpit:    http://localhost:%s\n' "$ENV_MAILPIT_PORT"
+	[ -z "${ENV_EUROOFFICE_PORT:-}" ] || printf 'EuroOffice: http://localhost:%s\n' "$ENV_EUROOFFICE_PORT"
+	[ -z "${ENV_PLAYWRIGHT_PORT:-}" ] || printf 'Playwright: http://localhost:%s\n' "$ENV_PLAYWRIGHT_PORT"
+	[ -z "${ENV_SIGNAL_PORT:-}" ] || printf 'Signal:     http://localhost:%s\n' "$ENV_SIGNAL_PORT"
+	}
+}
+
+prepare_banner() {
+	temporary_file="${banner_file}.tmp.$$"
+	umask 077
+	{
+		printf 'ENV_HTTP_PORT=%s\n' "${ENV_HTTP_PORT:-}"
+		printf 'ENV_HTTPS_PORT=%s\n' "${ENV_HTTPS_PORT:-}"
+		printf 'ENV_MAILPIT_PORT=%s\n' "${ENV_MAILPIT_PORT:-}"
+		printf 'ENV_EUROOFFICE_PORT=%s\n' "${ENV_EUROOFFICE_PORT:-}"
+		printf 'ENV_PLAYWRIGHT_PORT=%s\n' "${ENV_PLAYWRIGHT_PORT:-}"
+		printf 'ENV_SIGNAL_PORT=%s\n' "${ENV_SIGNAL_PORT:-}"
+	} > "$temporary_file"
+	mv "$temporary_file" "$banner_file"
+
+	# On a repeated `docker compose up`, PHP-FPM is already PID 1.
+	if [ -f "$fpm_marker" ]; then
+		emit_banner > /proc/1/fd/2
+	fi
+}
+
+wait_and_emit() {
+	deadline=$(( $(date +%s) + 60 ))
+	while ! [ -f "$banner_file" ]; do
+		if [ "$(date +%s)" -ge "$deadline" ]; then
+			echo 'Environment banner data was not prepared; continuing without banner.' >&2
+			return 0
+		fi
+		sleep 1
+	done
+	emit_banner
+}
+
+case "${1:-}" in
+	--prepare)
+		prepare_banner
+		;;
+	--wait-and-emit)
+		wait_and_emit
+		touch "$fpm_marker"
+		;;
+	*)
+		echo "Usage: $0 --prepare|--wait-and-emit" >&2
+		exit 2
+		;;
+esac
