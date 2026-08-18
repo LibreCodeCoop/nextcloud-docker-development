@@ -146,6 +146,6 @@ exec busybox crond -f -l 0 -L /dev/stdout > /dev/null 2>&1 &
 runuser -u www-data -- php -f /var/www/html/cron.php
 
 # Start PHP-FPM
-/usr/local/bin/report-environment-ready --wait-and-emit
+sh /var/www/scripts/report-environment-ready --wait-and-emit
 echo "Starting PHP-FPM..."
 exec "$@"
