@@ -1,0 +1,9 @@
+FROM docker:27-cli
+
+RUN apk add --no-cache docker-cli-compose
+
+COPY scripts/nginx-port-selector.sh /usr/local/bin/nginx-port-selector.sh
+
+RUN chmod +x /usr/local/bin/nginx-port-selector.sh
+
+ENTRYPOINT ["/usr/local/bin/nginx-port-selector.sh"]

@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -eu
+
+wait_for_php_fpm() {
+	attempt=0
+	while [ "$attempt" -lt 100 ]; do
+		if php -r '
+			$socket = @fsockopen("127.0.0.1", 9000, $errno, $errstr, 0.1);
+			if ($socket === false) {
+				exit(1);
+			}
+			fclose($socket);
+		' >/dev/null 2>&1; then
+			return 0
+		fi
+		attempt=$((attempt + 1))
+		sleep 0.1
+	done
+	return 1
+}
+
+url() {
+	port="$1"
+	base="$2"
+	if [ "$port" = "80" ] || [ "$port" = "443" ]; then
+		printf '%s' "$base"
+	else
+		printf '%s:%s' "$base" "$port"
+	fi
+}
+
+emit_banner() {
+	{
+	printf '\n'
+	printf '┌─ 💙 Environment ready ─────────────────────\n'
+	printf '│\n'
+	[ -z "${ENV_HTTP_PORT:-}" ] || printf '│ %-16s %s\n' 'Nextcloud HTTP' "$(url "$ENV_HTTP_PORT" http://localhost)"
+	[ -z "${ENV_HTTPS_PORT:-}" ] || printf '│ %-16s %s\n' 'Nextcloud HTTPS' "$(url "$ENV_HTTPS_PORT" https://localhost)"
+	[ -z "${ENV_MAILPIT_PORT:-}" ] || printf '│ %-16s %s\n' 'Mailpit' "http://localhost:$ENV_MAILPIT_PORT"
+	[ -z "${ENV_EUROOFFICE_PORT:-}" ] || printf '│ %-16s %s\n' 'EuroOffice' "http://localhost:$ENV_EUROOFFICE_PORT"
+	[ -z "${ENV_PLAYWRIGHT_PORT:-}" ] || printf '│ %-16s %s\n' 'Playwright' "http://localhost:$ENV_PLAYWRIGHT_PORT"
+	[ -z "${ENV_SIGNAL_PORT:-}" ] || printf '│ %-16s %s\n' 'Signal' "http://localhost:$ENV_SIGNAL_PORT"
+	printf '│\n'
+	[ -z "${ENV_NEXTCLOUD_BRANCH:-}" ] || printf '│ %-16s %s\n' 'Nextcloud branch' "$ENV_NEXTCLOUD_BRANCH"
+	[ -z "${ENV_ADMIN_USER:-}" ] || printf '│ %-16s %s\n' 'Admin user' "$ENV_ADMIN_USER"
+	[ -z "${ENV_ADMIN_PASSWORD:-}" ] || printf '│ %-16s %s\n' 'Admin password' "$ENV_ADMIN_PASSWORD"
+	printf '│\n'
+	printf '└────────────────────────────────────────────\n'
+	} > /proc/1/fd/2
+}
+
+if ! wait_for_php_fpm; then
+	echo 'Could not confirm PHP-FPM readiness; skipping environment banner.' >&2
+	exit 0
+fi
+
+emit_banner

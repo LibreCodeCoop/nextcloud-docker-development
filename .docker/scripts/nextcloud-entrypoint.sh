@@ -146,5 +146,5 @@ exec busybox crond -f -l 0 -L /dev/stdout > /dev/null 2>&1 &
 runuser -u www-data -- php -f /var/www/html/cron.php
 
 # Start PHP-FPM
-echo "💙 Nextcloud is up!"
+echo "Starting PHP-FPM..."
 exec "$@"
