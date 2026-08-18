@@ -1,7 +1,0 @@
-ARG PHP_VERSION=83
-FROM ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION}:latest
-
-COPY scripts/report-environment-ready /usr/local/bin/report-environment-ready
-COPY scripts/nextcloud-entrypoint.sh /var/www/scripts/nextcloud-entrypoint.sh
-
-RUN chmod +x /usr/local/bin/report-environment-ready
