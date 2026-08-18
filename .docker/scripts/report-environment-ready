@@ -32,16 +32,17 @@ url() {
 
 emit_banner() {
 	{
-	echo
-	echo '💙 Nextcloud development environment is ready!'
-	echo
-
-	[ -z "${ENV_HTTP_PORT:-}" ] || printf 'Nextcloud HTTP:  %s\n' "$(url "$ENV_HTTP_PORT" http://localhost)"
-	[ -z "${ENV_HTTPS_PORT:-}" ] || printf 'Nextcloud HTTPS: %s\n' "$(url "$ENV_HTTPS_PORT" https://localhost)"
-	[ -z "${ENV_MAILPIT_PORT:-}" ] || printf 'Mailpit:    http://localhost:%s\n' "$ENV_MAILPIT_PORT"
-	[ -z "${ENV_EUROOFFICE_PORT:-}" ] || printf 'EuroOffice: http://localhost:%s\n' "$ENV_EUROOFFICE_PORT"
-	[ -z "${ENV_PLAYWRIGHT_PORT:-}" ] || printf 'Playwright: http://localhost:%s\n' "$ENV_PLAYWRIGHT_PORT"
-	[ -z "${ENV_SIGNAL_PORT:-}" ] || printf 'Signal:     http://localhost:%s\n' "$ENV_SIGNAL_PORT"
+	printf '\n'
+	printf '┌─ 💙 Environment ready ─────────────────────\n'
+	printf '│\n'
+	[ -z "${ENV_HTTP_PORT:-}" ] || printf '│ %-15s %s\n' 'Nextcloud HTTP' "$(url "$ENV_HTTP_PORT" http://localhost)"
+	[ -z "${ENV_HTTPS_PORT:-}" ] || printf '│ %-15s %s\n' 'Nextcloud HTTPS' "$(url "$ENV_HTTPS_PORT" https://localhost)"
+	[ -z "${ENV_MAILPIT_PORT:-}" ] || printf '│ %-15s %s\n' 'Mailpit' "http://localhost:$ENV_MAILPIT_PORT"
+	[ -z "${ENV_EUROOFFICE_PORT:-}" ] || printf '│ %-15s %s\n' 'EuroOffice' "http://localhost:$ENV_EUROOFFICE_PORT"
+	[ -z "${ENV_PLAYWRIGHT_PORT:-}" ] || printf '│ %-15s %s\n' 'Playwright' "http://localhost:$ENV_PLAYWRIGHT_PORT"
+	[ -z "${ENV_SIGNAL_PORT:-}" ] || printf '│ %-15s %s\n' 'Signal' "http://localhost:$ENV_SIGNAL_PORT"
+	printf '│\n'
+	printf '└────────────────────────────────────────────\n'
 	} > /proc/1/fd/2
 }
 
