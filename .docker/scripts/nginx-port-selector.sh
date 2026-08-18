@@ -39,13 +39,28 @@ start_nginx() {
 		compose up --detach --no-deps --scale nginx=1 nginx
 }
 
-report_urls() {
-	http_url="http://localhost"
-	https_url="https://localhost"
-	[ "$1" -eq 80 ] || http_url="${http_url}:$1"
-	[ "$2" -eq 443 ] || https_url="${https_url}:$2"
-	echo "Nextcloud: ${http_url}"
-	echo "HTTPS: ${https_url}"
+published_port() {
+	mapping="$(compose port "$1" "$2" 2>/dev/null || true)"
+	[ -n "$mapping" ] || return 0
+	printf '%s\n' "${mapping##*:}"
+}
+
+prepare_environment_banner() {
+	selector_http_port="$1"
+	selector_https_port="$2"
+	mailpit_port="$(published_port mailpit 8025)"
+	eurooffice_port="$(published_port eurooffice 80)"
+	playwright_port="$(published_port playwright 9323)"
+	signal_port="$(published_port signal-gateway 8080)"
+
+	compose exec -T \
+		-e ENV_HTTP_PORT="$selector_http_port" \
+		-e ENV_HTTPS_PORT="$selector_https_port" \
+		-e ENV_MAILPIT_PORT="$mailpit_port" \
+		-e ENV_EUROOFFICE_PORT="$eurooffice_port" \
+		-e ENV_PLAYWRIGHT_PORT="$playwright_port" \
+		-e ENV_SIGNAL_PORT="$signal_port" \
+		nextcloud /usr/local/bin/report-environment-ready --prepare
 }
 
 if [ "${HTTP_PORT+x}" = x ] || [ "${HTTPS_PORT+x}" = x ]; then
@@ -60,7 +75,9 @@ if [ "${HTTP_PORT+x}" = x ] || [ "${HTTPS_PORT+x}" = x ]; then
 		exit "$status"
 	fi
 	echo 'nginx started with explicit ports.'
-	report_urls "${HTTP_PORT:-80}" "${HTTPS_PORT:-443}"
+	if ! prepare_environment_banner "${HTTP_PORT:-80}" "${HTTPS_PORT:-443}"; then
+		echo 'Could not prepare environment banner.' >&2
+	fi
 	exit 0
 fi
 
@@ -78,7 +95,9 @@ while [ "$offset" -le 19 ]; do
 
 	if [ "$status" -eq 0 ]; then
 		echo "nginx started with HTTP ${http_port} / HTTPS ${https_port}."
-		report_urls "$http_port" "$https_port"
+		if ! prepare_environment_banner "$http_port" "$https_port"; then
+			echo 'Could not prepare environment banner.' >&2
+		fi
 		exit 0
 	fi
 
