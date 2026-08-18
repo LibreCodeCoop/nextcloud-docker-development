@@ -7,8 +7,29 @@ fpm_marker=/tmp/nextcloud-fpm-started
 
 load_banner() {
 	[ -f "$banner_file" ] || return 1
-	# The file is created by this script from numeric Docker port mappings.
-	. "$banner_file"
+	ENV_HTTP_PORT=''
+	ENV_HTTPS_PORT=''
+	ENV_MAILPIT_PORT=''
+	ENV_EUROOFFICE_PORT=''
+	ENV_PLAYWRIGHT_PORT=''
+	ENV_SIGNAL_PORT=''
+	while IFS='=' read -r name value; do
+		case "$name" in
+			ENV_HTTP_PORT|ENV_HTTPS_PORT|ENV_MAILPIT_PORT|ENV_EUROOFFICE_PORT|ENV_PLAYWRIGHT_PORT|ENV_SIGNAL_PORT)
+				case "$value" in
+					''|*[!0-9]*) [ -z "$value" ] || return 1 ;;
+				esac
+				case "$name" in
+					ENV_HTTP_PORT) ENV_HTTP_PORT="$value" ;;
+					ENV_HTTPS_PORT) ENV_HTTPS_PORT="$value" ;;
+					ENV_MAILPIT_PORT) ENV_MAILPIT_PORT="$value" ;;
+					ENV_EUROOFFICE_PORT) ENV_EUROOFFICE_PORT="$value" ;;
+					ENV_PLAYWRIGHT_PORT) ENV_PLAYWRIGHT_PORT="$value" ;;
+					ENV_SIGNAL_PORT) ENV_SIGNAL_PORT="$value" ;;
+				esac
+				;;
+		esac
+	done < "$banner_file"
 }
 
 url() {
