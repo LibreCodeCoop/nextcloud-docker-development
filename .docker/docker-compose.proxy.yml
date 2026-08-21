@@ -12,7 +12,6 @@ services:
       - ${DOCKER_SOCKET:-/var/run/docker.sock}:/tmp/docker.sock:ro
       - librecode-dev-proxy-vhost:/etc/nginx/vhost.d
       - librecode-dev-proxy-conf:/etc/nginx/conf.d
-      - ./.docker/nginx-proxy/localhost.conf:/etc/nginx/conf.d/librecode-localhost.conf:ro
       - librecode-dev-proxy-log:/etc/nginx/log
       - librecode-dev-proxy-certs:/etc/nginx/certs:ro
       - librecode-dev-proxy-html:/usr/share/nginx/html
