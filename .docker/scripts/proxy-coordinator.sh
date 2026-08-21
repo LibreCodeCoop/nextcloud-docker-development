@@ -115,33 +115,22 @@ ensure_ports_available_or_proxy() {
 }
 
 start_proxy() {
-	set +e
-	output="$(proxy_compose up --detach 2>&1)"
-	status=$?
-	set -e
-	printf '%s\n' "$output"
-	if [ "$status" -eq 0 ]; then
+	if proxy_compose up --detach; then
 		return 0
 	fi
 
-	# A concurrent checkout may have created the proxy while this one was starting.
-	if [ -n "$(compatible_proxy_container || true)" ] && is_compatible_proxy_port_owner 80 && is_compatible_proxy_port_owner 443; then
+	if proxy_is_ready; then
 		return 0
 	fi
 
-	case "$output" in
-		*'port is already allocated'*|*'address already in use'*|*'Bind for'*|*'listen tcp'*'bind'*)
-			if container_for_published_port 80 | grep -q .; then
-				show_conflict 80
-			else
-				show_conflict 443
-			fi
-			;;
-		*)
-			printf '%s\n' "$output" >&2
-			;;
-	esac
-	exit "$status"
+	for port in 80 443; do
+		if port_is_in_use "$port"; then
+			show_conflict "$port"
+			exit 1
+		fi
+	done
+
+	exit 1
 }
 
 connect_to_proxy_network() {
@@ -167,8 +156,8 @@ connect_running_service_to_proxy_network() {
 	connect_to_proxy_network "$service"
 }
 
-service_is_running() {
 	compose ps --status running --services |
+service_is_running() {
 		grep -qx "$1"
 }
 
