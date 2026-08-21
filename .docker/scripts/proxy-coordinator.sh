@@ -39,12 +39,18 @@ proxy_compose() {
 
 container_for_published_port() {
 	port="$1"
+
 	for container in $(docker ps --filter "publish=$port" --format '{{.ID}}'); do
 		[ -n "$container" ] || continue
-		name="$(docker inspect --format '{{ trimPrefix "/" .Name }}' "$container")"
+
+		name="$(docker inspect --format '{{ .Name }}' "$container")"
+		name="${name#/}"
+
 		image="$(docker inspect --format '{{ .Config.Image }}' "$container")"
 		compatible="$(docker inspect --format '{{ index .Config.Labels "coop.librecode.dev-proxy" }}' "$container")"
-		printf '%s\t%s\t%s\t%s\n' "$container" "$name" "$image" "$compatible"
+
+		printf '%s\t%s\t%s\t%s\n' \
+			"$container" "$name" "$image" "$compatible"
 	done
 }
 
@@ -140,21 +146,30 @@ start_proxy() {
 
 connect_to_proxy_network() {
 	service="$1"
+
 	container="$(compose ps -q "$service" 2>/dev/null || true)"
 	[ -n "$container" ] || return 0
-	if docker inspect --format '{{ json .NetworkSettings.Networks }}' "$container" | grep -q "\"$proxy_network\""; then
+
+	if docker inspect \
+		--format '{{ json .NetworkSettings.Networks }}' \
+		"$container" |
+		grep -q "\"$proxy_network\""; then
 		return 0
 	fi
-	docker network connect "$proxy_network" "$container" 2>/dev/null || true
+
+	docker network connect "$proxy_network" "$container"
+}
+
+connect_running_service_to_proxy_network() {
+	service="$1"
+
+	service_is_running "$service" || return 0
+	connect_to_proxy_network "$service"
 }
 
 service_is_running() {
-	service="$1"
-
-	container="$(compose ps -q "$service" 2>/dev/null || true)"
-	[ -n "$container" ] || return 1
-
-	[ "$(docker inspect --format '{{.State.Running}}' "$container" 2>/dev/null || true)" = "true" ]
+	compose ps --status running --services |
+		grep -qx "$1"
 }
 
 report_environment_ready() {
@@ -205,11 +220,11 @@ else
 	proxy_state=started
 fi
 
-connect_to_proxy_network nginx
-connect_to_proxy_network mailpit
-connect_to_proxy_network eurooffice
-connect_to_proxy_network playwright
-connect_to_proxy_network signal-gateway
+connect_running_service_to_proxy_network nginx
+connect_running_service_to_proxy_network mailpit
+connect_running_service_to_proxy_network eurooffice
+connect_running_service_to_proxy_network playwright
+connect_running_service_to_proxy_network signal-gateway
 
 if ! report_environment_ready; then
 	echo 'Could not print environment banner.' >&2
