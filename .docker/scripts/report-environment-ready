@@ -3,8 +3,7 @@
 set -eu
 
 wait_for_php_fpm() {
-	attempt=0
-	while [ "$attempt" -lt 100 ]; do
+	while :; do
 		if php -r '
 			$socket = @fsockopen("127.0.0.1", 9000, $errno, $errstr, 0.1);
 			if ($socket === false) {
@@ -14,10 +13,9 @@ wait_for_php_fpm() {
 		' >/dev/null 2>&1; then
 			return 0
 		fi
-		attempt=$((attempt + 1))
-		sleep 0.1
+
+		sleep 0.2
 	done
-	return 1
 }
 
 emit_banner() {
