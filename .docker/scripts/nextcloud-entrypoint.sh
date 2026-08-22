@@ -35,7 +35,6 @@ fi
 # Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     echo "⌛️ Starting installation ..."
-    chown -R www-data:www-data .
     if [[ ${DB_HOST} == 'mysql' ]]; then
         occ maintenance:install --verbose --database="${DB_HOST}" --database-name="${MYSQL_DATABASE}" --database-host="${DB_HOST}" --database-port= --database-user="${MYSQL_USER}" --database-pass="${MYSQL_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
         install_cmd_status=$?
