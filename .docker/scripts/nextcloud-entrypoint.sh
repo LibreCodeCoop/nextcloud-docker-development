@@ -107,6 +107,7 @@ EOF
     if [ ! -d "apps-extra/hmr_enabler" ]; then
         echo "⌛️ Installing hmr_enabler app to be possible use Vue Developer Tools"
         runuser -u www-data -- git clone --progress --single-branch --depth 1 https://github.com/nextcloud/hmr_enabler apps-extra/hmr_enabler
+        runuser -u www-data -- composer install --working-dir=apps-extra/hmr_enabler
         runuser -u www-data -- occ app:enable hmr_enabler
     fi
 
