@@ -6,12 +6,13 @@ groupmod --non-unique --gid "${HOST_GID}" www-data
 
 # Clone Nextcloud repository, if needed
 if [ ! -d ".git" ]; then
-    git config --global --add safe.directory /var/www/html
-    git init
-    git remote add origin https://github.com/nextcloud/server
-    git fetch --depth=1 origin "${VERSION_NEXTCLOUD}"
-    git checkout "${VERSION_NEXTCLOUD}"
-    git submodule update --init --recursive
+    chown -R www-data:www-data .
+    runuser -u www-data -- git config --global --add safe.directory /var/www/html
+    runuser -u www-data -- git init
+    runuser -u www-data -- git remote add origin https://github.com/nextcloud/server
+    runuser -u www-data -- git fetch --depth=1 origin "${VERSION_NEXTCLOUD}"
+    runuser -u www-data -- git checkout "${VERSION_NEXTCLOUD}"
+    runuser -u www-data -- git submodule update --init --recursive
 fi
 
 mkdir -p data
