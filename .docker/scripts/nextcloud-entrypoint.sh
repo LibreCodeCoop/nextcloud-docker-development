@@ -15,10 +15,11 @@ if [ ! -d ".git" ]; then
     runuser -u www-data -- git submodule update --init --recursive
 fi
 
-mkdir -p data
-mkdir -p apps-writable
-mkdir -p config
-mkdir -p apps-extra
+install -d -o www-data -g www-data \
+    data \
+    apps-writable \
+    config \
+    apps-extra
 
 # Wait for database
 php /var/www/scripts/wait-for-db.php
