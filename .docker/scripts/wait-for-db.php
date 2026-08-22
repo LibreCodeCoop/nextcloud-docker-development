@@ -17,7 +17,7 @@ function dbIsUp(string $dbName): bool {
             return true;
         }
     } catch(Exception $e) {
-        echo "⛔ Unable to conect to $dbName server: " . $e->getMessage()."\n";
+        echo "⌛ Database $dbName not ready yet\n";
         return false;
     }
     return true;

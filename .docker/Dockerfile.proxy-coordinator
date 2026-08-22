@@ -1,0 +1,9 @@
+FROM docker:27-cli
+
+RUN apk add --no-cache docker-cli-compose
+
+COPY scripts/proxy-coordinator.sh /usr/local/bin/proxy-coordinator.sh
+
+RUN chmod +x /usr/local/bin/proxy-coordinator.sh
+
+ENTRYPOINT ["/usr/local/bin/proxy-coordinator.sh"]
