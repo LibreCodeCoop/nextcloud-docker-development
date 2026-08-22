@@ -140,6 +140,13 @@ if ! occ status | grep -q 'installed: true'; then
     exit 1
 fi
 
+if [[ -n "${NEXTCLOUD_HOST:-}" ]]; then
+    echo "🔧 Setting trusted domain and overwritehost to ${NEXTCLOUD_HOST} ..."
+    occ config:system:set trusted_domains 1 --value "${NEXTCLOUD_HOST}"
+    occ config:system:set overwritehost --value "${NEXTCLOUD_HOST}"
+    occ config:system:set overwriteprotocol --value https
+fi
+
 # Run cron
 echo "📅 Running cron for the first time ..."
 exec busybox crond -f -l 0 -L /dev/stdout > /dev/null 2>&1 &

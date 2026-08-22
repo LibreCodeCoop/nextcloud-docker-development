@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LibreCode Development Proxy</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: Canvas;
+      color: CanvasText;
+    }
+
+    main {
+      width: min(680px, calc(100% - 48px));
+      padding: 32px;
+      border: 1px solid color-mix(in srgb, CanvasText 20%, transparent);
+      border-radius: 12px;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.5rem;
+    }
+
+    code {
+      padding: 0.15em 0.4em;
+      border-radius: 4px;
+      background: color-mix(in srgb, CanvasText 10%, transparent);
+    }
+
+    .status {
+      margin-top: 24px;
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>💙 LibreCode Development Proxy</h1>
+
+    <p>The shared development proxy is running.</p>
+
+    <p>
+      Open your environment using the URL shown by
+      <code>docker compose up</code>.
+    </p>
+
+    <p>
+      The hostname is usually based on the project directory name:
+    </p>
+
+    <p>
+      <code>php83-master/</code>
+      → <code>https://php83-master.localhost</code>
+    </p>
+
+    <p class="status">
+      Requests to <code>*.localhost</code> are routed automatically.
+    </p>
+  </main>
+</body>
+</html>

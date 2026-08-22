@@ -1,0 +1,51 @@
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy:1.11-alpine
+    container_name: librecode-dev-proxy
+    restart: unless-stopped
+    labels:
+      coop.librecode.dev-proxy: "true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/tmp/docker.sock:ro
+      - librecode-dev-proxy-vhost:/etc/nginx/vhost.d
+      - librecode-dev-proxy-conf:/etc/nginx/conf.d
+      - librecode-dev-proxy-log:/etc/nginx/log
+      - librecode-dev-proxy-certs:/etc/nginx/certs:ro
+      - librecode-dev-proxy-html:/usr/share/nginx/html
+    environment:
+      - ENABLE_IPV6=true
+    networks:
+      - proxy
+
+  ssl-companion:
+    image: sebastienheyd/self-signed-proxy-companion:latest
+    container_name: librecode-dev-proxy-ssl-companion
+    restart: unless-stopped
+    labels:
+      coop.librecode.dev-proxy-companion: "true"
+    volumes:
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
+      - librecode-dev-proxy-certs:/etc/nginx/certs:rw
+    environment:
+      - NGINX_PROXY_CONTAINER=librecode-dev-proxy
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    name: librecode-dev-proxy
+
+volumes:
+  librecode-dev-proxy-vhost:
+    name: librecode-dev-proxy-vhost
+  librecode-dev-proxy-conf:
+    name: librecode-dev-proxy-conf
+  librecode-dev-proxy-log:
+    name: librecode-dev-proxy-log
+  librecode-dev-proxy-certs:
+    name: librecode-dev-proxy-certs
+  librecode-dev-proxy-html:
+    name: librecode-dev-proxy-html
