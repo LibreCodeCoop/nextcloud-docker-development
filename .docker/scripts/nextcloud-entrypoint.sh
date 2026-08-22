@@ -105,31 +105,20 @@ EOF
 
     if [ ! -d "apps-extra/hmr_enabler" ]; then
         echo "⌛️ Installing hmr_enabler app to be possible use Vue Developer Tools"
-        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/hmr_enabler apps-extra/hmr_enabler
-        composer -d apps-extra/hmr_enabler/ i
-        occ app:enable hmr_enabler
+        runuser -u www-data -- git clone --progress --single-branch --depth 1 https://github.com/nextcloud/hmr_enabler apps-extra/hmr_enabler
+        runuser -u www-data -- occ app:enable hmr_enabler
     fi
 
     if [ ! -d "apps-extra/viewer" ]; then
         echo "⌛️ Installing viewer app..."
-        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/viewer apps-extra/viewer
-        cd apps-extra/viewer || exit
-        composer i
-        npm ci
-        npm run build
-        cd ../../ || exit
-        occ app:enable viewer
+        runuser -u www-data -- git clone --progress --single-branch --depth 1 https://github.com/nextcloud/viewer apps-extra/viewer
+        runuser -u www-data -- occ app:enable viewer
     fi
 
     if [ ! -d "apps-extra/files_pdfviewer" ]; then
         echo "⌛️ Installing files_pdfviewer app..."
-        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/files_pdfviewer apps-extra/files_pdfviewer
-        cd apps-extra/files_pdfviewer || exit
-        composer i
-        npm ci
-        npm run build
-        cd ../../ || exit
-        occ app:enable files_pdfviewer
+        runuser -u www-data -- git clone --progress --single-branch --depth 1 https://github.com/nextcloud/files_pdfviewer apps-extra/files_pdfviewer
+        runuser -u www-data -- occ app:enable files_pdfviewer
     fi
 
     echo "🥳 Setup completed !!!"
