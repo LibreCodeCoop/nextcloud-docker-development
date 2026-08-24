@@ -6,18 +6,20 @@ groupmod --non-unique --gid "${HOST_GID}" www-data
 
 # Clone Nextcloud repository, if needed
 if [ ! -d ".git" ]; then
-    git config --global --add safe.directory /var/www/html
-    git init
-    git remote add origin https://github.com/nextcloud/server
-    git fetch --depth=1 origin "${VERSION_NEXTCLOUD}"
-    git checkout "${VERSION_NEXTCLOUD}"
-    git submodule update --init --recursive
+    chown -R www-data:www-data .
+    runuser -u www-data -- git config --global --add safe.directory /var/www/html
+    runuser -u www-data -- git init
+    runuser -u www-data -- git remote add origin https://github.com/nextcloud/server
+    runuser -u www-data -- git fetch --depth=1 origin "${VERSION_NEXTCLOUD}"
+    runuser -u www-data -- git checkout "${VERSION_NEXTCLOUD}"
+    runuser -u www-data -- git submodule update --init --recursive
 fi
 
-mkdir -p data
-mkdir -p apps-writable
-mkdir -p config
-mkdir -p apps-extra
+install -d -o www-data -g www-data \
+    data \
+    apps-writable \
+    config \
+    apps-extra
 
 # Wait for database
 php /var/www/scripts/wait-for-db.php
@@ -33,7 +35,6 @@ fi
 # Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     echo "⌛️ Starting installation ..."
-    chown -R www-data:www-data .
     if [[ ${DB_HOST} == 'mysql' ]]; then
         occ maintenance:install --verbose --database="${DB_HOST}" --database-name="${MYSQL_DATABASE}" --database-host="${DB_HOST}" --database-port= --database-user="${MYSQL_USER}" --database-pass="${MYSQL_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
         install_cmd_status=$?
@@ -105,31 +106,21 @@ EOF
 
     if [ ! -d "apps-extra/hmr_enabler" ]; then
         echo "⌛️ Installing hmr_enabler app to be possible use Vue Developer Tools"
-        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/hmr_enabler apps-extra/hmr_enabler
-        composer -d apps-extra/hmr_enabler/ i
-        occ app:enable hmr_enabler
+        runuser -u www-data -- git clone --progress --single-branch --depth 1 https://github.com/nextcloud/hmr_enabler apps-extra/hmr_enabler
+        runuser -u www-data -- composer install --working-dir=apps-extra/hmr_enabler
+        runuser -u www-data -- occ app:enable hmr_enabler
     fi
 
     if [ ! -d "apps-extra/viewer" ]; then
         echo "⌛️ Installing viewer app..."
-        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/viewer apps-extra/viewer
-        cd apps-extra/viewer || exit
-        composer i
-        npm ci
-        npm run build
-        cd ../../ || exit
-        occ app:enable viewer
+        runuser -u www-data -- git clone --progress --single-branch --depth 1 https://github.com/nextcloud/viewer apps-extra/viewer
+        runuser -u www-data -- occ app:enable viewer
     fi
 
     if [ ! -d "apps-extra/files_pdfviewer" ]; then
         echo "⌛️ Installing files_pdfviewer app..."
-        git clone --progress --single-branch --depth 1 https://github.com/nextcloud/files_pdfviewer apps-extra/files_pdfviewer
-        cd apps-extra/files_pdfviewer || exit
-        composer i
-        npm ci
-        npm run build
-        cd ../../ || exit
-        occ app:enable files_pdfviewer
+        runuser -u www-data -- git clone --progress --single-branch --depth 1 https://github.com/nextcloud/files_pdfviewer apps-extra/files_pdfviewer
+        runuser -u www-data -- occ app:enable files_pdfviewer
     fi
 
     echo "🥳 Setup completed !!!"
