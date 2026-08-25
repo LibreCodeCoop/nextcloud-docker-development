@@ -23,6 +23,13 @@ jobs:
           - php81
           - php82
           - php83
+        include:
+          - container: php81
+            version: '8.1'
+          - container: php82
+            version: '8.2'
+          - container: php83
+            version: '8.3'
     permissions:
       packages: write
       contents: read
@@ -77,6 +84,8 @@ jobs:
           tags: |
             ghcr.io/librecodecoop/nextcloud-dev-${{ matrix.container }}:${{ github.sha }}
             ghcr.io/librecodecoop/nextcloud-dev-${{ matrix.container }}:latest
+            ghcr.io/librecodecoop/nextcloud-dev:${{ matrix.version }}
+            ghcr.io/librecodecoop/nextcloud-dev:${{ matrix.version }}-${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
       - name: Move cache
