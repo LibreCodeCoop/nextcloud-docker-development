@@ -1,1 +1,2 @@
-return 404;
+root /usr/share/nginx/html;
+try_files /index.html =404;
