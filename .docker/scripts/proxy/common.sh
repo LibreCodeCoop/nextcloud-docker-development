@@ -1,14 +1,28 @@
 #!/bin/sh
 
-# This module defines and consumes globals shared by the sourced proxy modules.
-# shellcheck disable=SC2034,SC2154
+proxy_project_name() {
+	printf '%s\n' "${PROXY_PROJECT:-librecode-dev-proxy}"
+}
 
-proxy_project=${PROXY_PROJECT:-librecode-dev-proxy}
-proxy_network=${PROXY_NETWORK:-librecode-dev-proxy}
-proxy_label=${PROXY_LABEL:-coop.librecode.dev-proxy=true}
-proxy_client_label=${PROXY_CLIENT_LABEL:-coop.librecode.dev-proxy-client=true}
-proxy_assets_volume=${PROXY_ASSETS_VOLUME:-librecode-dev-proxy-assets}
-proxy_vhost_volume=${PROXY_VHOST_VOLUME:-librecode-dev-proxy-vhost}
+proxy_network_name() {
+	printf '%s\n' "${PROXY_NETWORK:-librecode-dev-proxy}"
+}
+
+proxy_container_label() {
+	printf '%s\n' "${PROXY_LABEL:-coop.librecode.dev-proxy=true}"
+}
+
+proxy_client_label() {
+	printf '%s\n' "${PROXY_CLIENT_LABEL:-coop.librecode.dev-proxy-client=true}"
+}
+
+proxy_assets_volume_name() {
+	printf '%s\n' "${PROXY_ASSETS_VOLUME:-librecode-dev-proxy-assets}"
+}
+
+proxy_vhost_volume_name() {
+	printf '%s\n' "${PROXY_VHOST_VOLUME:-librecode-dev-proxy-vhost}"
+}
 
 Docker() {
 	docker "$@"
@@ -36,16 +50,16 @@ container_networks() {
 
 compose() {
 	Docker compose \
-		--project-name "$project" \
-		--project-directory "$PROJECT_DIR" \
-		--file "${PROJECT_COMPOSE_FILE:-$PROJECT_DIR/docker-compose.yml}" \
+		--project-name "${PROJECT_NAME:-}" \
+		--project-directory "${PROJECT_DIR:-}" \
+		--file "${PROJECT_COMPOSE_FILE:-${PROJECT_DIR:-}/docker-compose.yml}" \
 		"$@"
 }
 
 proxy_compose() {
 	Docker compose \
-		--project-name "$proxy_project" \
-		--project-directory "$PROJECT_DIR" \
-		--file "${PROXY_COMPOSE_FILE:-$PROJECT_DIR/.docker/docker-compose.proxy.yml}" \
+		--project-name "$(proxy_project_name)" \
+		--project-directory "${PROJECT_DIR:-}" \
+		--file "${PROXY_COMPOSE_FILE:-${PROJECT_DIR:-}/.docker/docker-compose.proxy.yml}" \
 		"$@"
 }
