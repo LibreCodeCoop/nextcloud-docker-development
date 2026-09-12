@@ -34,6 +34,12 @@ container_project() {
 		"$1" 2>/dev/null || true
 }
 
+container_image() {
+	Docker inspect \
+		--format '{{ .Config.Image }}' \
+		"$1" 2>/dev/null || true
+}
+
 container_virtual_host() {
 	Docker inspect \
 		--format '{{range .Config.Env}}{{println .}}{{end}}' \
