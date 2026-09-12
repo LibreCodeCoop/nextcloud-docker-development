@@ -1,0 +1,6 @@
+root /usr/share/nginx/html;
+error_page 404 =404 /index.html;
+
+location = /index.html {
+    internal;
+}
