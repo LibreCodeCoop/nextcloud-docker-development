@@ -81,6 +81,12 @@ wait_for_https_status() {
 
 	wait_for_running librecode-dev-proxy
 	wait_for_running librecode-dev-proxy-ssl-companion
+
+	http_host_ip="$(docker inspect --format '{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostIp}}' librecode-dev-proxy)"
+	https_host_ip="$(docker inspect --format '{{(index (index .NetworkSettings.Ports "443/tcp") 0).HostIp}}' librecode-dev-proxy)"
+	[ "$http_host_ip" = "127.0.0.1" ]
+	[ "$https_host_ip" = "127.0.0.1" ]
+
 	wait_for_https_status localhost 200
 	grep -q 'LibreCode Nextcloud Development Environment' "$BODY"
 	grep -q 'Environment checks' "$BODY"
@@ -98,6 +104,10 @@ wait_for_https_status() {
 
 	wait_for_https_status something-wrong.localhost 404
 	grep -q 'Environment not found' "$BODY"
+
+	wait_for_https_path_status something-wrong.localhost /runtime.json 404
+	! grep -q '"docker":"' "$BODY"
+	! grep -q '"runc":"' "$BODY"
 
 	compose_test proxytesta stop
 
