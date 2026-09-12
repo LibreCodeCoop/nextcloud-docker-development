@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# Globals are provided by common.sh before this module is sourced.
-# shellcheck disable=SC2154
-
 runtime_version() {
 	component="$1"
 
@@ -23,20 +20,19 @@ version_at_most() {
 	version="${version%%-*}"
 	maximum="${maximum%%-*}"
 
-	old_ifs="$IFS"
-	IFS=.
-	# Intentional field splitting turns semantic versions into components.
-	# shellcheck disable=SC2086
-	set -- $version
-	version_major="${1:-0}"
-	version_minor="${2:-0}"
-	version_patch="${3:-0}"
-	# shellcheck disable=SC2086
-	set -- $maximum
-	maximum_major="${1:-0}"
-	maximum_minor="${2:-0}"
-	maximum_patch="${3:-0}"
-	IFS="$old_ifs"
+	IFS=. read -r version_major version_minor version_patch <<EOF
+$version
+EOF
+	IFS=. read -r maximum_major maximum_minor maximum_patch <<EOF
+$maximum
+EOF
+
+	version_major="${version_major:-0}"
+	version_minor="${version_minor:-0}"
+	version_patch="${version_patch:-0}"
+	maximum_major="${maximum_major:-0}"
+	maximum_minor="${maximum_minor:-0}"
+	maximum_patch="${maximum_patch:-0}"
 
 	[ "$version_major" -lt "$maximum_major" ] && return 0
 	[ "$version_major" -gt "$maximum_major" ] && return 1
