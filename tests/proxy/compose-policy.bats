@@ -46,13 +46,13 @@ setup() {
 
 	run env MYSQL_IP_BIND=0.0.0.0 docker compose --file "$database_compose" config
 	[ "$status" -eq 0 ]
-	printf '%s\n' "$output" | grep -A5 'target: 3306' | grep -q 'host_ip: 0.0.0.0'
-	printf '%s\n' "$output" | grep -A5 'target: 5432' | grep -q 'host_ip: 127.0.0.1'
+	printf '%s\n' "$output" | grep -B5 -A5 'target: 3306' | grep -q 'host_ip: 0.0.0.0'
+	printf '%s\n' "$output" | grep -B5 -A5 'target: 5432' | grep -q 'host_ip: 127.0.0.1'
 
 	run env POSTGRES_IP_BIND=0.0.0.0 docker compose --file "$database_compose" config
 	[ "$status" -eq 0 ]
-	printf '%s\n' "$output" | grep -A5 'target: 3306' | grep -q 'host_ip: 127.0.0.1'
-	printf '%s\n' "$output" | grep -A5 'target: 5432' | grep -q 'host_ip: 0.0.0.0'
+	printf '%s\n' "$output" | grep -B5 -A5 'target: 3306' | grep -q 'host_ip: 127.0.0.1'
+	printf '%s\n' "$output" | grep -B5 -A5 'target: 5432' | grep -q 'host_ip: 0.0.0.0'
 }
 
 @test "docker socket mounts stay limited to proxy infrastructure" {
