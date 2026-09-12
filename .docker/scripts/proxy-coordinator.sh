@@ -234,6 +234,7 @@ compose config --quiet
 install_proxy_assets
 
 if proxy_is_ready; then
+	proxy_compose up --detach
 	proxy_state=reused
 else
 	ensure_ports_available
