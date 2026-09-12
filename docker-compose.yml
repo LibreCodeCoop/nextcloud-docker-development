@@ -76,7 +76,7 @@ services:
     environment:
       - PROJECT_DIR=${PWD}
       - DOCKER_SOCKET=${DOCKER_SOCKET:-/var/run/docker.sock}
-      - IP_BIND=${IP_BIND:-127.0.0.1}
+      - PROXY_IP_BIND=${PROXY_IP_BIND:-127.0.0.1}
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-admin}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD:-admin}
       - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-master}
