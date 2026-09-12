@@ -65,8 +65,10 @@ setup() {
 }
 
 @test "last lease stops the shared proxy with bounded timeout" {
-	proxy_lease_acquired=true
 	PROXY_STOP_TIMEOUT_SECONDS=7
+	container_networks() {
+		printf '{"%s":{}}\n' "$proxy_network"
+	}
 	proxy_is_used_by_another_environment() {
 		return 1
 	}
@@ -80,11 +82,14 @@ setup() {
 	run release_proxy_if_unused
 
 	[ "$status" -eq 0 ]
+	grep -q "^docker network disconnect $proxy_network $coordinator_container$" "$TEST_LOG"
 	grep -q '^proxy-compose down --timeout 7 --remove-orphans$' "$TEST_LOG"
 }
 
 @test "another lease prevents proxy shutdown" {
-	proxy_lease_acquired=true
+	container_networks() {
+		printf '{"%s":{}}\n' "$proxy_network"
+	}
 	proxy_is_used_by_another_environment() {
 		return 0
 	}
@@ -98,7 +103,22 @@ setup() {
 	run release_proxy_if_unused
 
 	[ "$status" -eq 0 ]
+	grep -q "^docker network disconnect $proxy_network $coordinator_container$" "$TEST_LOG"
 	! grep -q '^proxy-compose down' "$TEST_LOG"
+}
+
+@test "release is safe when compose already disconnected the coordinator" {
+	container_networks() {
+		printf '{}\n'
+	}
+	Docker() {
+		printf 'docker %s\n' "$*" >> "$TEST_LOG"
+	}
+
+	run release_proxy_lease
+
+	[ "$status" -eq 0 ]
+	! grep -q '^docker network disconnect' "$TEST_LOG"
 }
 
 @test "acquiring a lease connects the coordinator only when needed" {
@@ -112,5 +132,4 @@ setup() {
 	acquire_proxy_lease
 
 	grep -q "^docker network connect $proxy_network $coordinator_container$" "$TEST_LOG"
-	[ "$proxy_lease_acquired" = true ]
 }
