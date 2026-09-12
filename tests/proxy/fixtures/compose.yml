@@ -10,6 +10,7 @@ services:
 
   proxy-coordinator:
     image: docker:29-cli
+    init: true
     entrypoint: ["/bin/sh", "/project/.docker/scripts/proxy-coordinator.sh"]
     labels:
       coop.librecode.dev-proxy-client: "true"
