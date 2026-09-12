@@ -39,6 +39,7 @@ services:
 networks:
   proxy:
     name: librecode-dev-proxy
+    external: true
 
 volumes:
   librecode-dev-proxy-vhost:
