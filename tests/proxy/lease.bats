@@ -64,8 +64,9 @@ setup() {
 	[ "$status" -eq 0 ]
 }
 
-@test "last lease stops the shared proxy" {
+@test "last lease stops the shared proxy with bounded timeout" {
 	proxy_lease_acquired=true
+	PROXY_STOP_TIMEOUT_SECONDS=7
 	proxy_is_used_by_another_environment() {
 		return 1
 	}
@@ -79,7 +80,7 @@ setup() {
 	run release_proxy_if_unused
 
 	[ "$status" -eq 0 ]
-	grep -q '^proxy-compose down --remove-orphans$' "$TEST_LOG"
+	grep -q '^proxy-compose down --timeout 7 --remove-orphans$' "$TEST_LOG"
 }
 
 @test "another lease prevents proxy shutdown" {
