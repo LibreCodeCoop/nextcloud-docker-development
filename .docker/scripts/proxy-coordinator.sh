@@ -10,10 +10,12 @@ release_marker=/tmp/librecode-proxy-lease-released
 . "$proxy_lib_dir/common.sh"
 
 coordinator_container="$(hostname)"
-project="$(container_project "$coordinator_container")"
+PROJECT_NAME="$(container_project "$coordinator_container")"
+export PROJECT_NAME
 
-# These modules share the context initialized above. Keep the source directives
-# in sync with the runtime paths so ShellCheck can analyze the complete graph.
+# These modules share only exported environment and common.sh accessors.
+# Keep the source directives in sync with the runtime paths so ShellCheck can
+# analyze the complete dependency graph without file-wide suppressions.
 # shellcheck source=proxy/infrastructure.sh
 . "$proxy_lib_dir/infrastructure.sh"
 # shellcheck source=proxy/assets.sh
@@ -26,7 +28,7 @@ project="$(container_project "$coordinator_container")"
 . "$proxy_lib_dir/lease.sh"
 
 validate_environment() {
-	if [ -z "$project" ]; then
+	if [ -z "$PROJECT_NAME" ]; then
 		echo 'Could not determine the Compose project from the coordinator container.' >&2
 		return 1
 	fi
@@ -36,7 +38,7 @@ validate_environment() {
 		return 1
 	fi
 
-	echo "Validating Compose project ${project} at ${PROJECT_DIR}."
+	echo "Validating Compose project ${PROJECT_NAME} at ${PROJECT_DIR}."
 	compose config --quiet
 }
 
