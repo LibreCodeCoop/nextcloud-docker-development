@@ -4,6 +4,8 @@ set -eu
 
 html_dir="${HTML_DIR:-/html}"
 output="$html_dir/index.html"
+proxy_network="${PROXY_NETWORK:-librecode-dev-proxy}"
+proxy_project="${PROXY_PROJECT:-librecode-dev-proxy}"
 
 html_escape() {
 	printf '%s' "$1" |
@@ -39,17 +41,9 @@ service_title() {
 }
 
 active_hosts() {
-	docker ps --filter network=librecode-dev-proxy --format '{{.ID}}' |
+	docker ps --filter "network=$proxy_network" --format '{{.ID}}' |
 	while IFS= read -r container; do
 		[ -n "$container" ] || continue
-
-		virtual_hosts="$(docker inspect \
-			--format '{{range .Config.Env}}{{println .}}{{end}}' \
-			"$container" |
-			sed -n 's/^VIRTUAL_HOST=//p' |
-			head -n 1)"
-
-		[ -n "$virtual_hosts" ] || continue
 
 		project="$(docker inspect \
 			--format '{{ index .Config.Labels "com.docker.compose.project" }}' \
@@ -58,6 +52,17 @@ active_hosts() {
 			--format '{{ index .Config.Labels "com.docker.compose.service" }}' \
 			"$container" 2>/dev/null || true)"
 
+		# The shared proxy infrastructure exposes its own routing metadata, but it
+		# is not a development environment and must not appear in the dashboard.
+		[ "$project" != "$proxy_project" ] || continue
+
+		virtual_hosts="$(docker inspect \
+			--format '{{range .Config.Env}}{{println .}}{{end}}' \
+			"$container" |
+			sed -n 's/^VIRTUAL_HOST=//p' |
+			head -n 1)"
+
+		[ -n "$virtual_hosts" ] || continue
 		[ -n "$project" ] || project="Docker"
 		[ -n "$service" ] || service="Service"
 
@@ -67,6 +72,11 @@ active_hosts() {
 			host="$(printf '%s' "$host" | tr -d '[:space:]')"
 			case "$host" in
 				*.localhost)
+					case "$host" in
+						'*.'*|'~'*)
+							continue
+							;;
+					esac
 					printf '%s|%s|%s\n' "$project" "$service" "$host"
 					;;
 			esac
@@ -187,13 +197,26 @@ mkdir -p "$html_dir"
 generate_dashboard
 
 while true; do
-	docker events \
-		--filter type=container \
-		--filter event=start \
-		--filter event=stop \
-		--filter event=die \
-		--filter event=destroy \
-		--format '{{.Status}}' |
+	{
+		docker events \
+			--filter type=container \
+			--filter event=start \
+			--filter event=stop \
+			--filter event=die \
+			--filter event=destroy \
+			--format '{{.Status}}' &
+		container_events_pid=$!
+
+		docker events \
+			--filter type=network \
+			--filter "network=$proxy_network" \
+			--filter event=connect \
+			--filter event=disconnect \
+			--format '{{.Status}}' &
+		network_events_pid=$!
+
+		wait "$container_events_pid" "$network_events_pid"
+	} |
 	while IFS= read -r _event; do
 		generate_dashboard
 	done
