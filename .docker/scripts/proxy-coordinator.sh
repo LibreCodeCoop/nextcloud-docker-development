@@ -122,6 +122,19 @@ ensure_ports_available() {
 	done
 }
 
+ensure_proxy_network() {
+	if docker network inspect "$proxy_network" >/dev/null 2>&1; then
+		return 0
+	fi
+
+	if docker network create "$proxy_network" >/dev/null 2>&1; then
+		return 0
+	fi
+
+	# Another checkout may have created it concurrently.
+	docker network inspect "$proxy_network" >/dev/null
+}
+
 start_proxy() {
 	if proxy_compose up --detach; then
 		return 0
@@ -304,6 +317,7 @@ success() {
 echo "Validating Compose project ${project} at ${PROJECT_DIR}."
 compose config --quiet
 
+ensure_proxy_network
 install_proxy_assets
 
 if proxy_is_ready; then
