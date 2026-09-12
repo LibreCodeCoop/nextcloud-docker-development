@@ -47,6 +47,10 @@
     a { color: LinkText; }
     code { padding: .15em .4em; border-radius: 4px; background: color-mix(in srgb, CanvasText 10%, transparent); }
     .not-found, .runtime-warning, .runtime-hint { padding: 1rem; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 8px; }
+    .not-found { border-color: #c9362b; background: color-mix(in srgb, #c9362b 8%, Canvas 92%); }
+    .not-found h2 { margin: 0 0 .65rem; color: color-mix(in srgb, #c9362b 82%, CanvasText 18%); }
+    .not-found p { margin: .45rem 0 0; }
+    .not-found #suggestion { margin-top: .8rem; font-weight: 600; }
     .runtime-warning, .runtime-hint { margin-top: 1rem; }
     .runtime-warning { border-color: #c47f00; }
     .runtime-hint { border-color: color-mix(in srgb, LinkText 55%, Canvas 45%); }
@@ -63,8 +67,8 @@
 <body>
   <main>
     <h1>💙 LibreCode Nextcloud Development Environment</h1>
-    <section id="not-found" class="not-found" hidden>
-      <h2>Environment not found</h2>
+    <section id="not-found" class="not-found" role="alert" hidden>
+      <h2>⚠ Environment not found</h2>
       <p>There is no active development service for <code id="requested-host"></code>.</p>
       <p id="suggestion" hidden>Did you mean <a id="suggestion-link"></a>?</p>
     </section>
