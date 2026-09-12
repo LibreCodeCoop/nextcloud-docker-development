@@ -5,6 +5,9 @@ set -eu
 proxy_project=librecode-dev-proxy
 proxy_network=librecode-dev-proxy
 proxy_label=coop.librecode.dev-proxy=true
+proxy_client_label=coop.librecode.dev-proxy-client=true
+proxy_assets_volume=librecode-dev-proxy-assets
+proxy_vhost_volume=librecode-dev-proxy-vhost
 
 compose_project() {
 	docker inspect \
@@ -124,7 +127,6 @@ start_proxy() {
 		return 0
 	fi
 
-	# Another checkout may have created the shared proxy concurrently.
 	if proxy_is_ready; then
 		return 0
 	fi
@@ -138,6 +140,55 @@ start_proxy() {
 
 	echo 'Could not start the LibreCode development proxy.' >&2
 	exit 1
+}
+
+copy_to_named_volume() {
+	volume="$1"
+	source="$2"
+	destination="$3"
+
+	docker run --rm -i \
+		-v "$volume:/target" \
+		docker:29-cli \
+		sh -c 'cat > "/target/$1"' sh "$destination" \
+		< "$source"
+}
+
+install_proxy_assets() {
+	docker volume create "$proxy_assets_volume" >/dev/null
+	docker volume create "$proxy_vhost_volume" >/dev/null
+
+	docker run --rm \
+		-v "$proxy_assets_volume:/target" \
+		docker:29-cli \
+		sh -c 'rm -f /target/Procfile /target/dashboard.tmpl'
+
+	copy_to_named_volume \
+		"$proxy_assets_volume" \
+		"$PROJECT_DIR/.docker/nginx-proxy/Procfile" \
+		Procfile
+	copy_to_named_volume \
+		"$proxy_assets_volume" \
+		"$PROJECT_DIR/.docker/nginx-proxy/dashboard.tmpl" \
+		dashboard.tmpl
+
+	docker run --rm \
+		-v "$proxy_vhost_volume:/target" \
+		docker:29-cli \
+		sh -c 'rm -f /target/librecode-localhost.conf /target/localhost /target/localhost_location_override /target/\*.localhost /target/\*.localhost_location_override'
+
+	copy_to_named_volume \
+		"$proxy_vhost_volume" \
+		"$PROJECT_DIR/.docker/nginx-proxy/localhost_location_override" \
+		localhost_location_override
+	copy_to_named_volume \
+		"$proxy_vhost_volume" \
+		"$PROJECT_DIR/.docker/nginx-proxy/*.localhost" \
+		'*.localhost'
+	copy_to_named_volume \
+		"$proxy_vhost_volume" \
+		"$PROJECT_DIR/.docker/nginx-proxy/*.localhost_location_override" \
+		'*.localhost_location_override'
 }
 
 running_services="$(compose ps --status running --services)"
@@ -206,19 +257,54 @@ report_environment_ready() {
 		nextcloud sh /var/www/scripts/report-environment-ready
 }
 
+other_proxy_client_is_running() {
+	docker ps \
+		--filter "label=$proxy_client_label" \
+		--format '{{.Label "com.docker.compose.project"}}' |
+		grep -v -x "$project" |
+		grep -q .
+}
+
+release_proxy_if_unused() {
+	if other_proxy_client_is_running; then
+		echo '✅ Shared development proxy is still used by another environment.'
+		return 0
+	fi
+
+	sleep 1
+
+	if other_proxy_client_is_running; then
+		echo '✅ Shared development proxy is still used by another environment.'
+		return 0
+	fi
+
+	echo 'Stopping unused shared development proxy.'
+	if ! proxy_compose down --remove-orphans; then
+		echo 'Could not stop the unused shared development proxy.' >&2
+	fi
+}
+
+shutdown() {
+	trap - INT TERM HUP
+	release_proxy_if_unused
+	exit 0
+}
+
 success() {
 	case "$1" in
 		reused)
-			echo '✅ Existing LibreCode development proxy reused. Coordinator exiting normally.'
-			;;
-		started)
-			echo '✅ Development proxy started successfully. Coordinator exiting normally.'
-			;;
+		echo '✅ Existing LibreCode development proxy reused. Coordinator lease is active.'
+		;;
+	started)
+		echo '✅ Development proxy started successfully. Coordinator lease is active.'
+		;;
 	esac
 }
 
 echo "Validating Compose project ${project} at ${PROJECT_DIR}."
 compose config --quiet
+
+install_proxy_assets
 
 if proxy_is_ready; then
 	proxy_compose up --detach
@@ -240,3 +326,10 @@ if ! report_environment_ready; then
 fi
 
 success "$proxy_state"
+
+trap shutdown INT TERM HUP
+
+while :; do
+	sleep 3600 &
+	wait "$!" || true
+done
