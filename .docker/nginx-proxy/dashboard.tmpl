@@ -54,6 +54,9 @@
     .runtime-hint p { margin: .45rem 0 0; }
     .runtime-list { list-style: none; padding: 0; }
     .runtime-list li { margin: .35rem 0; }
+    .project-links { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, CanvasText 16%, transparent); font-size: .95rem; }
+    .project-links p { margin: .45rem 0; }
+    .project-links nav { display: flex; flex-wrap: wrap; gap: .4rem 1rem; }
     .muted { opacity: .7; }
   </style>
 </head>
@@ -76,6 +79,16 @@
     </section>
 
     <p class="muted">This page is generated from the routes currently connected to the shared development proxy.</p>
+
+    <footer class="project-links">
+      <strong>Help improve this development environment</strong>
+      <p class="muted">Contributions, bug reports, and stars help the project grow.</p>
+      <nav aria-label="Project links">
+        <a href="https://github.com/LibreCodeCoop/nextcloud-docker-development" target="_blank" rel="noopener noreferrer">Contribute on GitHub</a>
+        <a href="https://github.com/LibreCodeCoop/nextcloud-docker-development/issues/new/choose" target="_blank" rel="noopener noreferrer">Report an issue</a>
+        <a href="https://github.com/LibreCodeCoop/nextcloud-docker-development" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
+      </nav>
+    </footer>
   </main>
 
   <script type="application/json" id="routes">{{ toJson $routes }}</script>
