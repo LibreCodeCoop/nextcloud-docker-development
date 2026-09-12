@@ -74,7 +74,9 @@ release_proxy_if_unused() {
 	fi
 
 	echo 'Stopping unused shared development proxy.'
-	if ! proxy_compose down --remove-orphans; then
+	if ! proxy_compose down \
+		--timeout "${PROXY_STOP_TIMEOUT_SECONDS:-3}" \
+		--remove-orphans; then
 		echo 'Could not stop the unused shared development proxy.' >&2
 		return 1
 	fi
