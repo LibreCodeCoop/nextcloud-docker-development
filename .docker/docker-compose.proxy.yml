@@ -1,6 +1,6 @@
 services:
   nginx-proxy:
-    image: nginxproxy/nginx-proxy:1.11.6-alpine
+    image: nginxproxy/nginx-proxy:1.11.6-alpine@sha256:99376e95c8754547213d411222a2c4dca046d974e753ae2a1c9aef09b2c03364
     container_name: librecode-dev-proxy
     labels:
       coop.librecode.dev-proxy: "true"
@@ -24,7 +24,7 @@ services:
       - proxy
 
   ssl-companion:
-    image: sebastienheyd/self-signed-proxy-companion:1.1.0
+    image: sebastienheyd/self-signed-proxy-companion:1.1.0@sha256:dd698341f804aaffe2974931a185aa088561d76094e040e374847f3a64004d43
     container_name: librecode-dev-proxy-ssl-companion
     labels:
       coop.librecode.dev-proxy-companion: "true"
