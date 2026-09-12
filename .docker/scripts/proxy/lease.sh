@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Globals are provided by common.sh and proxy-coordinator.sh before use.
+# shellcheck disable=SC2154
+
 proxy_lease_acquired=false
 
 acquire_proxy_lease() {
