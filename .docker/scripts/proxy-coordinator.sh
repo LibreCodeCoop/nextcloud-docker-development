@@ -85,9 +85,9 @@ run() {
 	validate_environment
 	ensure_proxy_network
 	install_proxy_assets
-	install_runtime_diagnostics
 
 	proxy_state="$(ensure_proxy_running)"
+	install_runtime_diagnostics
 
 	acquire_proxy_lease
 	rm -f "$release_marker"
