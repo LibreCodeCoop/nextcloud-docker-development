@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Globals are provided by common.sh before this module is sourced.
+# shellcheck disable=SC2154
+
 service_is_running() {
 	compose ps --status running --services |
 		grep -qx "$1"
