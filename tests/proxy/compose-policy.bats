@@ -29,3 +29,40 @@ setup() {
 		! grep -Eq '^[[:space:]]+(stop_signal|stop_grace_period|init):' "$file"
 	done
 }
+
+@test "shared proxy binds to loopback by default and supports explicit exposure" {
+	proxy_compose="$REPO_ROOT/.docker/docker-compose.proxy.yml"
+	grep -Fq '"${IP_BIND:-127.0.0.1}:80:80"' "$proxy_compose"
+	grep -Fq '"${IP_BIND:-127.0.0.1}:443:443"' "$proxy_compose"
+
+	run env IP_BIND=0.0.0.0 docker compose --file "$proxy_compose" config
+	[ "$status" -eq 0 ]
+	printf '%s\n' "$output" | grep -q 'host_ip: 0.0.0.0'
+}
+
+@test "docker socket mounts stay limited to proxy infrastructure" {
+	main_socket_mounts="$(grep -Ec '^[[:space:]]+- .*DOCKER_SOCKET.*:/var/run/docker\.sock$' "$REPO_ROOT/docker-compose.yml")"
+	[ "$main_socket_mounts" -eq 1 ]
+
+	proxy_socket_mounts="$(grep -Ec '^[[:space:]]+- .*DOCKER_SOCKET.*:/.*docker\.sock:ro$' "$REPO_ROOT/.docker/docker-compose.proxy.yml")"
+	[ "$proxy_socket_mounts" -eq 2 ]
+}
+
+@test "dashboard does not use innerHTML for Docker metadata" {
+	! grep -q 'innerHTML' "$REPO_ROOT/.docker/nginx-proxy/dashboard.tmpl"
+	grep -q 'textContent = currentProject' "$REPO_ROOT/.docker/nginx-proxy/dashboard.tmpl"
+	grep -q 'textContent = link.href' "$REPO_ROOT/.docker/nginx-proxy/dashboard.tmpl"
+}
+
+@test "GitHub Actions are pinned to immutable commit SHAs" {
+	while IFS= read -r workflow; do
+		while IFS= read -r uses_line; do
+			ref="${uses_line#*@}"
+			ref="${ref%% *}"
+			[[ "$ref" =~ ^[0-9a-f]{40}$ ]] || {
+				printf 'mutable action reference in %s: %s\n' "$workflow" "$uses_line" >&2
+				return 1
+			}
+		done < <(grep -E '^[[:space:]]*-?[[:space:]]*uses:[[:space:]]+[^./][^[:space:]]+@' "$workflow" || true)
+	done < <(find "$REPO_ROOT/.github/workflows" -type f -name '*.yml' -o -name '*.yaml')
+}
