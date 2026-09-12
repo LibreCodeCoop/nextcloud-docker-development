@@ -10,9 +10,6 @@ runtime_version() {
 		docker)
 			Docker version --format '{{.Server.Version}}'
 			;;
-		compose)
-			Docker compose version --short
-			;;
 		runc)
 			Docker version --format '{{range .Server.Components}}{{if eq .Name "runc"}}{{.Version}}{{end}}{{end}}'
 			;;
@@ -55,7 +52,6 @@ runtime_has_known_shutdown_risk() {
 
 runtime_diagnostics_json() {
 	docker_version="$(runtime_version docker)"
-	compose_version="$(runtime_version compose)"
 	runc_version="$(runtime_version runc)"
 
 	if runtime_has_known_shutdown_risk "$docker_version" "$runc_version"; then
@@ -64,8 +60,8 @@ runtime_diagnostics_json() {
 		warnings='[]'
 	fi
 
-	printf '{"docker":"%s","compose":"%s","runc":"%s","warnings":%s}\n' \
-		"$docker_version" "$compose_version" "$runc_version" "$warnings"
+	printf '{"docker":"%s","runc":"%s","warnings":%s}\n' \
+		"$docker_version" "$runc_version" "$warnings"
 }
 
 install_runtime_diagnostics() {
