@@ -23,7 +23,7 @@ jobs:
           detik-install: false
           file-install: false
       - name: Run unit tests
-        run: bats tests/proxy/lease.bats tests/proxy/infrastructure.bats tests/proxy/services.bats
+        run: bats tests/proxy/lease.bats tests/proxy/infrastructure.bats tests/proxy/services.bats tests/proxy/diagnostics.bats
 
   integration:
     name: Proxy Docker integration tests
