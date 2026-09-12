@@ -84,6 +84,10 @@ wait_for_https_status() {
 	wait_for_https_status localhost 200
 	grep -q 'LibreCode Development Proxy' "$BODY"
 	grep -q 'Environment checks' "$BODY"
+	grep -q 'Help improve this development environment' "$BODY"
+	grep -q 'Contribute on GitHub' "$BODY"
+	grep -q 'Report an issue' "$BODY"
+	grep -q 'Star on GitHub' "$BODY"
 
 	wait_for_https_path_status localhost /runtime.json 200
 	grep -q '"docker":"' "$BODY"
