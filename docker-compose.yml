@@ -65,12 +65,12 @@ services:
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}.localhost
   proxy-coordinator:
     image: docker:29-cli
-    entrypoint: ["/bin/sh", "/usr/local/bin/proxy-coordinator.sh"]
+    entrypoint: ["/bin/sh", "/usr/local/lib/librecode/proxy-coordinator.sh"]
     labels:
       coop.librecode.dev-proxy-client: "true"
     volumes:
       - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
-      - ./.docker/scripts/proxy-coordinator.sh:/usr/local/bin/proxy-coordinator.sh:ro
+      - ./.docker/scripts:/usr/local/lib/librecode:ro
       - .:${PWD}:ro
     working_dir: ${PWD}
     environment:
