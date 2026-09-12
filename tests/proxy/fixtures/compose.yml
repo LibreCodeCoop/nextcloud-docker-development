@@ -1,0 +1,28 @@
+services:
+  nginx:
+    image: nginx:alpine
+    environment:
+      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}.localhost
+      - VIRTUAL_PORT=80
+      - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}.localhost
+
+  proxy-coordinator:
+    image: docker:29-cli
+    entrypoint: ["/bin/sh", "/project/.docker/scripts/proxy-coordinator.sh"]
+    labels:
+      coop.librecode.dev-proxy-client: "true"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${REPO_ROOT}:/project:ro
+    working_dir: /project
+    environment:
+      - PROJECT_DIR=/project
+      - PROJECT_COMPOSE_FILE=/project/tests/proxy/fixtures/compose.yml
+      - PROXY_LEASE_GRACE_SECONDS=0
+      - NEXTCLOUD_ADMIN_USER=admin
+      - NEXTCLOUD_ADMIN_PASSWORD=admin
+      - VERSION_NEXTCLOUD=master
+    restart: "no"
+    stop_grace_period: 10s
+    depends_on:
+      - nginx
