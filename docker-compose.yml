@@ -69,6 +69,7 @@ services:
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}.localhost
   proxy-coordinator:
     image: docker:29-cli
+    init: true
     entrypoint: ["/bin/sh", "/usr/local/lib/librecode/proxy-coordinator.sh"]
     labels:
       coop.librecode.dev-proxy-client: "true"
