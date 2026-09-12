@@ -6,7 +6,7 @@ script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
 proxy_lib_dir="${PROXY_LIB_DIR:-$script_dir/proxy}"
 release_marker=/tmp/librecode-proxy-lease-released
 
-# shellcheck source=proxy/common.sh
+# shellcheck source=.docker/scripts/proxy/common.sh
 . "$proxy_lib_dir/common.sh"
 
 COORDINATOR_CONTAINER="$(hostname)"
@@ -16,15 +16,15 @@ export COORDINATOR_CONTAINER PROJECT_NAME
 # These modules share only exported environment and common.sh accessors.
 # Keep the source directives in sync with the runtime paths so ShellCheck can
 # analyze the complete dependency graph without file-wide suppressions.
-# shellcheck source=proxy/infrastructure.sh
+# shellcheck source=.docker/scripts/proxy/infrastructure.sh
 . "$proxy_lib_dir/infrastructure.sh"
-# shellcheck source=proxy/assets.sh
+# shellcheck source=.docker/scripts/proxy/assets.sh
 . "$proxy_lib_dir/assets.sh"
-# shellcheck source=proxy/diagnostics.sh
+# shellcheck source=.docker/scripts/proxy/diagnostics.sh
 . "$proxy_lib_dir/diagnostics.sh"
-# shellcheck source=proxy/services.sh
+# shellcheck source=.docker/scripts/proxy/services.sh
 . "$proxy_lib_dir/services.sh"
-# shellcheck source=proxy/lease.sh
+# shellcheck source=.docker/scripts/proxy/lease.sh
 . "$proxy_lib_dir/lease.sh"
 
 validate_environment() {
