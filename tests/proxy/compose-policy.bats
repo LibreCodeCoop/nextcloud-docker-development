@@ -12,7 +12,11 @@ setup() {
 	grep -Eq '^[[:space:]]+image: postgres:13-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/database-services.yml"
 	grep -Eq '^[[:space:]]+image: nginxproxy/nginx-proxy:[0-9]+\.[0-9]+\.[0-9]+-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
 	grep -Eq '^[[:space:]]+image: sebastienheyd/self-signed-proxy-companion:[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
-	grep -Eq '^proxy_helper_image="\$\{PROXY_HELPER_IMAGE:-docker:[0-9]+\.[0-9]+\.[0-9]+-cli@sha256:[0-9a-f]{64}\}"$' "$REPO_ROOT/.docker/scripts/proxy/assets.sh"
+}
+
+@test "proxy helper reuses the coordinator image instead of duplicating its version" {
+	grep -q 'container_image "${COORDINATOR_CONTAINER:-}"' "$REPO_ROOT/.docker/scripts/proxy/assets.sh"
+	! grep -Eq 'docker:[0-9]+\.[0-9]+\.[0-9]+-cli@sha256:' "$REPO_ROOT/.docker/scripts/proxy/assets.sh"
 }
 
 @test "proxy integration fixture images are pinned by tag and digest" {
