@@ -18,6 +18,7 @@ services:
     environment:
       - PROJECT_DIR=/project
       - PROJECT_COMPOSE_FILE=/project/tests/proxy/fixtures/compose.yml
+      - REPO_ROOT=/project
       - PROXY_LEASE_GRACE_SECONDS=0
       - NEXTCLOUD_ADMIN_USER=admin
       - NEXTCLOUD_ADMIN_PASSWORD=admin
