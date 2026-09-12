@@ -25,10 +25,13 @@ version_at_most() {
 
 	old_ifs="$IFS"
 	IFS=.
+	# Intentional field splitting turns semantic versions into components.
+	# shellcheck disable=SC2086
 	set -- $version
 	version_major="${1:-0}"
 	version_minor="${2:-0}"
 	version_patch="${3:-0}"
+	# shellcheck disable=SC2086
 	set -- $maximum
 	maximum_major="${1:-0}"
 	maximum_minor="${2:-0}"
@@ -65,9 +68,10 @@ runtime_diagnostics_json() {
 }
 
 install_runtime_diagnostics() {
+	proxy_container="$(compatible_proxy_container)"
+	[ -n "$proxy_container" ] || return 1
+
 	runtime_diagnostics_json |
-		Docker run --rm -i \
-			-v "$proxy_assets_volume:/target" \
-			docker:29-cli \
-			sh -c 'cat > /target/runtime.json'
+		Docker exec -i "$proxy_container" \
+			sh -c 'cat > /usr/share/nginx/html/runtime.json'
 }
