@@ -14,6 +14,8 @@ release_marker=/tmp/librecode-proxy-lease-released
 # shellcheck disable=SC1090,SC1091
 . "$proxy_lib_dir/assets.sh"
 # shellcheck disable=SC1090,SC1091
+. "$proxy_lib_dir/diagnostics.sh"
+# shellcheck disable=SC1090,SC1091
 . "$proxy_lib_dir/services.sh"
 # shellcheck disable=SC1090,SC1091
 . "$proxy_lib_dir/lease.sh"
@@ -83,6 +85,7 @@ run() {
 	validate_environment
 	ensure_proxy_network
 	install_proxy_assets
+	install_runtime_diagnostics
 
 	proxy_state="$(ensure_proxy_running)"
 
