@@ -49,9 +49,18 @@ runtime_has_known_shutdown_risk() {
 		version_at_most "$runc_version" "${PROXY_KNOWN_BAD_RUNC_MAX:-1.1.12}"
 }
 
+project_name_needs_shortening_hint() {
+	project_name="$1"
+	[ -n "$project_name" ] || return 1
+
+	[ "$project_name" = "${PROXY_REPOSITORY_PROJECT_NAME:-nextcloud-docker-development}" ] && return 0
+	[ "${#project_name}" -gt "${PROXY_PROJECT_NAME_HINT_LENGTH:-20}" ]
+}
+
 runtime_diagnostics_json() {
 	docker_version="$(runtime_version docker)"
 	runc_version="$(runtime_version runc)"
+	project_name="${PROJECT_NAME:-}"
 
 	if runtime_has_known_shutdown_risk "$docker_version" "$runc_version"; then
 		warnings='[{"code":"outdated-docker-runtime","message":"This Docker and runc combination may fail to stop containers correctly on recent Linux/AppArmor hosts. Update Docker Engine before investigating shutdown problems."}]'
@@ -59,8 +68,14 @@ runtime_diagnostics_json() {
 		warnings='[]'
 	fi
 
-	printf '{"docker":"%s","runc":"%s","warnings":%s}\n' \
-		"$docker_version" "$runc_version" "$warnings"
+	if project_name_needs_shortening_hint "$project_name"; then
+		hints="[{\"code\":\"long-project-name\",\"projectName\":\"$project_name\",\"exampleHost\":\"$project_name-playwright.localhost\"}]"
+	else
+		hints='[]'
+	fi
+
+	printf '{"docker":"%s","runc":"%s","project":{"name":"%s"},"warnings":%s,"hints":%s}\n' \
+		"$docker_version" "$runc_version" "$project_name" "$warnings" "$hints"
 }
 
 install_runtime_diagnostics() {
