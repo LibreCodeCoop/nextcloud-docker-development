@@ -35,7 +35,7 @@ compose() {
 	Docker compose \
 		--project-name "$project" \
 		--project-directory "$PROJECT_DIR" \
-		--file "$PROJECT_DIR/docker-compose.yml" \
+		--file "${PROJECT_COMPOSE_FILE:-$PROJECT_DIR/docker-compose.yml}" \
 		"$@"
 }
 
@@ -43,6 +43,6 @@ proxy_compose() {
 	Docker compose \
 		--project-name "$proxy_project" \
 		--project-directory "$PROJECT_DIR" \
-		--file "$PROJECT_DIR/.docker/docker-compose.proxy.yml" \
+		--file "${PROXY_COMPOSE_FILE:-$PROJECT_DIR/.docker/docker-compose.proxy.yml}" \
 		"$@"
 }
