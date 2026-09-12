@@ -1,8 +1,5 @@
 #!/bin/sh
 
-# Globals are provided by common.sh before this module is sourced.
-# shellcheck disable=SC2154
-
 container_for_published_port() {
 	port="$1"
 
@@ -17,7 +14,7 @@ port_is_in_use() {
 
 compatible_proxy_container() {
 	Docker ps \
-		--filter "label=$proxy_label" \
+		--filter "label=$(proxy_container_label)" \
 		--format '{{.ID}}' |
 		head -n 1
 }
@@ -77,16 +74,18 @@ ensure_ports_available() {
 }
 
 ensure_proxy_network() {
-	if Docker network inspect "$proxy_network" >/dev/null 2>&1; then
+	network="$(proxy_network_name)"
+
+	if Docker network inspect "$network" >/dev/null 2>&1; then
 		return 0
 	fi
 
-	if Docker network create "$proxy_network" >/dev/null 2>&1; then
+	if Docker network create "$network" >/dev/null 2>&1; then
 		return 0
 	fi
 
 	# Another checkout may have created it concurrently.
-	Docker network inspect "$proxy_network" >/dev/null
+	Docker network inspect "$network" >/dev/null
 }
 
 start_proxy() {
