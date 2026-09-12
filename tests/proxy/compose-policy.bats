@@ -30,14 +30,29 @@ setup() {
 	done
 }
 
-@test "shared proxy binds to loopback by default and supports explicit exposure" {
+@test "network bind settings are scoped per infrastructure service" {
 	proxy_compose="$REPO_ROOT/.docker/docker-compose.proxy.yml"
-	grep -Fq '"${IP_BIND:-127.0.0.1}:80:80"' "$proxy_compose"
-	grep -Fq '"${IP_BIND:-127.0.0.1}:443:443"' "$proxy_compose"
+	database_compose="$REPO_ROOT/.docker/database-services.yml"
 
-	run env IP_BIND=0.0.0.0 docker compose --file "$proxy_compose" config
+	grep -Fq '"${PROXY_IP_BIND:-127.0.0.1}:80:80"' "$proxy_compose"
+	grep -Fq '"${PROXY_IP_BIND:-127.0.0.1}:443:443"' "$proxy_compose"
+	grep -Fq 'host_ip: ${MYSQL_IP_BIND:-127.0.0.1}' "$database_compose"
+	grep -Fq 'host_ip: ${POSTGRES_IP_BIND:-127.0.0.1}' "$database_compose"
+	! grep -Rq '${IP_BIND' "$proxy_compose" "$database_compose" "$REPO_ROOT/docker-compose.yml"
+
+	run env PROXY_IP_BIND=0.0.0.0 docker compose --file "$proxy_compose" config
 	[ "$status" -eq 0 ]
 	printf '%s\n' "$output" | grep -q 'host_ip: 0.0.0.0'
+
+	run env MYSQL_IP_BIND=0.0.0.0 docker compose --file "$database_compose" config
+	[ "$status" -eq 0 ]
+	printf '%s\n' "$output" | grep -A5 'target: 3306' | grep -q 'host_ip: 0.0.0.0'
+	printf '%s\n' "$output" | grep -A5 'target: 5432' | grep -q 'host_ip: 127.0.0.1'
+
+	run env POSTGRES_IP_BIND=0.0.0.0 docker compose --file "$database_compose" config
+	[ "$status" -eq 0 ]
+	printf '%s\n' "$output" | grep -A5 'target: 3306' | grep -q 'host_ip: 127.0.0.1'
+	printf '%s\n' "$output" | grep -A5 'target: 5432' | grep -q 'host_ip: 0.0.0.0'
 }
 
 @test "docker socket mounts stay limited to proxy infrastructure" {
@@ -64,5 +79,5 @@ setup() {
 				return 1
 			}
 		done < <(grep -E '^[[:space:]]*-?[[:space:]]*uses:[[:space:]]+[^./][^[:space:]]+@' "$workflow" || true)
-	done < <(find "$REPO_ROOT/.github/workflows" -type f -name '*.yml' -o -name '*.yaml')
+	done < <(find "$REPO_ROOT/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \))
 }
