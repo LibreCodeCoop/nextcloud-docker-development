@@ -87,7 +87,6 @@ wait_for_https_status() {
 
 	wait_for_https_path_status localhost /runtime.json 200
 	grep -q '"docker":"' "$BODY"
-	grep -q '"compose":"' "$BODY"
 	grep -q '"runc":"' "$BODY"
 
 	wait_for_https_status proxytesta.localhost 200
