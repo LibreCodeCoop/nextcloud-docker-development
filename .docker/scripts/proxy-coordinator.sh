@@ -2,414 +2,85 @@
 
 set -eu
 
-proxy_project=librecode-dev-proxy
-proxy_network=librecode-dev-proxy
-proxy_label=coop.librecode.dev-proxy=true
-proxy_client_label=coop.librecode.dev-proxy-client=true
-proxy_assets_volume=librecode-dev-proxy-assets
-proxy_vhost_volume=librecode-dev-proxy-vhost
-proxy_lease_acquired=false
+script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+proxy_lib_dir="${PROXY_LIB_DIR:-$script_dir/proxy}"
+
+# shellcheck source=.docker/scripts/proxy/common.sh
+. "$proxy_lib_dir/common.sh"
+# shellcheck source=.docker/scripts/proxy/infrastructure.sh
+. "$proxy_lib_dir/infrastructure.sh"
+# shellcheck source=.docker/scripts/proxy/assets.sh
+. "$proxy_lib_dir/assets.sh"
+# shellcheck source=.docker/scripts/proxy/services.sh
+. "$proxy_lib_dir/services.sh"
+# shellcheck source=.docker/scripts/proxy/lease.sh
+. "$proxy_lib_dir/lease.sh"
+
 coordinator_container="$(hostname)"
+project="$(container_project "$coordinator_container")"
 
-compose_project() {
-	docker inspect \
-		--format '{{ index .Config.Labels "com.docker.compose.project" }}' \
-		"$coordinator_container"
-}
-
-project="$(compose_project)"
-
-if [ -z "$project" ]; then
-	echo 'Could not determine the Compose project from the coordinator container.' >&2
-	exit 1
-fi
-
-if [ -z "${PROJECT_DIR:-}" ]; then
-	echo 'The host project directory was not provided to the coordinator.' >&2
-	exit 1
-fi
-
-compose() {
-	docker compose \
-		--project-name "$project" \
-		--project-directory "$PROJECT_DIR" \
-		--file "$PROJECT_DIR/docker-compose.yml" \
-		"$@"
-}
-
-proxy_compose() {
-	docker compose \
-		--project-name "$proxy_project" \
-		--project-directory "$PROJECT_DIR" \
-		--file "$PROJECT_DIR/.docker/docker-compose.proxy.yml" \
-		"$@"
-}
-
-container_for_published_port() {
-	port="$1"
-
-	docker ps \
-		--filter "publish=$port" \
-		--format '{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Label "coop.librecode.dev-proxy"}}'
-}
-
-port_is_in_use() {
-	container_for_published_port "$1" | grep -q .
-}
-
-compatible_proxy_container() {
-	docker ps \
-		--filter "label=$proxy_label" \
-		--format '{{.ID}}' |
-		head -n 1
-}
-
-is_compatible_proxy_port_owner() {
-	port="$1"
-	info="$(container_for_published_port "$port" | head -n 1)"
-
-	[ -n "$info" ] || return 1
-
-	compatible="$(printf '%s\n' "$info" | cut -f4)"
-
-	[ "$compatible" = "true" ]
-}
-
-proxy_is_ready() {
-	[ -n "$(compatible_proxy_container || true)" ] &&
-		is_compatible_proxy_port_owner 80 &&
-		is_compatible_proxy_port_owner 443
-}
-
-show_conflict() {
-	port="$1"
-	container_info="$(container_for_published_port "$port" | head -n 1)"
-
-	printf '┌─ ⛔ Development proxy cannot start ─────────────────────\n' >&2
-	printf '│\n' >&2
-	printf '│ Port 80 or 443 is already in use by another service.\n' >&2
-	printf '│\n' >&2
-	printf '│ This development environment requires:\n' >&2
-	printf '│\n' >&2
-	printf '│   HTTP   localhost:80\n' >&2
-	printf '│   HTTPS  localhost:443\n' >&2
-	printf '│\n' >&2
-	printf '│ Stop the conflicting service and run:\n' >&2
-	printf '│\n' >&2
-	printf '│   docker compose up\n' >&2
-	printf '│\n' >&2
-
-	if [ -n "$container_info" ]; then
-		name="$(printf '%s\n' "$container_info" | cut -f2)"
-		image="$(printf '%s\n' "$container_info" | cut -f3)"
-
-		printf '│ Conflicting container\n' >&2
-		printf '│   Name   %s\n' "$name" >&2
-		printf '│   Image  %s\n' "$image" >&2
-		printf '│   Port   %s\n' "$port" >&2
-	else
-		printf '│ Port %s is already in use by a process outside Docker.\n' "$port" >&2
+validate_environment() {
+	if [ -z "$project" ]; then
+		echo 'Could not determine the Compose project from the coordinator container.' >&2
+		return 1
 	fi
 
-	printf '│\n' >&2
-	printf '└────────────────────────────────────────────────────────\n' >&2
-}
-
-ensure_ports_available() {
-	for port in 80 443; do
-		if port_is_in_use "$port"; then
-			show_conflict "$port"
-			exit 1
-		fi
-	done
-}
-
-ensure_proxy_network() {
-	if docker network inspect "$proxy_network" >/dev/null 2>&1; then
-		return 0
+	if [ -z "${PROJECT_DIR:-}" ]; then
+		echo 'The host project directory was not provided to the coordinator.' >&2
+		return 1
 	fi
 
-	if docker network create "$proxy_network" >/dev/null 2>&1; then
-		return 0
-	fi
-
-	# Another checkout may have created it concurrently.
-	docker network inspect "$proxy_network" >/dev/null
-}
-
-start_proxy() {
-	if proxy_compose up --detach; then
-		return 0
-	fi
-
-	if proxy_is_ready; then
-		return 0
-	fi
-
-	for port in 80 443; do
-		if port_is_in_use "$port"; then
-			show_conflict "$port"
-			exit 1
-		fi
-	done
-
-	echo 'Could not start the LibreCode development proxy.' >&2
-	exit 1
-}
-
-copy_to_named_volume() {
-	volume="$1"
-	source="$2"
-	destination="$3"
-
-	docker run --rm -i \
-		-v "$volume:/target" \
-		docker:29-cli \
-		sh -c 'cat > "/target/$1"' sh "$destination" \
-		< "$source"
-}
-
-install_proxy_assets() {
-	docker volume create "$proxy_assets_volume" >/dev/null
-	docker volume create "$proxy_vhost_volume" >/dev/null
-
-	docker run --rm \
-		-v "$proxy_assets_volume:/target" \
-		docker:29-cli \
-		sh -c 'rm -f /target/Procfile /target/docker-gen.cfg /target/dashboard.tmpl'
-
-	copy_to_named_volume \
-		"$proxy_assets_volume" \
-		"$PROJECT_DIR/.docker/nginx-proxy/Procfile" \
-		Procfile
-	copy_to_named_volume \
-		"$proxy_assets_volume" \
-		"$PROJECT_DIR/.docker/nginx-proxy/docker-gen.cfg" \
-		docker-gen.cfg
-	copy_to_named_volume \
-		"$proxy_assets_volume" \
-		"$PROJECT_DIR/.docker/nginx-proxy/dashboard.tmpl" \
-		dashboard.tmpl
-
-	docker run --rm \
-		-v "$proxy_vhost_volume:/target" \
-		docker:29-cli \
-		sh -c 'rm -f /target/librecode-localhost.conf /target/localhost /target/localhost_location_override /target/\*.localhost /target/\*.localhost_location_override'
-
-	copy_to_named_volume \
-		"$proxy_vhost_volume" \
-		"$PROJECT_DIR/.docker/nginx-proxy/localhost_location_override" \
-		localhost_location_override
-	copy_to_named_volume \
-		"$proxy_vhost_volume" \
-		"$PROJECT_DIR/.docker/nginx-proxy/*.localhost" \
-		'*.localhost'
-	copy_to_named_volume \
-		"$proxy_vhost_volume" \
-		"$PROJECT_DIR/.docker/nginx-proxy/*.localhost_location_override" \
-		'*.localhost_location_override'
-}
-
-running_services="$(compose ps --status running --services)"
-
-service_is_running() {
-	printf '%s\n' "$running_services" |
-		grep -qx "$1"
-}
-
-container_for_service() {
-	compose ps -q "$1" 2>/dev/null || true
-}
-
-connect_to_proxy_network() {
-	service="$1"
-	container="$(container_for_service "$service")"
-
-	[ -n "$container" ] || return 0
-
-	if docker inspect \
-		--format '{{ json .NetworkSettings.Networks }}' \
-		"$container" |
-		grep -q "\"$proxy_network\""; then
-		return 0
-	fi
-
-	docker network connect "$proxy_network" "$container"
-}
-
-connect_running_service_to_proxy_network() {
-	service="$1"
-
-	service_is_running "$service" || return 0
-	connect_to_proxy_network "$service"
-}
-
-report_environment_ready() {
-	set -- \
-		-e ENV_NEXTCLOUD_URL="https://${project}.localhost" \
-		-e ENV_ADMIN_USER="$NEXTCLOUD_ADMIN_USER" \
-		-e ENV_ADMIN_PASSWORD="$NEXTCLOUD_ADMIN_PASSWORD" \
-		-e ENV_NEXTCLOUD_BRANCH="$VERSION_NEXTCLOUD"
-
-	if service_is_running mailpit; then
-		set -- "$@" \
-			-e ENV_MAILPIT_URL="https://${project}-mailpit.localhost"
-	fi
-
-	if service_is_running eurooffice; then
-		set -- "$@" \
-			-e ENV_EUROOFFICE_URL="https://${project}-eurooffice.localhost"
-	fi
-
-	if service_is_running playwright; then
-		set -- "$@" \
-			-e ENV_PLAYWRIGHT_URL="https://${project}-playwright.localhost"
-	fi
-
-	if service_is_running signal-gateway; then
-		set -- "$@" \
-			-e ENV_SIGNAL_URL="https://${project}-signal.localhost"
-	fi
-
-	compose exec -T \
-		"$@" \
-		nextcloud sh /var/www/scripts/report-environment-ready
-}
-
-acquire_proxy_lease() {
-	if ! docker inspect \
-		--format '{{ json .NetworkSettings.Networks }}' \
-		"$coordinator_container" |
-		grep -q "\"$proxy_network\""; then
-		docker network connect "$proxy_network" "$coordinator_container"
-	fi
-
-	proxy_lease_acquired=true
-}
-
-release_proxy_lease() {
-	[ "$proxy_lease_acquired" = true ] || return 0
-
-	if ! docker network disconnect "$proxy_network" "$coordinator_container" >/dev/null 2>&1; then
-		echo 'Could not disconnect this coordinator lease from the shared proxy network; continuing with project-based lease detection.' >&2
-	fi
-	proxy_lease_acquired=false
-}
-
-other_proxy_client_is_running() {
-	for container in $(docker ps \
-		--filter "label=$proxy_client_label" \
-		--filter "network=$proxy_network" \
-		--format '{{.ID}}'); do
-		container_project="$(docker inspect \
-			--format '{{ index .Config.Labels "com.docker.compose.project" }}' \
-			"$container" 2>/dev/null || true)"
-
-		[ "$container_project" = "$project" ] || return 0
-	done
-
-	return 1
-}
-
-other_proxy_route_is_running() {
-	for container in $(docker ps --filter "network=$proxy_network" --format '{{.ID}}'); do
-		container_project="$(docker inspect \
-			--format '{{ index .Config.Labels "com.docker.compose.project" }}' \
-			"$container" 2>/dev/null || true)"
-
-		case "$container_project" in
-			"$project"|"$proxy_project")
-				continue
-				;;
-		esac
-
-		virtual_host="$(docker inspect \
-			--format '{{range .Config.Env}}{{println .}}{{end}}' \
-			"$container" 2>/dev/null |
-			sed -n 's/^VIRTUAL_HOST=//p' |
-			head -n 1)"
-
-		[ -z "$virtual_host" ] || return 0
-	done
-
-	return 1
-}
-
-proxy_is_used_by_another_environment() {
-	other_proxy_client_is_running || other_proxy_route_is_running
-}
-
-release_proxy_if_unused() {
-	release_proxy_lease
-
-	if proxy_is_used_by_another_environment; then
-		echo '✅ Shared development proxy is still used by another environment.'
-		return 0
-	fi
-
-	# Give an environment starting concurrently time to acquire its lease.
-	sleep 1
-
-	if proxy_is_used_by_another_environment; then
-		echo '✅ Shared development proxy is still used by another environment.'
-		return 0
-	fi
-
-	echo 'Stopping unused shared development proxy.'
-	if ! proxy_compose down --remove-orphans; then
-		echo 'Could not stop the unused shared development proxy.' >&2
-	fi
-}
-
-shutdown() {
-	trap - INT TERM HUP
-	echo 'Releasing shared development proxy lease.'
-	release_proxy_if_unused
-	exit 0
+	echo "Validating Compose project ${project} at ${PROJECT_DIR}."
+	compose config --quiet
 }
 
 success() {
 	case "$1" in
 		reused)
-		echo '✅ Existing LibreCode development proxy reused. Coordinator lease is active.'
+			echo '✅ Existing LibreCode development proxy reused. Coordinator lease is active.'
 		;;
 	started)
-		echo '✅ Development proxy started successfully. Coordinator lease is active.'
+			echo '✅ Development proxy started successfully. Coordinator lease is active.'
 		;;
 	esac
 }
 
-echo "Validating Compose project ${project} at ${PROJECT_DIR}."
-compose config --quiet
+shutdown() {
+	trap - INT TERM HUP
+	echo 'Releasing shared development proxy lease.'
+	release_proxy_if_unused || true
+	exit 0
+}
 
-ensure_proxy_network
-install_proxy_assets
+wait_for_shutdown() {
+	trap shutdown INT TERM HUP
 
-if proxy_is_ready; then
-	proxy_compose up --detach
-	proxy_state=reused
-else
-	ensure_ports_available
-	start_proxy
-	proxy_state=started
+	while :; do
+		sleep 3600 &
+		wait "$!" || true
+	done
+}
+
+main() {
+	validate_environment
+	ensure_proxy_network
+	install_proxy_assets
+
+	proxy_state="$(ensure_proxy_running)"
+
+	acquire_proxy_lease
+	trap shutdown INT TERM HUP
+
+	connect_project_services
+
+	if ! report_environment_ready; then
+		echo 'Could not print environment banner.' >&2
+	fi
+
+	success "$proxy_state"
+	wait_for_shutdown
+}
+
+if [ "${PROXY_COORDINATOR_SOURCE_ONLY:-false}" != "true" ]; then
+	main "$@"
 fi
-
-acquire_proxy_lease
-trap shutdown INT TERM HUP
-
-connect_running_service_to_proxy_network nginx
-connect_running_service_to_proxy_network mailpit
-connect_running_service_to_proxy_network eurooffice
-connect_running_service_to_proxy_network playwright
-connect_running_service_to_proxy_network signal-gateway
-
-if ! report_environment_ready; then
-	echo 'Could not print environment banner.' >&2
-fi
-
-success "$proxy_state"
-
-while :; do
-	sleep 3600 &
-	wait "$!" || true
-done
