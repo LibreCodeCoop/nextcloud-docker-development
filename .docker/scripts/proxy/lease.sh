@@ -3,24 +3,20 @@
 # Globals are provided by common.sh and proxy-coordinator.sh before use.
 # shellcheck disable=SC2154
 
-proxy_lease_acquired=false
-
 acquire_proxy_lease() {
 	if ! container_networks "$coordinator_container" | grep -q "\"$proxy_network\""; then
 		Docker network connect "$proxy_network" "$coordinator_container"
 	fi
-
-	proxy_lease_acquired=true
 }
 
 release_proxy_lease() {
-	[ "$proxy_lease_acquired" = true ] || return 0
+	if ! container_networks "$coordinator_container" | grep -q "\"$proxy_network\""; then
+		return 0
+	fi
 
 	if ! Docker network disconnect "$proxy_network" "$coordinator_container" >/dev/null 2>&1; then
 		echo 'Could not disconnect this coordinator lease from the shared proxy network; continuing with project-based lease detection.' >&2
 	fi
-
-	proxy_lease_acquired=false
 }
 
 other_proxy_client_is_running() {
