@@ -56,7 +56,7 @@ setup() {
 	Docker() {
 		printf 'docker %s\n' "$*" >> "$TEST_LOG"
 		case "$*" in
-			"network inspect $proxy_network") return 0 ;;
+			"network inspect $(proxy_network_name)") return 0 ;;
 		esac
 		return 1
 	}
@@ -64,6 +64,6 @@ setup() {
 	run ensure_proxy_network
 
 	[ "$status" -eq 0 ]
-	grep -q "^docker network inspect $proxy_network$" "$TEST_LOG"
+	grep -q "^docker network inspect $(proxy_network_name)$" "$TEST_LOG"
 	! grep -q '^docker network create' "$TEST_LOG"
 }
