@@ -10,8 +10,8 @@ copy_to_named_volume() {
 	Docker run --rm -i \
 		-v "$volume:/target" \
 		"$proxy_helper_image" \
-		sh -c 'cat > "/target/$1"' sh "$destination" \
-		< "$source"
+		tee "/target/$destination" \
+		< "$source" >/dev/null
 }
 
 install_proxy_assets() {
