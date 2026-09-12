@@ -10,7 +10,7 @@ setup() {
 	# shellcheck source=.docker/scripts/proxy/services.sh
 	source "$REPO_ROOT/.docker/scripts/proxy/services.sh"
 
-	project=current
+	PROJECT_NAME=current
 }
 
 @test "running service is connected to proxy network" {
@@ -23,13 +23,13 @@ setup() {
 
 	connect_running_service_to_proxy_network nginx
 
-	grep -q "^docker network connect $proxy_network service-container$" "$TEST_LOG"
+	grep -q "^docker network connect $(proxy_network_name) service-container$" "$TEST_LOG"
 }
 
 @test "service already on proxy network is not connected twice" {
 	service_is_running() { return 0; }
 	container_for_service() { printf '%s\n' service-container; }
-	container_networks() { printf '{\"%s\":{}}\n' "$proxy_network"; }
+	container_networks() { printf '{\"%s\":{}}\n' "$(proxy_network_name)"; }
 	Docker() {
 		printf 'docker %s\n' "$*" >> "$TEST_LOG"
 	}
