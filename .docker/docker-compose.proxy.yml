@@ -1,6 +1,8 @@
 services:
   nginx-proxy:
-    image: nginxproxy/nginx-proxy:1.11-alpine
+    build:
+      context: ./.docker/nginx-proxy
+      dockerfile: Dockerfile
     container_name: librecode-dev-proxy
     restart: unless-stopped
     labels:
@@ -17,36 +19,9 @@ services:
       - librecode-dev-proxy-html:/usr/share/nginx/html
     environment:
       - ENABLE_IPV6=true
-    networks:
-      - proxy
-
-  proxy-dashboard:
-    image: nginx:alpine
-    container_name: librecode-dev-proxy-dashboard
-    restart: unless-stopped
-    labels:
-      coop.librecode.dev-proxy-dashboard: "true"
-    volumes:
-      - librecode-dev-proxy-html:/usr/share/nginx/html:ro
-      - ./.docker/nginx-proxy/dashboard.conf:/etc/nginx/conf.d/default.conf:ro
-    environment:
       - VIRTUAL_HOST=localhost,*.localhost
-      - VIRTUAL_PORT=80
+      - VIRTUAL_PORT=8080
       - SELF_SIGNED_HOST=localhost,*.localhost
-    networks:
-      - proxy
-
-  proxy-dashboard-updater:
-    image: docker:29-cli
-    container_name: librecode-dev-proxy-dashboard-updater
-    restart: unless-stopped
-    labels:
-      coop.librecode.dev-proxy-dashboard-updater: "true"
-    volumes:
-      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
-      - librecode-dev-proxy-html:/html
-      - ./.docker/scripts/proxy-dashboard.sh:/usr/local/bin/proxy-dashboard.sh:ro
-    command: /bin/sh /usr/local/bin/proxy-dashboard.sh
     networks:
       - proxy
 
