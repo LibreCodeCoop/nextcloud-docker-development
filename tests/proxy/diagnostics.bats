@@ -27,6 +27,24 @@ setup() {
 	[ "$status" -eq 1 ]
 }
 
+@test "repository project name suggests a shorter Compose project name" {
+	run project_name_needs_shortening_hint nextcloud-docker-development
+
+	[ "$status" -eq 0 ]
+}
+
+@test "long Compose project name suggests a shorter name" {
+	run project_name_needs_shortening_hint this-is-a-very-long-project-name
+
+	[ "$status" -eq 0 ]
+}
+
+@test "short Compose project name does not suggest a shorter name" {
+	run project_name_needs_shortening_hint dev
+
+	[ "$status" -eq 1 ]
+}
+
 @test "runtime diagnostics include host versions without warning for current runtime" {
 	runtime_version() {
 		case "$1" in
@@ -34,13 +52,16 @@ setup() {
 			runc) printf '%s\n' 1.5.1 ;;
 		esac
 	}
+	PROJECT_NAME=dev
 
 	run runtime_diagnostics_json
 
 	[ "$status" -eq 0 ]
 	[[ "$output" == *'"docker":"29.8.0"'* ]]
 	[[ "$output" == *'"runc":"1.5.1"'* ]]
+	[[ "$output" == *'"project":{"name":"dev"}'* ]]
 	[[ "$output" == *'"warnings":[]'* ]]
+	[[ "$output" == *'"hints":[]'* ]]
 }
 
 @test "runtime diagnostics warn for known old runtime combination" {
@@ -50,10 +71,28 @@ setup() {
 			runc) printf '%s\n' 1.1.12 ;;
 		esac
 	}
+	PROJECT_NAME=dev
 
 	run runtime_diagnostics_json
 
 	[ "$status" -eq 0 ]
 	[[ "$output" == *'"code":"outdated-docker-runtime"'* ]]
 	[[ "$output" == *'Update Docker Engine'* ]]
+}
+
+@test "runtime diagnostics include project-name hint with example host" {
+	runtime_version() {
+		case "$1" in
+			docker) printf '%s\n' 29.8.0 ;;
+			runc) printf '%s\n' 1.5.1 ;;
+		esac
+	}
+	PROJECT_NAME=nextcloud-docker-development
+
+	run runtime_diagnostics_json
+
+	[ "$status" -eq 0 ]
+	[[ "$output" == *'"code":"long-project-name"'* ]]
+	[[ "$output" == *'"projectName":"nextcloud-docker-development"'* ]]
+	[[ "$output" == *'"exampleHost":"nextcloud-docker-development-playwright.localhost"'* ]]
 }
