@@ -2,18 +2,19 @@
 
 set -eu
 
-script_dir="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
 proxy_lib_dir="${PROXY_LIB_DIR:-$script_dir/proxy}"
 
-# shellcheck source=.docker/scripts/proxy/common.sh
+# The modules are loaded from a runtime path in the coordinator container.
+# shellcheck disable=SC1090,SC1091
 . "$proxy_lib_dir/common.sh"
-# shellcheck source=.docker/scripts/proxy/infrastructure.sh
+# shellcheck disable=SC1090,SC1091
 . "$proxy_lib_dir/infrastructure.sh"
-# shellcheck source=.docker/scripts/proxy/assets.sh
+# shellcheck disable=SC1090,SC1091
 . "$proxy_lib_dir/assets.sh"
-# shellcheck source=.docker/scripts/proxy/services.sh
+# shellcheck disable=SC1090,SC1091
 . "$proxy_lib_dir/services.sh"
-# shellcheck source=.docker/scripts/proxy/lease.sh
+# shellcheck disable=SC1090,SC1091
 . "$proxy_lib_dir/lease.sh"
 
 coordinator_container="$(hostname)"
