@@ -8,11 +8,13 @@ proxy_label=coop.librecode.dev-proxy=true
 proxy_client_label=coop.librecode.dev-proxy-client=true
 proxy_assets_volume=librecode-dev-proxy-assets
 proxy_vhost_volume=librecode-dev-proxy-vhost
+proxy_lease_acquired=false
+coordinator_container="$(hostname)"
 
 compose_project() {
 	docker inspect \
 		--format '{{ index .Config.Labels "com.docker.compose.project" }}' \
-		"$(hostname)"
+		"$coordinator_container"
 }
 
 project="$(compose_project)"
@@ -174,12 +176,16 @@ install_proxy_assets() {
 	docker run --rm \
 		-v "$proxy_assets_volume:/target" \
 		docker:29-cli \
-		sh -c 'rm -f /target/Procfile /target/dashboard.tmpl'
+		sh -c 'rm -f /target/Procfile /target/docker-gen.cfg /target/dashboard.tmpl'
 
 	copy_to_named_volume \
 		"$proxy_assets_volume" \
 		"$PROJECT_DIR/.docker/nginx-proxy/Procfile" \
 		Procfile
+	copy_to_named_volume \
+		"$proxy_assets_volume" \
+		"$PROJECT_DIR/.docker/nginx-proxy/docker-gen.cfg" \
+		docker-gen.cfg
 	copy_to_named_volume \
 		"$proxy_assets_volume" \
 		"$PROJECT_DIR/.docker/nginx-proxy/dashboard.tmpl" \
@@ -270,23 +276,72 @@ report_environment_ready() {
 		nextcloud sh /var/www/scripts/report-environment-ready
 }
 
+acquire_proxy_lease() {
+	if ! docker inspect \
+		--format '{{ json .NetworkSettings.Networks }}' \
+		"$coordinator_container" |
+		grep -q "\"$proxy_network\""; then
+		docker network connect "$proxy_network" "$coordinator_container"
+	fi
+
+	proxy_lease_acquired=true
+}
+
+release_proxy_lease() {
+	[ "$proxy_lease_acquired" = true ] || return 0
+
+	docker network disconnect "$proxy_network" "$coordinator_container" >/dev/null 2>&1 || true
+	proxy_lease_acquired=false
+}
+
 other_proxy_client_is_running() {
 	docker ps \
 		--filter "label=$proxy_client_label" \
-		--format '{{.Label "com.docker.compose.project"}}' |
-		grep -v -x "$project" |
+		--filter "network=$proxy_network" \
+		--format '{{.ID}}' |
 		grep -q .
 }
 
+other_proxy_route_is_running() {
+	for container in $(docker ps --filter "network=$proxy_network" --format '{{.ID}}'); do
+		container_project="$(docker inspect \
+			--format '{{ index .Config.Labels "com.docker.compose.project" }}' \
+			"$container" 2>/dev/null || true)"
+
+		case "$container_project" in
+			"$project"|"$proxy_project")
+				continue
+				;;
+		esac
+
+		virtual_host="$(docker inspect \
+			--format '{{range .Config.Env}}{{println .}}{{end}}' \
+			"$container" 2>/dev/null |
+			sed -n 's/^VIRTUAL_HOST=//p' |
+			head -n 1)"
+
+		[ -z "$virtual_host" ] || return 0
+	done
+
+	return 1
+}
+
+proxy_is_used_by_another_environment() {
+	other_proxy_client_is_running || other_proxy_route_is_running
+}
+
 release_proxy_if_unused() {
-	if other_proxy_client_is_running; then
+	release_proxy_lease
+
+	if proxy_is_used_by_another_environment; then
 		echo '✅ Shared development proxy is still used by another environment.'
 		return 0
 	fi
 
+	# Give an environment starting concurrently time to acquire its lease.
 	sleep 1
 
-	if other_proxy_client_is_running; then
+	if proxy_is_used_by_another_environment; then
 		echo '✅ Shared development proxy is still used by another environment.'
 		return 0
 	fi
@@ -329,6 +384,9 @@ else
 	proxy_state=started
 fi
 
+acquire_proxy_lease
+trap shutdown INT TERM HUP
+
 connect_running_service_to_proxy_network nginx
 connect_running_service_to_proxy_network mailpit
 connect_running_service_to_proxy_network eurooffice
@@ -340,8 +398,6 @@ if ! report_environment_ready; then
 fi
 
 success "$proxy_state"
-
-trap shutdown INT TERM HUP
 
 while :; do
 	sleep 3600 &
