@@ -91,6 +91,27 @@ wait_for_https_status() {
 	wait_for_absent librecode-dev-proxy-ssl-companion
 }
 
+@test "Ctrl+C on attached compose stops the last shared proxy" {
+	log="$BATS_TEST_TMPDIR/compose-up.log"
+
+	COMPOSE_PROJECT_NAME=proxytesta REPO_ROOT="$REPO_ROOT" \
+		docker compose \
+			--project-name proxytesta \
+			--file "$FIXTURE" \
+			up >"$log" 2>&1 &
+	compose_pid=$!
+
+	wait_for_running librecode-dev-proxy
+	wait_for_running librecode-dev-proxy-ssl-companion
+	wait_for_https_status proxytesta.localhost 200
+
+	kill -INT "$compose_pid"
+	wait "$compose_pid" || true
+
+	wait_for_absent librecode-dev-proxy
+	wait_for_absent librecode-dev-proxy-ssl-companion
+}
+
 @test "shared proxy stays alive until the last project stops" {
 	compose_test proxytesta up --detach
 	compose_test proxytestb up --detach
