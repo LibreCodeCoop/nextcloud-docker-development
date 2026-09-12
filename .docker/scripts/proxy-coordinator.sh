@@ -72,11 +72,8 @@ shutdown() {
 wait_for_shutdown() {
 	trap shutdown INT TERM HUP
 
-	# Keep the wait interval short. Some /bin/sh implementations defer traps
-	# while waiting for a child process, so a long sleep can outlive Compose's
-	# stop grace period and prevent the lease cleanup from running.
 	while :; do
-		sleep "${PROXY_SIGNAL_POLL_SECONDS:-1}" &
+		sleep 3600 &
 		wait "$!" || true
 	done
 }
@@ -103,15 +100,4 @@ run() {
 	wait_for_shutdown
 }
 
-case "${1:-run}" in
-	run)
-		run
-		;;
-	release)
-		release
-		;;
-	*)
-		echo "Unknown proxy coordinator command: $1" >&2
-		exit 2
-		;;
-esac
+run
