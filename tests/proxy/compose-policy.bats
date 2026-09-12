@@ -4,17 +4,20 @@ setup() {
 	REPO_ROOT="$(cd "$BATS_TEST_DIRNAME/../.." && pwd)"
 }
 
-@test "default third-party runtime images use concrete versions" {
-	grep -Eq '^[[:space:]]+image: docker:[0-9]+\.[0-9]+\.[0-9]+-cli$' "$REPO_ROOT/docker-compose.yml"
-	grep -Eq '^[[:space:]]+image: axllent/mailpit:v[0-9]+\.[0-9]+\.[0-9]+$' "$REPO_ROOT/docker-compose.yml"
-	grep -Eq '^[[:space:]]+image: redis:[0-9]+\.[0-9]+\.[0-9]+$' "$REPO_ROOT/docker-compose.yml"
-	grep -Eq '^[[:space:]]+image: nginxproxy/nginx-proxy:[0-9]+\.[0-9]+\.[0-9]+-alpine$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
-	grep -Eq '^[[:space:]]+image: sebastienheyd/self-signed-proxy-companion:[0-9]+\.[0-9]+\.[0-9]+$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
+@test "default third-party runtime images are pinned by tag and digest" {
+	grep -Eq '^[[:space:]]+image: docker:[0-9]+\.[0-9]+\.[0-9]+-cli@sha256:[0-9a-f]{64}$' "$REPO_ROOT/docker-compose.yml"
+	grep -Eq '^[[:space:]]+image: axllent/mailpit:v[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' "$REPO_ROOT/docker-compose.yml"
+	grep -Eq '^[[:space:]]+image: redis:[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' "$REPO_ROOT/docker-compose.yml"
+	grep -Eq '^[[:space:]]+image: mysql:8\.4@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/database-services.yml"
+	grep -Eq '^[[:space:]]+image: postgres:13-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/database-services.yml"
+	grep -Eq '^[[:space:]]+image: nginxproxy/nginx-proxy:[0-9]+\.[0-9]+\.[0-9]+-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
+	grep -Eq '^[[:space:]]+image: sebastienheyd/self-signed-proxy-companion:[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
+	grep -Eq '^proxy_helper_image="\$\{PROXY_HELPER_IMAGE:-docker:[0-9]+\.[0-9]+\.[0-9]+-cli@sha256:[0-9a-f]{64}\}"$' "$REPO_ROOT/.docker/scripts/proxy/assets.sh"
 }
 
-@test "proxy integration fixture uses concrete image versions" {
-	grep -Eq '^[[:space:]]+image: nginx:[0-9]+\.[0-9]+\.[0-9]+-alpine$' "$REPO_ROOT/tests/proxy/fixtures/compose.yml"
-	grep -Eq '^[[:space:]]+image: docker:[0-9]+\.[0-9]+\.[0-9]+-cli$' "$REPO_ROOT/tests/proxy/fixtures/compose.yml"
+@test "proxy integration fixture images are pinned by tag and digest" {
+	grep -Eq '^[[:space:]]+image: nginx:[0-9]+\.[0-9]+\.[0-9]+-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/tests/proxy/fixtures/compose.yml"
+	grep -Eq '^[[:space:]]+image: docker:[0-9]+\.[0-9]+\.[0-9]+-cli@sha256:[0-9a-f]{64}$' "$REPO_ROOT/tests/proxy/fixtures/compose.yml"
 }
 
 @test "compose files do not keep shutdown workarounds from runtime debugging" {
