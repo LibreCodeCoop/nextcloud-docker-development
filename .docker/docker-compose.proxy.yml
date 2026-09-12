@@ -7,8 +7,8 @@ services:
     working_dir: /dashboard
     command: ["forego", "start", "-r"]
     ports:
-      - "80:80"
-      - "443:443"
+      - "${IP_BIND:-127.0.0.1}:80:80"
+      - "${IP_BIND:-127.0.0.1}:443:443"
     volumes:
       - ${DOCKER_SOCKET:-/var/run/docker.sock}:/tmp/docker.sock:ro
       - librecode-dev-proxy-vhost:/etc/nginx/vhost.d
