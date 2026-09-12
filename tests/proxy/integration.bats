@@ -82,7 +82,7 @@ wait_for_https_status() {
 	wait_for_running librecode-dev-proxy
 	wait_for_running librecode-dev-proxy-ssl-companion
 	wait_for_https_status localhost 200
-	grep -q 'LibreCode Development Proxy' "$BODY"
+	grep -q 'LibreCode Nextcloud Development Environment' "$BODY"
 	grep -q 'Environment checks' "$BODY"
 	grep -q 'Help improve this development environment' "$BODY"
 	grep -q 'Contribute on GitHub' "$BODY"
