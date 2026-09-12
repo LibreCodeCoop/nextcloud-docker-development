@@ -19,6 +19,8 @@ services:
       - ~/.npm:/var/www/.npm/
       - ./volumes/nextcloud:/var/www/html
     restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 3s
     depends_on:
       - database
     environment:
@@ -53,6 +55,8 @@ services:
     #   context: .docker/
     #   dockerfile: Dockerfile.nginx
     restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 3s
     depends_on:
       - nextcloud
     volumes:
@@ -78,18 +82,22 @@ services:
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-admin}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD:-admin}
       - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-master}
+    pre_stop:
+      - command: ["/bin/sh", "/usr/local/lib/librecode/proxy-coordinator.sh", "release"]
     restart: "no"
-    stop_grace_period: 15s
+    stop_grace_period: 8s
     depends_on:
       - nextcloud
   mailpit:
     image: axllent/mailpit
+    stop_grace_period: 3s
     environment:
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-mailpit.localhost
       - VIRTUAL_PORT=8025
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-mailpit.localhost
   redis:
     image: redis
+    stop_grace_period: 3s
   eurooffice:
     image: ghcr.io/euro-office/documentserver:latest
     profiles:
