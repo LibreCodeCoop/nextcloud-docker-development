@@ -4,6 +4,7 @@ set -eu
 
 script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
 proxy_lib_dir="${PROXY_LIB_DIR:-$script_dir/proxy}"
+release_marker=/tmp/librecode-proxy-lease-released
 
 # The modules are loaded from a runtime path in the coordinator container.
 # shellcheck disable=SC1090,SC1091
@@ -46,10 +47,23 @@ success() {
 	esac
 }
 
+release() {
+	if [ -f "$release_marker" ]; then
+		return 0
+	fi
+
+	echo 'Releasing shared development proxy lease.'
+	if release_proxy_if_unused; then
+		touch "$release_marker"
+		return 0
+	fi
+
+	return 1
+}
+
 shutdown() {
 	trap - INT TERM HUP
-	echo 'Releasing shared development proxy lease.'
-	release_proxy_if_unused || true
+	release || true
 	exit 0
 }
 
@@ -62,7 +76,7 @@ wait_for_shutdown() {
 	done
 }
 
-main() {
+run() {
 	validate_environment
 	ensure_proxy_network
 	install_proxy_assets
@@ -70,6 +84,7 @@ main() {
 	proxy_state="$(ensure_proxy_running)"
 
 	acquire_proxy_lease
+	rm -f "$release_marker"
 	trap shutdown INT TERM HUP
 
 	connect_project_services
@@ -82,6 +97,15 @@ main() {
 	wait_for_shutdown
 }
 
-if [ "${PROXY_COORDINATOR_SOURCE_ONLY:-false}" != "true" ]; then
-	main "$@"
-fi
+case "${1:-run}" in
+	run)
+		run
+		;;
+	release)
+		release
+		;;
+	*)
+		echo "Unknown proxy coordinator command: $1" >&2
+		exit 2
+		;;
+esac
