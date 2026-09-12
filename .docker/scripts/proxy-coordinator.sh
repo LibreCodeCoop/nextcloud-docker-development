@@ -70,8 +70,11 @@ shutdown() {
 wait_for_shutdown() {
 	trap shutdown INT TERM HUP
 
+	# Keep the wait interval short. Some /bin/sh implementations defer traps
+	# while waiting for a child process, so a long sleep can outlive Compose's
+	# stop grace period and prevent the lease cleanup from running.
 	while :; do
-		sleep 3600 &
+		sleep "${PROXY_SIGNAL_POLL_SECONDS:-1}" &
 		wait "$!" || true
 	done
 }
