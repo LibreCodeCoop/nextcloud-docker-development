@@ -6,22 +6,24 @@ script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
 proxy_lib_dir="${PROXY_LIB_DIR:-$script_dir/proxy}"
 release_marker=/tmp/librecode-proxy-lease-released
 
-# The modules are loaded from a runtime path in the coordinator container.
-# shellcheck disable=SC1090,SC1091
+# shellcheck source=proxy/common.sh
 . "$proxy_lib_dir/common.sh"
-# shellcheck disable=SC1090,SC1091
-. "$proxy_lib_dir/infrastructure.sh"
-# shellcheck disable=SC1090,SC1091
-. "$proxy_lib_dir/assets.sh"
-# shellcheck disable=SC1090,SC1091
-. "$proxy_lib_dir/diagnostics.sh"
-# shellcheck disable=SC1090,SC1091
-. "$proxy_lib_dir/services.sh"
-# shellcheck disable=SC1090,SC1091
-. "$proxy_lib_dir/lease.sh"
 
 coordinator_container="$(hostname)"
 project="$(container_project "$coordinator_container")"
+
+# These modules share the context initialized above. Keep the source directives
+# in sync with the runtime paths so ShellCheck can analyze the complete graph.
+# shellcheck source=proxy/infrastructure.sh
+. "$proxy_lib_dir/infrastructure.sh"
+# shellcheck source=proxy/assets.sh
+. "$proxy_lib_dir/assets.sh"
+# shellcheck source=proxy/diagnostics.sh
+. "$proxy_lib_dir/diagnostics.sh"
+# shellcheck source=proxy/services.sh
+. "$proxy_lib_dir/services.sh"
+# shellcheck source=proxy/lease.sh
+. "$proxy_lib_dir/lease.sh"
 
 validate_environment() {
 	if [ -z "$project" ]; then
