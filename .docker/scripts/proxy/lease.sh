@@ -1,41 +1,47 @@
 #!/bin/sh
 
-# Globals are provided by common.sh and proxy-coordinator.sh before use.
-# shellcheck disable=SC2154
-
 acquire_proxy_lease() {
-	if ! container_networks "$coordinator_container" | grep -q "\"$proxy_network\""; then
-		Docker network connect "$proxy_network" "$coordinator_container"
+	network="$(proxy_network_name)"
+
+	if ! container_networks "${COORDINATOR_CONTAINER:-}" | grep -q "\"$network\""; then
+		Docker network connect "$network" "${COORDINATOR_CONTAINER:-}"
 	fi
 }
 
 release_proxy_lease() {
-	if ! container_networks "$coordinator_container" | grep -q "\"$proxy_network\""; then
+	network="$(proxy_network_name)"
+
+	if ! container_networks "${COORDINATOR_CONTAINER:-}" | grep -q "\"$network\""; then
 		return 0
 	fi
 
-	if ! Docker network disconnect "$proxy_network" "$coordinator_container" >/dev/null 2>&1; then
+	if ! Docker network disconnect "$network" "${COORDINATOR_CONTAINER:-}" >/dev/null 2>&1; then
 		echo 'Could not disconnect this coordinator lease from the shared proxy network; continuing with project-based lease detection.' >&2
 	fi
 }
 
 other_proxy_client_is_running() {
+	network="$(proxy_network_name)"
+
 	for container in $(Docker ps \
-		--filter "label=$proxy_client_label" \
-		--filter "network=$proxy_network" \
+		--filter "label=$(proxy_client_label)" \
+		--filter "network=$network" \
 		--format '{{.ID}}'); do
-		[ "$(container_project "$container")" = "$project" ] || return 0
+		[ "$(container_project "$container")" = "${PROJECT_NAME:-}" ] || return 0
 	done
 
 	return 1
 }
 
 other_proxy_route_is_running() {
-	for container in $(Docker ps --filter "network=$proxy_network" --format '{{.ID}}'); do
+	network="$(proxy_network_name)"
+	proxy_project="$(proxy_project_name)"
+
+	for container in $(Docker ps --filter "network=$network" --format '{{.ID}}'); do
 		container_project_name="$(container_project "$container")"
 
 		case "$container_project_name" in
-			"$project"|"$proxy_project")
+			"${PROJECT_NAME:-}"|"$proxy_project")
 				continue
 				;;
 		esac
