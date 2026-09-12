@@ -75,6 +75,8 @@ services:
     working_dir: ${PWD}
     environment:
       - PROJECT_DIR=${PWD}
+      - DOCKER_SOCKET=${DOCKER_SOCKET:-/var/run/docker.sock}
+      - IP_BIND=${IP_BIND:-127.0.0.1}
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-admin}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD:-admin}
       - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-master}
@@ -108,53 +110,3 @@ services:
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-eurooffice.localhost
     extra_hosts:
       - host.docker.internal:host-gateway
-  playwright:
-    image: mcr.microsoft.com/playwright:v1.59.1-noble
-    profiles:
-      - playwright
-    user: pwuser
-    volumes:
-      - ./volumes/nextcloud:/var/www/html
-    working_dir: /var/www/html
-    environment:
-      - PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://${COMPOSE_PROJECT_NAME}.localhost}
-      - NODE_ENV=test
-      - CI=${CI:-false}
-      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-playwright.localhost
-      - VIRTUAL_PORT=9323
-      - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-playwright.localhost
-    command: sleep infinity
-    depends_on:
-      - nextcloud
-    restart: unless-stopped
-    networks:
-      - default
-  signal-gateway:
-    image: bbernhard/signal-cli-rest-api:latest
-    profiles:
-      - signal
-    restart: unless-stopped
-    volumes:
-      - ./volumes/signal:/home/.local/share/signal-cli
-    environment:
-      - LOG_LEVEL=info
-      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-signal.localhost
-      - VIRTUAL_PORT=8080
-      - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-signal.localhost
-  whatsapp.web:
-    image: aldinokemal2104/go-whatsapp-web-multidevice
-    profiles:
-      - whatsapp
-    restart: unless-stopped
-    environment:
-      - APP_PORT=3000
-      - APP_DEBUG=true
-      - APP_OS=cloud.libresign.coop
-      - APP_ACCOUNT_VALIDATION=false
-      - WHATSAPP_AUTO_DOWNLOAD_MEDIA=false
-      - WHATSAPP_WEBHOOK=${WHATSAPP_WEBHOOK:-http://nginx/index.php/apps/twofactor_gateway/gowhatsapp/webhook}
-      - WHATSAPP_WEBHOOK_SECRET=${WHATSAPP_WEBHOOK_SECRET:-change-this-secret}
-      - WHATSAPP_WEBHOOK_EVENTS=${WHATSAPP_WEBHOOK_EVENTS:-message,message.ack,group.participants,chat_presence}
-      - WHATSAPP_AUTO_REPLY="Conta de sistema. Para falar com a LibreCode, mande email para contato@libresign.coop"
-    volumes:
-      -  ./volumes/go-whatsapp-web:/usr/src/app/files
