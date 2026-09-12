@@ -206,17 +206,6 @@ report_environment_ready() {
 		nextcloud sh /var/www/scripts/report-environment-ready
 }
 
-install_proxy_assets() {
-	docker run --rm \
-		-v librecode-dev-proxy-conf:/conf \
-		-v librecode-dev-proxy-html:/html \
-		-v "$PROJECT_DIR/.docker/nginx-proxy:/source:ro" \
-		alpine sh -c '
-			cp /source/localhost.conf /conf/librecode-localhost.conf
-			cp /source/index.html /html/index.html
-		'
-}
-
 success() {
 	case "$1" in
 		reused)
@@ -230,8 +219,6 @@ success() {
 
 echo "Validating Compose project ${project} at ${PROJECT_DIR}."
 compose config --quiet
-
-install_proxy_assets
 
 if proxy_is_ready; then
 	proxy_compose up --detach
