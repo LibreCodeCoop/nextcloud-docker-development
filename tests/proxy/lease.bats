@@ -10,8 +10,8 @@ setup() {
 	# shellcheck source=.docker/scripts/proxy/lease.sh
 	source "$REPO_ROOT/.docker/scripts/proxy/lease.sh"
 
-	project=current
-	coordinator_container=current-coordinator
+	PROJECT_NAME=current
+	COORDINATOR_CONTAINER=current-coordinator
 	PROXY_LEASE_GRACE_SECONDS=0
 }
 
@@ -50,7 +50,7 @@ setup() {
 	}
 	container_project() {
 		case "$1" in
-			proxy) printf '%s\n' "$proxy_project" ;;
+			proxy) proxy_project_name ;;
 			current-route) printf '%s\n' current ;;
 			other-route) printf '%s\n' other ;;
 		esac
@@ -67,7 +67,7 @@ setup() {
 @test "last lease stops the shared proxy with bounded timeout" {
 	PROXY_STOP_TIMEOUT_SECONDS=7
 	container_networks() {
-		printf '{"%s":{}}\n' "$proxy_network"
+		printf '{"%s":{}}\n' "$(proxy_network_name)"
 	}
 	proxy_is_used_by_another_environment() {
 		return 1
@@ -82,13 +82,13 @@ setup() {
 	run release_proxy_if_unused
 
 	[ "$status" -eq 0 ]
-	grep -q "^docker network disconnect $proxy_network $coordinator_container$" "$TEST_LOG"
+	grep -q "^docker network disconnect $(proxy_network_name) $COORDINATOR_CONTAINER$" "$TEST_LOG"
 	grep -q '^proxy-compose down --timeout 7 --remove-orphans$' "$TEST_LOG"
 }
 
 @test "another lease prevents proxy shutdown" {
 	container_networks() {
-		printf '{"%s":{}}\n' "$proxy_network"
+		printf '{"%s":{}}\n' "$(proxy_network_name)"
 	}
 	proxy_is_used_by_another_environment() {
 		return 0
@@ -103,7 +103,7 @@ setup() {
 	run release_proxy_if_unused
 
 	[ "$status" -eq 0 ]
-	grep -q "^docker network disconnect $proxy_network $coordinator_container$" "$TEST_LOG"
+	grep -q "^docker network disconnect $(proxy_network_name) $COORDINATOR_CONTAINER$" "$TEST_LOG"
 	! grep -q '^proxy-compose down' "$TEST_LOG"
 }
 
@@ -131,5 +131,5 @@ setup() {
 
 	acquire_proxy_lease
 
-	grep -q "^docker network connect $proxy_network $coordinator_container$" "$TEST_LOG"
+	grep -q "^docker network connect $(proxy_network_name) $COORDINATOR_CONTAINER$" "$TEST_LOG"
 }
