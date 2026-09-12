@@ -46,9 +46,12 @@
     li { margin: .45rem 0; }
     a { color: LinkText; }
     code { padding: .15em .4em; border-radius: 4px; background: color-mix(in srgb, CanvasText 10%, transparent); }
-    .not-found, .runtime-warning { padding: 1rem; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 8px; }
-    .runtime-warning { margin-top: 1rem; border-color: #c47f00; }
-    .runtime-warning strong { display: block; margin-bottom: .4rem; }
+    .not-found, .runtime-warning, .runtime-hint { padding: 1rem; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 8px; }
+    .runtime-warning, .runtime-hint { margin-top: 1rem; }
+    .runtime-warning { border-color: #c47f00; }
+    .runtime-hint { border-color: color-mix(in srgb, LinkText 55%, Canvas 45%); }
+    .runtime-warning strong, .runtime-hint strong { display: block; margin-bottom: .4rem; }
+    .runtime-hint p { margin: .45rem 0 0; }
     .runtime-list { list-style: none; padding: 0; }
     .runtime-list li { margin: .35rem 0; }
     .muted { opacity: .7; }
@@ -184,6 +187,39 @@
             const message = document.createElement('span');
             message.textContent = warning.message;
             panel.append(title, message);
+            checks.appendChild(panel);
+          }
+
+          for (const hint of runtime.hints || []) {
+            if (hint.code !== 'long-project-name') continue;
+
+            const panel = document.createElement('div');
+            panel.className = 'runtime-hint';
+
+            const title = document.createElement('strong');
+            title.textContent = 'ℹ Shorter local URLs are available';
+
+            const explanation = document.createElement('p');
+            explanation.append(
+              'This environment uses the Compose project name ',
+              Object.assign(document.createElement('code'), { textContent: hint.projectName }),
+              ', which makes local URLs longer.'
+            );
+
+            const example = document.createElement('p');
+            example.append(
+              'For example: ',
+              Object.assign(document.createElement('code'), { textContent: `https://${hint.exampleHost}/` })
+            );
+
+            const suggestion = document.createElement('p');
+            suggestion.append(
+              'You can keep the current directory and use a shorter project name, for example ',
+              Object.assign(document.createElement('code'), { textContent: 'COMPOSE_PROJECT_NAME=dev docker compose up' }),
+              '.'
+            );
+
+            panel.append(title, explanation, example, suggestion);
             checks.appendChild(panel);
           }
         })
