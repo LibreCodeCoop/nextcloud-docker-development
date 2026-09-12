@@ -1,6 +1,6 @@
 #!/bin/sh
 
-proxy_helper_image="${PROXY_HELPER_IMAGE:-docker:29.8.0-cli}"
+proxy_helper_image="${PROXY_HELPER_IMAGE:-docker:29.8.0-cli@sha256:eccaacfeed644c7de222ff047483568cb988dde95476fbaaf10ea2d04921bb66}"
 
 copy_to_named_volume() {
 	volume="$1"
