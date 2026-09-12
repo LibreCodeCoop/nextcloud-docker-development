@@ -46,7 +46,11 @@
     li { margin: .45rem 0; }
     a { color: LinkText; }
     code { padding: .15em .4em; border-radius: 4px; background: color-mix(in srgb, CanvasText 10%, transparent); }
-    .not-found { padding: 1rem; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 8px; }
+    .not-found, .runtime-warning { padding: 1rem; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 8px; }
+    .runtime-warning { margin-top: 1rem; border-color: #c47f00; }
+    .runtime-warning strong { display: block; margin-bottom: .4rem; }
+    .runtime-list { list-style: none; padding: 0; }
+    .runtime-list li { margin: .35rem 0; }
     .muted { opacity: .7; }
   </style>
 </head>
@@ -62,6 +66,12 @@
     <p>The shared development proxy is running.</p>
     <h2>Active environments</h2>
     <div id="environments"></div>
+
+    <section id="runtime-section" hidden>
+      <h2>Environment checks</h2>
+      <div id="runtime-checks"><p class="muted">Loading runtime information…</p></div>
+    </section>
+
     <p class="muted">This page is generated from the routes currently connected to the shared development proxy.</p>
   </main>
 
@@ -141,6 +151,48 @@
         link.textContent = closest;
         suggestion.hidden = false;
       }
+    } else {
+      const runtimeSection = document.getElementById('runtime-section');
+      runtimeSection.hidden = false;
+
+      fetch('/runtime.json', { cache: 'no-store' })
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })
+        .then((runtime) => {
+          const checks = document.getElementById('runtime-checks');
+          checks.replaceChildren();
+
+          const list = document.createElement('ul');
+          list.className = 'runtime-list';
+          for (const [label, version] of [
+            ['Docker Engine', runtime.docker],
+            ['Docker Compose', runtime.compose],
+            ['runc', runtime.runc],
+          ]) {
+            const item = document.createElement('li');
+            item.textContent = `✓ ${label} ${version || 'unknown'}`;
+            list.appendChild(item);
+          }
+          checks.appendChild(list);
+
+          for (const warning of runtime.warnings || []) {
+            const panel = document.createElement('div');
+            panel.className = 'runtime-warning';
+            const title = document.createElement('strong');
+            title.textContent = '⚠ Docker runtime needs attention';
+            const message = document.createElement('span');
+            message.textContent = warning.message;
+            panel.append(title, message);
+            checks.appendChild(panel);
+          }
+        })
+        .catch(() => {
+          const checks = document.getElementById('runtime-checks');
+          checks.textContent = 'Runtime information is not available.';
+          checks.className = 'muted';
+        });
     }
   </script>
 </body>
