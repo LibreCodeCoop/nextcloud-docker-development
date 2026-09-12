@@ -20,7 +20,7 @@ if [ -z "$project" ]; then
 fi
 
 if [ -z "${PROJECT_DIR:-}" ]; then
-	echo 'The host project directory was not provided to the coordinator.' >&2
+	echo 'The project directory was not provided to the coordinator.' >&2
 	exit 1
 fi
 
@@ -42,7 +42,6 @@ proxy_compose() {
 
 container_for_published_port() {
 	port="$1"
-
 	docker ps \
 		--filter "publish=$port" \
 		--format '{{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Label "coop.librecode.dev-proxy"}}'
@@ -207,14 +206,15 @@ report_environment_ready() {
 }
 
 install_proxy_assets() {
-	docker run --rm \
+	docker run --rm -i \
 		-v librecode-dev-proxy-conf:/conf \
+		alpine sh -c 'cat > /conf/librecode-localhost.conf' \
+		< "$PROJECT_DIR/.docker/nginx-proxy/localhost.conf"
+
+	docker run --rm -i \
 		-v librecode-dev-proxy-html:/html \
-		-v "$PROJECT_DIR/.docker/nginx-proxy:/source:ro" \
-		alpine sh -c '
-			cp /source/localhost.conf /conf/librecode-localhost.conf
-			cp /source/index.html /html/index.html
-		'
+		alpine sh -c 'cat > /html/index.html' \
+		< "$PROJECT_DIR/.docker/nginx-proxy/index.html"
 }
 
 success() {
