@@ -1,0 +1,46 @@
+name: Proxy tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Proxy unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Bats-core
+        uses: bats-core/bats-action@4.0.0
+        with:
+          support-install: false
+          assert-install: false
+          detik-install: false
+          file-install: false
+      - name: Run unit tests
+        run: bats tests/proxy/lease.bats tests/proxy/infrastructure.bats tests/proxy/services.bats
+
+  integration:
+    name: Proxy Docker integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup Bats-core
+        uses: bats-core/bats-action@4.0.0
+        with:
+          support-install: false
+          assert-install: false
+          detik-install: false
+          file-install: false
+      - name: Validate Compose files
+        run: |
+          docker compose config --quiet
+          REPO_ROOT="$GITHUB_WORKSPACE" COMPOSE_PROJECT_NAME=proxytesta docker compose --file tests/proxy/fixtures/compose.yml config --quiet
+      - name: Run Docker integration tests
+        run: bats tests/proxy/integration.bats
