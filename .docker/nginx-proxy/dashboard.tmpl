@@ -34,7 +34,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LibreCode Development Proxy</title>
+  <title>LibreCode Nextcloud Development Environment</title>
   <style>
     :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
     body { margin: 0; min-height: 100vh; display: grid; place-items: start center; background: Canvas; color: CanvasText; }
@@ -62,14 +62,13 @@
 </head>
 <body>
   <main>
-    <h1>💙 LibreCode Development Proxy</h1>
+    <h1>💙 LibreCode Nextcloud Development Environment</h1>
     <section id="not-found" class="not-found" hidden>
       <h2>Environment not found</h2>
       <p>There is no active development service for <code id="requested-host"></code>.</p>
       <p id="suggestion" hidden>Did you mean <a id="suggestion-link"></a>?</p>
     </section>
 
-    <p>The shared development proxy is running.</p>
     <h2>Active environments</h2>
     <div id="environments"></div>
 
@@ -78,7 +77,7 @@
       <div id="runtime-checks"><p class="muted">Loading runtime information…</p></div>
     </section>
 
-    <p class="muted">This page is generated from the routes currently connected to the shared development proxy.</p>
+    <p class="muted">This page is generated from the currently active development routes.</p>
 
     <footer class="project-links">
       <strong>Help improve this development environment</strong>
