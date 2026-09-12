@@ -113,13 +113,13 @@ A specific host port can still be requested explicitly:
 HTTP_PORT=9000 HTTPS_PORT=9443 docker compose up
 ```
 
-By default, published services bind to `127.0.0.1` and are accessible only from the local host. To expose them on other network interfaces, set:
+By default, published services and the shared development proxy bind to `127.0.0.1` and are accessible only from the local host. To expose them on other network interfaces, set:
 
 ```bash
 IP_BIND=0.0.0.0 docker compose up
 ```
 
-This can make the development services accessible to other hosts on the network, subject to the host firewall and network configuration.
+This also exposes the shared HTTP and HTTPS proxy on ports `80` and `443`, so use it only on a trusted network and with an appropriate host firewall.
 
 HTTP and HTTPS use automatic ranges beginning at ports `80` and `443` when no override is provided. The example above forces `host:9000 -> container:80` and `host:9443 -> container:443`.
 
