@@ -113,15 +113,28 @@ A specific host port can still be requested explicitly:
 HTTP_PORT=9000 HTTPS_PORT=9443 docker compose up
 ```
 
-By default, published services bind to `127.0.0.1` and are accessible only from the local host. To expose them on other network interfaces, set:
+By default, the shared development proxy binds to `127.0.0.1`. To expose only the proxy on other network interfaces, set:
 
 ```bash
-IP_BIND=0.0.0.0 docker compose up
+PROXY_IP_BIND=0.0.0.0 docker compose up
 ```
 
-This can make the development services accessible to other hosts on the network, subject to the host firewall and network configuration.
+MySQL and PostgreSQL use independent bind settings and also default to `127.0.0.1`:
+
+```bash
+MYSQL_IP_BIND=0.0.0.0 docker compose up
+POSTGRES_IP_BIND=0.0.0.0 DB_HOST=pgsql docker compose up
+```
+
+Expose development services only on trusted networks and with an appropriate host firewall.
 
 HTTP and HTTPS use automatic ranges beginning at ports `80` and `443` when no override is provided. The example above forces `host:9000 -> container:80` and `host:9443 -> container:443`.
+
+## Docker daemon access
+
+The proxy coordinator, reverse proxy, and certificate companion access the Docker daemon as part of the development workflow. This is an intentional trust boundary: code running through these infrastructure components can interact with the local Docker daemon.
+
+Application containers do not receive the Docker socket. Use this development environment only with repository code you trust.
 
 ## PHP custom settings
 
