@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# Globals are provided by common.sh before this module is sourced.
+# The single-quoted shell snippets are intentionally evaluated in helper containers.
+# shellcheck disable=SC2154,SC2016
+
 copy_to_named_volume() {
 	volume="$1"
 	source="$2"
