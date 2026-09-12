@@ -9,9 +9,9 @@ release_marker=/tmp/librecode-proxy-lease-released
 # shellcheck source=proxy/common.sh
 . "$proxy_lib_dir/common.sh"
 
-coordinator_container="$(hostname)"
-PROJECT_NAME="$(container_project "$coordinator_container")"
-export PROJECT_NAME
+COORDINATOR_CONTAINER="$(hostname)"
+PROJECT_NAME="$(container_project "$COORDINATOR_CONTAINER")"
+export COORDINATOR_CONTAINER PROJECT_NAME
 
 # These modules share only exported environment and common.sh accessors.
 # Keep the source directives in sync with the runtime paths so ShellCheck can
