@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Globals are provided by common.sh before this module is sourced.
+# shellcheck disable=SC2154
+
 container_for_published_port() {
 	port="$1"
 
