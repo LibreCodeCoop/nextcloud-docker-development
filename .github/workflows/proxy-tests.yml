@@ -25,6 +25,24 @@ jobs:
       - name: Run unit tests
         run: bats tests/proxy/lease.bats tests/proxy/infrastructure.bats tests/proxy/services.bats tests/proxy/diagnostics.bats tests/proxy/compose-policy.bats
 
+  image-digests:
+    name: Inspect runtime image digests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve multi-platform digests
+        run: |
+          for image in \
+            docker:29.8.0-cli \
+            axllent/mailpit:v1.31.1 \
+            redis:8.8.2 \
+            nginxproxy/nginx-proxy:1.11.6-alpine \
+            sebastienheyd/self-signed-proxy-companion:1.1.0 \
+            nginx:1.31.5-alpine
+          do
+            echo "IMAGE $image"
+            docker buildx imagetools inspect "$image" | sed -n '1,5p'
+          done
+
   integration:
     name: Proxy Docker integration tests
     runs-on: ubuntu-latest
