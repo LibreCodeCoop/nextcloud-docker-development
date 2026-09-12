@@ -55,20 +55,25 @@ wait_for_absent() {
 	return 1
 }
 
-wait_for_https_status() {
+wait_for_https_path_status() {
 	host="$1"
-	expected="$2"
+	path="$2"
+	expected="$3"
 
 	for _ in $(seq 1 60); do
 		status="$(curl --silent --show-error --insecure \
 			--resolve "$host:443:127.0.0.1" \
 			--output "$BODY" \
 			--write-out '%{http_code}' \
-			"https://$host/" 2>/dev/null || true)"
+			"https://$host$path" 2>/dev/null || true)"
 		[ "$status" = "$expected" ] && return 0
 		sleep 0.5
 	done
 	return 1
+}
+
+wait_for_https_status() {
+	wait_for_https_path_status "$1" / "$2"
 }
 
 @test "single project starts routing and releases the shared proxy" {
@@ -78,6 +83,12 @@ wait_for_https_status() {
 	wait_for_running librecode-dev-proxy-ssl-companion
 	wait_for_https_status localhost 200
 	grep -q 'LibreCode Development Proxy' "$BODY"
+	grep -q 'Environment checks' "$BODY"
+
+	wait_for_https_path_status localhost /runtime.json 200
+	grep -q '"docker":"' "$BODY"
+	grep -q '"compose":"' "$BODY"
+	grep -q '"runc":"' "$BODY"
 
 	wait_for_https_status proxytesta.localhost 200
 	grep -q 'Welcome to nginx' "$BODY"
