@@ -17,7 +17,6 @@ services:
       - librecode-dev-proxy-html:/usr/share/nginx/html
     environment:
       - ENABLE_IPV6=true
-      - DEFAULT_HOST=localhost
     networks:
       - proxy
 
@@ -31,8 +30,9 @@ services:
       - librecode-dev-proxy-html:/usr/share/nginx/html:ro
       - ./.docker/nginx-proxy/dashboard.conf:/etc/nginx/conf.d/default.conf:ro
     environment:
-      - VIRTUAL_HOST=localhost
+      - VIRTUAL_HOST=localhost,~^.+[.]localhost$$
       - VIRTUAL_PORT=80
+      - CERT_NAME=localhost
       - SELF_SIGNED_HOST=localhost
     networks:
       - proxy
