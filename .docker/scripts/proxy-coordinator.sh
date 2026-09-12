@@ -290,16 +290,25 @@ acquire_proxy_lease() {
 release_proxy_lease() {
 	[ "$proxy_lease_acquired" = true ] || return 0
 
-	docker network disconnect "$proxy_network" "$coordinator_container" >/dev/null 2>&1 || true
+	if ! docker network disconnect "$proxy_network" "$coordinator_container" >/dev/null 2>&1; then
+		echo 'Could not disconnect this coordinator lease from the shared proxy network; continuing with project-based lease detection.' >&2
+	fi
 	proxy_lease_acquired=false
 }
 
 other_proxy_client_is_running() {
-	docker ps \
+	for container in $(docker ps \
 		--filter "label=$proxy_client_label" \
 		--filter "network=$proxy_network" \
-		--format '{{.ID}}' |
-		grep -q .
+		--format '{{.ID}}'); do
+		container_project="$(docker inspect \
+			--format '{{ index .Config.Labels "com.docker.compose.project" }}' \
+			"$container" 2>/dev/null || true)"
+
+		[ "$container_project" = "$project" ] || return 0
+	done
+
+	return 1
 }
 
 other_proxy_route_is_running() {
@@ -354,6 +363,7 @@ release_proxy_if_unused() {
 
 shutdown() {
 	trap - INT TERM HUP
+	echo 'Releasing shared development proxy lease.'
 	release_proxy_if_unused
 	exit 0
 }
