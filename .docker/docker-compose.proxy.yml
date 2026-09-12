@@ -13,10 +13,8 @@ services:
     volumes:
       - ${DOCKER_SOCKET:-/var/run/docker.sock}:/tmp/docker.sock:ro
       - librecode-dev-proxy-vhost:/etc/nginx/vhost.d
-      - librecode-dev-proxy-conf:/etc/nginx/conf.d
       - librecode-dev-proxy-log:/etc/nginx/log
       - librecode-dev-proxy-certs:/etc/nginx/certs:ro
-      - librecode-dev-proxy-html:/usr/share/nginx/html
     environment:
       - ENABLE_IPV6=true
       - VIRTUAL_HOST=localhost,*.localhost
@@ -46,11 +44,7 @@ networks:
 volumes:
   librecode-dev-proxy-vhost:
     name: librecode-dev-proxy-vhost
-  librecode-dev-proxy-conf:
-    name: librecode-dev-proxy-conf
   librecode-dev-proxy-log:
     name: librecode-dev-proxy-log
   librecode-dev-proxy-certs:
     name: librecode-dev-proxy-certs
-  librecode-dev-proxy-html:
-    name: librecode-dev-proxy-html
