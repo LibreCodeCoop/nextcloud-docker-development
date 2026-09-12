@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# This module defines and consumes globals shared by the sourced proxy modules.
+# shellcheck disable=SC2034,SC2154
+
 proxy_project=${PROXY_PROJECT:-librecode-dev-proxy}
 proxy_network=${PROXY_NETWORK:-librecode-dev-proxy}
 proxy_label=${PROXY_LABEL:-coop.librecode.dev-proxy=true}
