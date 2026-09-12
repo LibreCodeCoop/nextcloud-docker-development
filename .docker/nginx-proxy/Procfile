@@ -1,3 +1,2 @@
-dockergen: docker-gen -watch -wait 100ms:500ms -event-filter event=connect -event-filter event=disconnect -notify "nginx -s reload" /app/nginx.tmpl /etc/nginx/conf.d/default.conf
-dashboard: docker-gen -watch -wait 100ms:500ms -event-filter event=connect -event-filter event=disconnect /dashboard/dashboard.tmpl /usr/share/nginx/html/index.html
+dockergen: docker-gen -config /dashboard/docker-gen.cfg -event-filter event=connect -event-filter event=disconnect
 nginx: nginx -g "daemon off;"
