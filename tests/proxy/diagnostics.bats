@@ -27,11 +27,10 @@ setup() {
 	[ "$status" -eq 1 ]
 }
 
-@test "runtime diagnostics include versions without warning for current runtime" {
+@test "runtime diagnostics include host versions without warning for current runtime" {
 	runtime_version() {
 		case "$1" in
 			docker) printf '%s\n' 29.8.0 ;;
-			compose) printf '%s\n' 5.5.1 ;;
 			runc) printf '%s\n' 1.5.1 ;;
 		esac
 	}
@@ -40,7 +39,6 @@ setup() {
 
 	[ "$status" -eq 0 ]
 	[[ "$output" == *'"docker":"29.8.0"'* ]]
-	[[ "$output" == *'"compose":"5.5.1"'* ]]
 	[[ "$output" == *'"runc":"1.5.1"'* ]]
 	[[ "$output" == *'"warnings":[]'* ]]
 }
@@ -49,7 +47,6 @@ setup() {
 	runtime_version() {
 		case "$1" in
 			docker) printf '%s\n' 25.0.2 ;;
-			compose) printf '%s\n' 2.24.5 ;;
 			runc) printf '%s\n' 1.1.12 ;;
 		esac
 	}
