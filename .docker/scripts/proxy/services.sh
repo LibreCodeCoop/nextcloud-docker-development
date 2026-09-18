@@ -5,35 +5,36 @@ service_is_running() {
 		grep -qx "$1"
 }
 
-container_for_service() {
-	compose ps -q "$1" 2>/dev/null || true
+project_network_name() {
+	printf '%s_default\n' "${PROJECT_NAME:-}"
 }
 
-connect_to_proxy_network() {
-	service="$1"
-	container="$(container_for_service "$service")"
-	network="$(proxy_network_name)"
+connect_proxy_to_project_network() {
+	proxy_container="$(compatible_proxy_container)"
+	network="$(project_network_name)"
 
-	[ -n "$container" ] || return 0
+	[ -n "$proxy_container" ] || return 1
+	[ -n "${PROJECT_NAME:-}" ] || return 1
 
-	if container_networks "$container" | grep -q "\"$network\""; then
+	if container_networks "$proxy_container" | grep -q "\\\"$network\\\""; then
 		return 0
 	fi
 
-	Docker network connect "$network" "$container"
+	Docker network connect "$network" "$proxy_container"
 }
 
-connect_running_service_to_proxy_network() {
-	service="$1"
+disconnect_proxy_from_project_network() {
+	proxy_container="$(compatible_proxy_container)"
+	network="$(project_network_name)"
 
-	service_is_running "$service" || return 0
-	connect_to_proxy_network "$service"
-}
+	[ -n "$proxy_container" ] || return 0
+	[ -n "${PROJECT_NAME:-}" ] || return 0
 
-connect_project_services() {
-	for service in nginx mailpit eurooffice playwright signal-gateway; do
-		connect_running_service_to_proxy_network "$service"
-	done
+	if ! container_networks "$proxy_container" | grep -q "\\\"$network\\\""; then
+		return 0
+	fi
+
+	Docker network disconnect "$network" "$proxy_container" >/dev/null 2>&1 || true
 }
 
 report_environment_ready() {
