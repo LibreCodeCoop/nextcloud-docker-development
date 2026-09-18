@@ -62,6 +62,8 @@ wait_for_https_path_status() {
 
 	for _ in $(seq 1 60); do
 		status="$(curl --silent --show-error --insecure \
+			--connect-timeout 2 \
+			--max-time 5 \
 			--resolve "$host:443:127.0.0.1" \
 			--output "$BODY" \
 			--write-out '%{http_code}' \
