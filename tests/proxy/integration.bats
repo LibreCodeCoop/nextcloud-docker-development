@@ -55,6 +55,19 @@ wait_for_absent() {
 	return 1
 }
 
+wait_for_network() {
+	container="$1"
+	network="$2"
+
+	for _ in $(seq 1 60); do
+		networks="$(docker inspect --format '{{json .NetworkSettings.Networks}}' "$container" 2>/dev/null || true)"
+		[[ "$networks" == *"\"$network\""* ]] && return 0
+		sleep 0.5
+	done
+
+	return 1
+}
+
 wait_for_https_path_status() {
 	host="$1"
 	path="$2"
@@ -91,9 +104,8 @@ wait_for_https_status() {
 	wait_for_running librecode-dev-proxy
 	wait_for_running librecode-dev-dashboard
 
-	proxy_networks="$(docker inspect --format '{{json .NetworkSettings.Networks}}' librecode-dev-proxy)"
+	wait_for_network librecode-dev-proxy proxytesta_default
 	backend_networks="$(docker inspect --format '{{json .NetworkSettings.Networks}}' proxytesta-nginx-1)"
-	[[ "$proxy_networks" == *'"proxytesta_default"'* ]]
 	[[ "$backend_networks" != *'"librecode-dev-proxy"'* ]]
 
 	http_host_ip="$(docker inspect --format '{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostIp}}' librecode-dev-proxy)"
