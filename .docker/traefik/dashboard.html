@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LibreCode Nextcloud Development Environment</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: start center; background: Canvas; color: CanvasText; }
+    main { width: min(760px, calc(100% - 48px)); margin: 26px 0; padding: 32px; border: 1px solid color-mix(in srgb, CanvasText 20%, transparent); border-radius: 12px; }
+    h1 { margin-top: 0; font-size: 1.5rem; }
+    h2 { margin-top: 2rem; font-size: 1.15rem; }
+    h3 { margin: 1.5rem 0 .5rem; font-size: 1rem; }
+    ul { padding-left: 1.25rem; }
+    li { margin: .45rem 0; }
+    a { color: LinkText; }
+    code { padding: .15em .4em; border-radius: 4px; background: color-mix(in srgb, CanvasText 10%, transparent); }
+    .not-found, .runtime-warning, .runtime-hint { padding: 1rem; border: 1px solid color-mix(in srgb, CanvasText 24%, transparent); border-radius: 8px; }
+    .not-found { border-color: #c9362b; background: color-mix(in srgb, #c9362b 8%, Canvas 92%); }
+    .not-found h2 { margin: 0 0 .65rem; color: color-mix(in srgb, #c9362b 82%, CanvasText 18%); }
+    .not-found p { margin: .45rem 0 0; }
+    .not-found #suggestion { margin-top: .8rem; font-weight: 600; }
+    .runtime-warning, .runtime-hint { margin-top: 1rem; }
+    .runtime-warning { border-color: #c47f00; }
+    .runtime-hint { border-color: color-mix(in srgb, LinkText 55%, Canvas 45%); }
+    .runtime-warning strong, .runtime-hint strong { display: block; margin-bottom: .4rem; }
+    .runtime-hint p { margin: .45rem 0 0; }
+    .runtime-list { list-style: none; padding: 0; }
+    .runtime-list li { margin: .35rem 0; }
+    .project-links { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid color-mix(in srgb, CanvasText 16%, transparent); font-size: .95rem; }
+    .project-links p { margin: .45rem 0; }
+    .project-links nav { display: flex; flex-wrap: wrap; gap: .4rem 1rem; }
+    .muted { opacity: .7; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>💙 LibreCode Nextcloud Development Environment</h1>
+    <section id="not-found" class="not-found" role="alert" hidden>
+      <h2>⚠ Environment not found</h2>
+      <p>There is no active development service for <code id="requested-host"></code>.</p>
+      <p id="suggestion" hidden>Did you mean <a id="suggestion-link"></a>?</p>
+    </section>
+
+    <h2>Active environments</h2>
+    <div id="environments"><p class="muted">Loading active development routes…</p></div>
+
+    <section id="runtime-section" hidden>
+      <h2>Environment checks</h2>
+      <div id="runtime-checks"><p class="muted">Loading runtime information…</p></div>
+    </section>
+
+    <p class="muted">This page is generated from the currently active development routes.</p>
+
+    <footer class="project-links">
+      <strong>Help improve this development environment</strong>
+      <p class="muted">Contributions, bug reports, and stars help the project grow.</p>
+      <nav aria-label="Project links">
+        <a href="https://github.com/LibreCodeCoop/nextcloud-docker-development" target="_blank" rel="noopener noreferrer">Contribute on GitHub</a>
+        <a href="https://github.com/LibreCodeCoop/nextcloud-docker-development/issues/new/choose" target="_blank" rel="noopener noreferrer">Report an issue</a>
+        <a href="https://github.com/LibreCodeCoop/nextcloud-docker-development" target="_blank" rel="noopener noreferrer">Star on GitHub</a>
+      </nav>
+    </footer>
+  </main>
+
+  <script>
+    const serviceNames = {
+      nextcloud: 'Nextcloud',
+      mailpit: 'Mailpit',
+      playwright: 'Playwright',
+      eurooffice: 'EuroOffice',
+      'signal-gateway': 'Signal Gateway',
+    };
+
+    const routerPrefix = 'librecode-';
+    const routerSeparator = '--';
+
+    const parseRoute = (router) => {
+      const name = String(router.name || '').replace(/@docker$/, '');
+      if (!name.startsWith(routerPrefix) || !name.includes(routerSeparator)) return null;
+
+      const payload = name.slice(routerPrefix.length);
+      const separatorIndex = payload.lastIndexOf(routerSeparator);
+      const project = payload.slice(0, separatorIndex);
+      const service = payload.slice(separatorIndex + routerSeparator.length);
+      const match = String(router.rule || '').match(/Host\(\`([^\`]+)\`\)/);
+
+      if (!project || !service || !match) return null;
+      return { host: match[1], project, service };
+    };
+
+    const renderRoutes = (routes) => {
+      const environments = document.getElementById('environments');
+      environments.replaceChildren();
+
+      if (routes.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No development environments are active.';
+        environments.appendChild(empty);
+        return;
+      }
+
+      let currentProject = null;
+      let list = null;
+
+      for (const route of routes) {
+        if (route.project !== currentProject) {
+          currentProject = route.project;
+          const heading = document.createElement('h3');
+          heading.textContent = currentProject;
+          environments.appendChild(heading);
+
+          list = document.createElement('ul');
+          environments.appendChild(list);
+        }
+
+        const item = document.createElement('li');
+        const label = document.createElement('strong');
+        label.textContent = `${serviceNames[route.service] || route.service}: `;
+        const link = document.createElement('a');
+        link.href = `https://${route.host}`;
+        link.dataset.host = route.host;
+        link.textContent = link.href;
+        item.append(label, link);
+        list.appendChild(item);
+      }
+    };
+
+    const showUnknownHost = (routes) => {
+      const requestedHost = window.location.hostname;
+      if (requestedHost === 'localhost') return;
+
+      const panel = document.getElementById('not-found');
+      document.getElementById('requested-host').textContent = requestedHost;
+      panel.hidden = false;
+
+      const hosts = routes.map(({ host }) => host);
+      const distance = (a, b) => {
+        const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+        for (let i = 1; i <= a.length; i++) {
+          let previous = row[0];
+          row[0] = i;
+          for (let j = 1; j <= b.length; j++) {
+            const current = row[j];
+            row[j] = Math.min(row[j] + 1, row[j - 1] + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1));
+            previous = current;
+          }
+        }
+        return row[b.length];
+      };
+
+      if (hosts.length > 0) {
+        const closest = hosts.reduce((best, host) => distance(requestedHost, host) < distance(requestedHost, best) ? host : best);
+        const suggestion = document.getElementById('suggestion');
+        const link = document.getElementById('suggestion-link');
+        link.href = `https://${closest}`;
+        link.textContent = closest;
+        suggestion.hidden = false;
+      }
+    };
+
+    const loadRuntime = () => {
+      if (window.location.hostname !== 'localhost') return;
+
+      const runtimeSection = document.getElementById('runtime-section');
+      runtimeSection.hidden = false;
+
+      fetch('/runtime.json', { cache: 'no-store' })
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          return response.json();
+        })
+        .then((runtime) => {
+          const checks = document.getElementById('runtime-checks');
+          checks.replaceChildren();
+
+          const list = document.createElement('ul');
+          list.className = 'runtime-list';
+          for (const [label, version] of [
+            ['Docker Engine', runtime.docker],
+            ['runc', runtime.runc],
+          ]) {
+            const item = document.createElement('li');
+            item.textContent = `✓ ${label} ${version || 'unknown'}`;
+            list.appendChild(item);
+          }
+          checks.appendChild(list);
+
+          for (const warning of runtime.warnings || []) {
+            const panel = document.createElement('div');
+            panel.className = 'runtime-warning';
+            const title = document.createElement('strong');
+            title.textContent = '⚠ Docker runtime needs attention';
+            const message = document.createElement('span');
+            message.textContent = warning.message;
+            panel.append(title, message);
+            checks.appendChild(panel);
+          }
+
+          for (const hint of runtime.hints || []) {
+            if (hint.code !== 'long-project-name') continue;
+
+            const panel = document.createElement('div');
+            panel.className = 'runtime-hint';
+            const title = document.createElement('strong');
+            title.textContent = 'ℹ Shorter local URLs are available';
+
+            const explanation = document.createElement('p');
+            explanation.append(
+              'This environment uses the Compose project name ',
+              Object.assign(document.createElement('code'), { textContent: hint.projectName }),
+              ', which makes local URLs longer.'
+            );
+
+            const example = document.createElement('p');
+            example.append(
+              'For example: ',
+              Object.assign(document.createElement('code'), { textContent: `https://${hint.exampleHost}/` })
+            );
+
+            const suggestion = document.createElement('p');
+            suggestion.append(
+              'You can keep the current directory and use a shorter project name, for example ',
+              Object.assign(document.createElement('code'), { textContent: 'COMPOSE_PROJECT_NAME=dev docker compose up' }),
+              '.'
+            );
+
+            panel.append(title, explanation, example, suggestion);
+            checks.appendChild(panel);
+          }
+        })
+        .catch(() => {
+          const checks = document.getElementById('runtime-checks');
+          checks.textContent = 'Runtime information is not available.';
+          checks.className = 'muted';
+        });
+    };
+
+    fetch('/api/http/routers', { cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((routers) => {
+        const routes = routers
+          .filter(({ provider, status }) => provider === 'docker' && status === 'enabled')
+          .map(parseRoute)
+          .filter(Boolean)
+          .sort((a, b) => a.project.localeCompare(b.project) || a.host.localeCompare(b.host));
+
+        renderRoutes(routes);
+        showUnknownHost(routes);
+      })
+      .catch(() => {
+        const environments = document.getElementById('environments');
+        environments.textContent = 'Active route information is not available.';
+        environments.className = 'muted';
+        showUnknownHost([]);
+      });
+
+    loadRuntime();
+  </script>
+</body>
+</html>
