@@ -13,39 +13,38 @@ setup() {
 	PROJECT_NAME=current
 }
 
-@test "running service is connected to proxy network" {
-	service_is_running() { return 0; }
-	container_for_service() { printf '%s\n' service-container; }
+@test "proxy is connected to the current Compose project network" {
+	compatible_proxy_container() { printf '%s\n' librecode-dev-proxy; }
 	container_networks() { printf '{}\n'; }
 	Docker() {
 		printf 'docker %s\n' "$*" >> "$TEST_LOG"
 	}
 
-	connect_running_service_to_proxy_network nginx
+	connect_proxy_to_project_network
 
-	grep -q "^docker network connect $(proxy_network_name) service-container$" "$TEST_LOG"
+	grep -q '^docker network connect current_default librecode-dev-proxy$' "$TEST_LOG"
 }
 
-@test "service already on proxy network is not connected twice" {
-	service_is_running() { return 0; }
-	container_for_service() { printf '%s\n' service-container; }
-	container_networks() { printf '{\"%s\":{}}\n' "$(proxy_network_name)"; }
+@test "proxy is not connected twice to the project network" {
+	compatible_proxy_container() { printf '%s\n' librecode-dev-proxy; }
+	container_networks() { printf '{"current_default":{}}\n'; }
 	Docker() {
 		printf 'docker %s\n' "$*" >> "$TEST_LOG"
 	}
 
-	connect_running_service_to_proxy_network nginx
+	connect_proxy_to_project_network
 
 	! grep -q '^docker network connect' "$TEST_LOG"
 }
 
-@test "stopped service is ignored" {
-	service_is_running() { return 1; }
+@test "project network is disconnected from proxy during release" {
+	compatible_proxy_container() { printf '%s\n' librecode-dev-proxy; }
+	container_networks() { printf '{"current_default":{}}\n'; }
 	Docker() {
 		printf 'docker %s\n' "$*" >> "$TEST_LOG"
 	}
 
-	connect_running_service_to_proxy_network nginx
+	disconnect_proxy_from_project_network
 
-	[ ! -s "$TEST_LOG" ]
+	grep -q '^docker network disconnect current_default librecode-dev-proxy$' "$TEST_LOG"
 }
