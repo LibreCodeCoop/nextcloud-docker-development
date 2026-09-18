@@ -71,8 +71,11 @@ wait_for_https_path_status() {
 		[ "$status" = "$expected" ] && return 0
 		sleep 0.5
 	done
-	printf 'Timed out waiting for https://%s%s to return %s\n' "$host" "$path" "$expected" >&2
+	printf 'Timed out waiting for https://%s%s to return %s; last status was %s\n' "$host" "$path" "$expected" "${status:-none}" >&2
 	docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}' >&2 || true
+	docker inspect proxytesta-nginx-1 --format '{{json .NetworkSettings.Networks}}' >&2 2>/dev/null || true
+	curl --silent --show-error --insecure --connect-timeout 1 --max-time 2 \
+		--resolve 'localhost:443:127.0.0.1' https://localhost/api/http/routers >&2 || true
 	docker logs librecode-dev-proxy >&2 || true
 	docker logs librecode-dev-dashboard >&2 || true
 	return 1
