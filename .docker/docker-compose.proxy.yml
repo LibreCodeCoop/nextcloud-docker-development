@@ -49,8 +49,8 @@ services:
       traefik.http.middlewares.librecode-not-found.replacepath.path: /__librecode_not_found__
       traefik.http.services.librecode-dashboard.loadbalancer.server.port: "80"
     volumes:
-      - ${PROXY_ASSET_DIR}/.docker/traefik/dashboard.html:/usr/share/nginx/html/index.html:ro
-      - ${PROXY_ASSET_DIR}/.docker/traefik/dashboard.conf:/etc/nginx/conf.d/default.conf:ro
+      - ${PROJECT_DIR}/.docker/traefik/dashboard.html:/usr/share/nginx/html/index.html:ro
+      - ${PROJECT_DIR}/.docker/traefik/dashboard.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - proxy
 
