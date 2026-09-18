@@ -59,6 +59,7 @@ release() {
 	fi
 
 	echo 'Releasing shared development proxy lease.'
+	disconnect_proxy_from_project_network
 	if release_proxy_if_unused; then
 		touch "$release_marker"
 		return 0
@@ -93,7 +94,7 @@ run() {
 	rm -f "$release_marker"
 	trap shutdown INT TERM HUP
 
-	connect_project_services
+	connect_proxy_to_project_network
 
 	if ! report_environment_ready; then
 		echo 'Could not print environment banner.' >&2
