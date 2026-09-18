@@ -61,9 +61,7 @@ docker compose \
 
 ## Multiple environments
 
-Multiple checkouts can run at the same time.
-
-Docker uses the standard host ports when they are available. If a port is already in use, another available port is selected automatically.
+Multiple checkouts can run at the same time. Each checkout keeps its own Compose network, while the shared development proxy connects to the active project networks.
 
 Start each environment from its own directory:
 
@@ -77,43 +75,22 @@ cd /path/to/second-checkout
 docker compose up
 ```
 
-To see the ports assigned to an environment:
-
-```bash
-docker compose ps
-```
-
-To check a specific port, use:
-
-```bash
-docker compose port nginx 80
-```
-
-For example, if it returns:
+The Compose project name is used to build the local hostnames. With project names `first-checkout` and `second-checkout`, Nextcloud is available at:
 
 ```text
-127.0.0.1:81
+https://first-checkout.localhost
+https://second-checkout.localhost
 ```
 
-access Nextcloud at:
+Open `https://localhost` to see the active environments and their available service URLs.
 
-```text
-http://localhost:81
-```
-
-When port `80` is available, Nextcloud remains accessible normally at:
-
-```text
-http://localhost
-```
-
-A specific host port can still be requested explicitly:
+If the directory name creates a long local hostname, use a shorter Compose project name without renaming the directory:
 
 ```bash
-HTTP_PORT=9000 HTTPS_PORT=9443 docker compose up
+COMPOSE_PROJECT_NAME=dev docker compose up
 ```
 
-By default, the shared development proxy binds to `127.0.0.1`. To expose only the proxy on other network interfaces, set:
+The shared proxy owns host ports `80` and `443` and binds to `127.0.0.1` by default. To expose only the proxy on other network interfaces, set:
 
 ```bash
 PROXY_IP_BIND=0.0.0.0 docker compose up
@@ -128,11 +105,9 @@ POSTGRES_IP_BIND=0.0.0.0 DB_HOST=pgsql docker compose up
 
 Expose development services only on trusted networks and with an appropriate host firewall.
 
-HTTP and HTTPS use automatic ranges beginning at ports `80` and `443` when no override is provided. The example above forces `host:9000 -> container:80` and `host:9443 -> container:443`.
-
 ## Docker daemon access
 
-The proxy coordinator, reverse proxy, and certificate companion access the Docker daemon as part of the development workflow. This is an intentional trust boundary: code running through these infrastructure components can interact with the local Docker daemon.
+The proxy coordinator and Traefik reverse proxy access the Docker daemon as part of the development workflow. This is an intentional trust boundary: code running through these infrastructure components can interact with the local Docker daemon.
 
 Application containers do not receive the Docker socket. Use this development environment only with repository code you trust.
 
