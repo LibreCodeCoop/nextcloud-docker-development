@@ -65,6 +65,7 @@ services:
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}.localhost
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.rule=Host(`${COMPOSE_PROJECT_NAME}.localhost`)"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.loadbalancer.server.port=80"
   proxy-coordinator:
@@ -95,6 +96,7 @@ services:
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-mailpit.localhost
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--mailpit.rule=Host(`${COMPOSE_PROJECT_NAME}-mailpit.localhost`)"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--mailpit.loadbalancer.server.port=8025"
   redis:
@@ -118,6 +120,7 @@ services:
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-eurooffice.localhost
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.rule=Host(`${COMPOSE_PROJECT_NAME}-eurooffice.localhost`)"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.loadbalancer.server.port=80"
     extra_hosts:
@@ -139,6 +142,7 @@ services:
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-playwright.localhost
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--playwright.rule=Host(`${COMPOSE_PROJECT_NAME}-playwright.localhost`)"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--playwright.loadbalancer.server.port=9323"
     command: sleep infinity
@@ -161,6 +165,7 @@ services:
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-signal.localhost
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.rule=Host(`${COMPOSE_PROJECT_NAME}-signal.localhost`)"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.loadbalancer.server.port=8080"
   whatsapp.web:
