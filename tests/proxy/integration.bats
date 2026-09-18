@@ -80,7 +80,7 @@ wait_for_https_status() {
 	compose_test proxytesta up --detach
 
 	wait_for_running librecode-dev-proxy
-	wait_for_running librecode-dev-proxy-ssl-companion
+	wait_for_running librecode-dev-dashboard
 
 	http_host_ip="$(docker inspect --format '{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostIp}}' librecode-dev-proxy)"
 	https_host_ip="$(docker inspect --format '{{(index (index .NetworkSettings.Ports "443/tcp") 0).HostIp}}' librecode-dev-proxy)"
@@ -94,6 +94,9 @@ wait_for_https_status() {
 	grep -q 'Contribute on GitHub' "$BODY"
 	grep -q 'Report an issue' "$BODY"
 	grep -q 'Star on GitHub' "$BODY"
+
+	wait_for_https_path_status localhost /api/http/routers 200
+	grep -q 'librecode-proxytesta--nextcloud' "$BODY"
 
 	wait_for_https_path_status localhost /runtime.json 200
 	grep -q '"docker":"' "$BODY"
@@ -112,7 +115,7 @@ wait_for_https_status() {
 	compose_test proxytesta stop
 
 	wait_for_absent librecode-dev-proxy
-	wait_for_absent librecode-dev-proxy-ssl-companion
+	wait_for_absent librecode-dev-dashboard
 }
 
 @test "Ctrl+C on attached compose stops the last shared proxy promptly" {
@@ -126,7 +129,7 @@ wait_for_https_status() {
 	compose_pid=$!
 
 	wait_for_running librecode-dev-proxy
-	wait_for_running librecode-dev-proxy-ssl-companion
+	wait_for_running librecode-dev-dashboard
 	wait_for_https_status proxytesta.localhost 200
 
 	started_at="$(date +%s)"
@@ -135,7 +138,7 @@ wait_for_https_status() {
 	finished_at="$(date +%s)"
 
 	wait_for_absent librecode-dev-proxy
-	wait_for_absent librecode-dev-proxy-ssl-companion
+	wait_for_absent librecode-dev-dashboard
 
 	elapsed=$((finished_at - started_at))
 	[ "$elapsed" -lt 10 ]
@@ -157,5 +160,5 @@ wait_for_https_status() {
 	compose_test proxytestb stop
 
 	wait_for_absent librecode-dev-proxy
-	wait_for_absent librecode-dev-proxy-ssl-companion
+	wait_for_absent librecode-dev-dashboard
 }
