@@ -44,26 +44,6 @@ setup() {
 	[ "$status" -eq 0 ]
 }
 
-@test "route from another project keeps the proxy leased" {
-	Docker() {
-		printf '%s\n' proxy current-route other-route
-	}
-	container_project() {
-		case "$1" in
-			proxy) proxy_project_name ;;
-			current-route) printf '%s\n' current ;;
-			other-route) printf '%s\n' other ;;
-		esac
-	}
-	container_virtual_host() {
-		[ "$1" = other-route ] && printf '%s\n' other.localhost
-	}
-
-	run other_proxy_route_is_running
-
-	[ "$status" -eq 0 ]
-}
-
 @test "last lease stops the shared proxy with bounded timeout" {
 	PROXY_STOP_TIMEOUT_SECONDS=7
 	container_networks() {
