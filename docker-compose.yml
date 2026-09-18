@@ -60,9 +60,6 @@ services:
       - ./volumes/nginx/includes:/etc/nginx/conf.d/includes/
       - ./volumes/nginx/certs:/certs
     environment:
-      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}.localhost
-      - VIRTUAL_PORT=80
-      - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}.localhost
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
@@ -91,9 +88,6 @@ services:
   mailpit:
     image: axllent/mailpit:v1.31.1@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365
     environment:
-      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-mailpit.localhost
-      - VIRTUAL_PORT=8025
-      - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-mailpit.localhost
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
@@ -115,9 +109,6 @@ services:
       - JWT_SECRET=${JWT_SECRET:-my_jwt_secret}
       - HOST_UID=${HOST_UID:-1000}
       - HOST_GID=${HOST_GID:-1000}
-      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-eurooffice.localhost
-      - VIRTUAL_PORT=80
-      - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-eurooffice.localhost
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
@@ -137,9 +128,6 @@ services:
       - PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://${COMPOSE_PROJECT_NAME}.localhost}
       - NODE_ENV=test
       - CI=${CI:-false}
-      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-playwright.localhost
-      - VIRTUAL_PORT=9323
-      - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-playwright.localhost
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
@@ -160,9 +148,6 @@ services:
       - ./volumes/signal:/home/.local/share/signal-cli
     environment:
       - LOG_LEVEL=info
-      - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-signal.localhost
-      - VIRTUAL_PORT=8080
-      - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-signal.localhost
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
