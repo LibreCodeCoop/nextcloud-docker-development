@@ -5,8 +5,9 @@ services:
     labels:
       coop.librecode.dev-proxy: "true"
       traefik.enable: "true"
-      traefik.http.routers.librecode-api.rule: Host(`localhost`) && Path(`/api/http/routers`)
+      traefik.http.routers.librecode-api.rule: Path(`/api/http/routers`)
       traefik.http.routers.librecode-api.priority: "200"
+      traefik.http.routers.librecode-api.entrypoints: api
       traefik.http.routers.librecode-api.service: api@internal
     command:
       - --api=true
@@ -17,6 +18,7 @@ services:
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
       - --entrypoints.websecure.address=:443
+      - --entrypoints.api.address=:8080
       - --entrypoints.websecure.asdefault=true
       - --entrypoints.websecure.http.tls=true
     ports:
