@@ -66,7 +66,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=librecode-dev-proxy"
-      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.rule=Host(\`${COMPOSE_PROJECT_NAME}.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.rule=Host(`${COMPOSE_PROJECT_NAME}.localhost`)"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.entrypoints=websecure"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.tls=true"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.loadbalancer.server.port=80"
@@ -99,7 +99,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=librecode-dev-proxy"
-      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--mailpit.rule=Host(\`${COMPOSE_PROJECT_NAME}-mailpit.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--mailpit.rule=Host(`${COMPOSE_PROJECT_NAME}-mailpit.localhost`)"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--mailpit.entrypoints=websecure"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--mailpit.tls=true"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--mailpit.loadbalancer.server.port=8025"
@@ -125,7 +125,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=librecode-dev-proxy"
-      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.rule=Host(\`${COMPOSE_PROJECT_NAME}-eurooffice.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.rule=Host(`${COMPOSE_PROJECT_NAME}-eurooffice.localhost`)"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.entrypoints=websecure"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.tls=true"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.loadbalancer.server.port=80"
@@ -149,7 +149,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=librecode-dev-proxy"
-      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--playwright.rule=Host(\`${COMPOSE_PROJECT_NAME}-playwright.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--playwright.rule=Host(`${COMPOSE_PROJECT_NAME}-playwright.localhost`)"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--playwright.entrypoints=websecure"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--playwright.tls=true"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--playwright.loadbalancer.server.port=9323"
@@ -174,7 +174,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=librecode-dev-proxy"
-      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.rule=Host(\`${COMPOSE_PROJECT_NAME}-signal.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.rule=Host(`${COMPOSE_PROJECT_NAME}-signal.localhost`)"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.entrypoints=websecure"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.tls=true"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.loadbalancer.server.port=8080"
