@@ -33,27 +33,8 @@ other_proxy_client_is_running() {
 	return 1
 }
 
-other_proxy_route_is_running() {
-	network="$(proxy_network_name)"
-	proxy_project="$(proxy_project_name)"
-
-	for container in $(Docker ps --filter "network=$network" --format '{{.ID}}'); do
-		container_project_name="$(container_project "$container")"
-
-		case "$container_project_name" in
-			"${PROJECT_NAME:-}"|"$proxy_project")
-				continue
-				;;
-		esac
-
-		[ -z "$(container_virtual_host "$container")" ] || return 0
-	done
-
-	return 1
-}
-
 proxy_is_used_by_another_environment() {
-	other_proxy_client_is_running || other_proxy_route_is_running
+	other_proxy_client_is_running
 }
 
 wait_for_concurrent_lease() {
