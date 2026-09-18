@@ -91,6 +91,12 @@ wait_for_https_status() {
 	wait_for_https_path_status "$1" / "$2"
 }
 
+certificate_matches_host() {
+	host="$1"
+	openssl s_client -connect 127.0.0.1:443 -servername "$host" </dev/null 2>/dev/null |
+		openssl x509 -noout -checkhost "$host" >/dev/null
+}
+
 @test "single project starts routing and releases the shared proxy" {
 	compose_test proxytesta up --detach
 
@@ -119,6 +125,7 @@ wait_for_https_status() {
 	grep -q '"runc":"' "$BODY"
 
 	wait_for_https_status proxytesta.localhost 200
+	certificate_matches_host proxytesta.localhost
 	grep -q 'Welcome to nginx' "$BODY"
 
 	wait_for_https_status something-wrong.localhost 404
