@@ -40,7 +40,7 @@ services:
       traefik.http.routers.librecode-dashboard.priority: "100"
       traefik.http.routers.librecode-dashboard.tls: "true"
       traefik.http.routers.librecode-dashboard.service: librecode-dashboard
-      traefik.http.routers.librecode-dashboard-catchall.rule: HostRegexp(`[a-z0-9-]+\\.localhost`)
+      traefik.http.routers.librecode-dashboard-catchall.rule: HostRegexp(`[a-z0-9-]+\.localhost`)
       traefik.http.routers.librecode-dashboard-catchall.entrypoints: websecure
       traefik.http.routers.librecode-dashboard-catchall.priority: "1"
       traefik.http.routers.librecode-dashboard-catchall.tls: "true"
