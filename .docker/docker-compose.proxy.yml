@@ -5,11 +5,8 @@ services:
     labels:
       coop.librecode.dev-proxy: "true"
       traefik.enable: "true"
-      traefik.docker.network: librecode-dev-proxy
       traefik.http.routers.librecode-api.rule: Path(`/api/http/routers`)
-      traefik.http.routers.librecode-api.entrypoints: websecure
       traefik.http.routers.librecode-api.priority: "200"
-      traefik.http.routers.librecode-api.tls: "true"
       traefik.http.routers.librecode-api.service: api@internal
     command:
       - --api=true
@@ -20,6 +17,8 @@ services:
       - --entrypoints.web.http.redirections.entrypoint.to=websecure
       - --entrypoints.web.http.redirections.entrypoint.scheme=https
       - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.asdefault=true
+      - --entrypoints.websecure.http.tls=true
     ports:
       - "${PROXY_IP_BIND:-127.0.0.1}:80:80"
       - "${PROXY_IP_BIND:-127.0.0.1}:443:443"
@@ -34,11 +33,8 @@ services:
     labels:
       coop.librecode.dev-proxy-dashboard: "true"
       traefik.enable: "true"
-      traefik.docker.network: librecode-dev-proxy
       traefik.http.routers.librecode-dashboard.rule: Host(`localhost`)
-      traefik.http.routers.librecode-dashboard.entrypoints: websecure
       traefik.http.routers.librecode-dashboard.priority: "100"
-      traefik.http.routers.librecode-dashboard.tls: "true"
       traefik.http.routers.librecode-dashboard.service: librecode-dashboard
       traefik.http.routers.librecode-dashboard-catchall.rule: HostRegexp(`[a-z0-9-]+\.localhost`)
       traefik.http.routers.librecode-dashboard-catchall.entrypoints: websecure
