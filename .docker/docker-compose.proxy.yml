@@ -45,6 +45,8 @@ services:
       traefik.http.routers.librecode-dashboard-catchall.priority: "1"
       traefik.http.routers.librecode-dashboard-catchall.tls: "true"
       traefik.http.routers.librecode-dashboard-catchall.service: librecode-dashboard
+      traefik.http.routers.librecode-dashboard-catchall.middlewares: librecode-not-found
+      traefik.http.middlewares.librecode-not-found.replacepath.path: /__librecode_not_found__
       traefik.http.services.librecode-dashboard.loadbalancer.server.port: "80"
     volumes:
       - ${PROXY_ASSET_DIR}/.docker/traefik/dashboard.html:/usr/share/nginx/html/index.html:ro
