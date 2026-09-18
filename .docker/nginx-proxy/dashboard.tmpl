@@ -1,4 +1,12 @@
 {{- $routes := list -}}
+{{- $proxyNetworks := dict -}}
+{{- range $container := . -}}
+  {{- if eq (index $container.Labels "coop.librecode.dev-proxy") "true" -}}
+    {{- range $network := $container.Networks -}}
+      {{- $_ := set $proxyNetworks $network.Name true -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 {{- range $hostname, $containers := groupByMulti . "Env.VIRTUAL_HOST" "," -}}
   {{- $hostname = trim $hostname -}}
   {{- if or (eq $hostname "") (eq $hostname "localhost") (eq $hostname "*.localhost") -}}
@@ -6,13 +14,13 @@
   {{- end -}}
 
   {{- range $container := $containers -}}
-    {{- $onProxyNetwork := false -}}
+    {{- $reachableFromProxy := false -}}
     {{- range $network := $container.Networks -}}
-      {{- if eq $network.Name "librecode-dev-proxy" -}}
-        {{- $onProxyNetwork = true -}}
+      {{- if index $proxyNetworks $network.Name -}}
+        {{- $reachableFromProxy = true -}}
       {{- end -}}
     {{- end -}}
-    {{- if not $onProxyNetwork -}}
+    {{- if not $reachableFromProxy -}}
       {{- continue -}}
     {{- end -}}
 
