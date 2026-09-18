@@ -8,7 +8,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=librecode-dev-proxy"
-      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.rule=Host(\`${COMPOSE_PROJECT_NAME}.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.rule=Host(`${COMPOSE_PROJECT_NAME}.localhost`)"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.entrypoints=websecure"
       - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.tls=true"
       - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.loadbalancer.server.port=80"
