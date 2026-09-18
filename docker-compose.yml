@@ -63,6 +63,13 @@ services:
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}.localhost
       - VIRTUAL_PORT=80
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}.localhost
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=librecode-dev-proxy"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.rule=Host(\`${COMPOSE_PROJECT_NAME}.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.entrypoints=websecure"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.tls=true"
+      - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--nextcloud.loadbalancer.server.port=80"
   proxy-coordinator:
     image: docker:29.8.0-cli@sha256:eccaacfeed644c7de222ff047483568cb988dde95476fbaaf10ea2d04921bb66
     entrypoint: ["/bin/sh", "/usr/local/lib/librecode/proxy-coordinator.sh"]
@@ -89,6 +96,13 @@ services:
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-mailpit.localhost
       - VIRTUAL_PORT=8025
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-mailpit.localhost
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=librecode-dev-proxy"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--mailpit.rule=Host(\`${COMPOSE_PROJECT_NAME}-mailpit.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--mailpit.entrypoints=websecure"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--mailpit.tls=true"
+      - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--mailpit.loadbalancer.server.port=8025"
   redis:
     image: redis:8.8.2@sha256:37227fff5638322f4ebea25d6d0dc3ee50848604e82b81426f11507b3ec7d2cc
   eurooffice:
@@ -108,6 +122,13 @@ services:
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-eurooffice.localhost
       - VIRTUAL_PORT=80
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-eurooffice.localhost
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=librecode-dev-proxy"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.rule=Host(\`${COMPOSE_PROJECT_NAME}-eurooffice.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.entrypoints=websecure"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.tls=true"
+      - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--eurooffice.loadbalancer.server.port=80"
     extra_hosts:
       - host.docker.internal:host-gateway
   playwright:
@@ -125,6 +146,13 @@ services:
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-playwright.localhost
       - VIRTUAL_PORT=9323
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-playwright.localhost
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=librecode-dev-proxy"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--playwright.rule=Host(\`${COMPOSE_PROJECT_NAME}-playwright.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--playwright.entrypoints=websecure"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--playwright.tls=true"
+      - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--playwright.loadbalancer.server.port=9323"
     command: sleep infinity
     depends_on:
       - nextcloud
@@ -143,6 +171,13 @@ services:
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-signal.localhost
       - VIRTUAL_PORT=8080
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-signal.localhost
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=librecode-dev-proxy"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.rule=Host(\`${COMPOSE_PROJECT_NAME}-signal.localhost\`)"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.entrypoints=websecure"
+      - "traefik.http.routers.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.tls=true"
+      - "traefik.http.services.librecode-${COMPOSE_PROJECT_NAME}--signal-gateway.loadbalancer.server.port=8080"
   whatsapp.web:
     image: aldinokemal2104/go-whatsapp-web-multidevice
     profiles:
