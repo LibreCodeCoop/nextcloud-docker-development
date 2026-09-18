@@ -5,7 +5,7 @@ services:
     labels:
       coop.librecode.dev-proxy: "true"
       traefik.enable: "true"
-      traefik.http.routers.librecode-api.rule: Path(`/api/http/routers`)
+      traefik.http.routers.librecode-api.rule: Host(`localhost`) && Path(`/api/http/routers`)
       traefik.http.routers.librecode-api.priority: "200"
       traefik.http.routers.librecode-api.service: api@internal
     command:
@@ -37,9 +37,7 @@ services:
       traefik.http.routers.librecode-dashboard.priority: "100"
       traefik.http.routers.librecode-dashboard.service: librecode-dashboard
       traefik.http.routers.librecode-dashboard-catchall.rule: HostRegexp(`[a-z0-9-]+\.localhost`)
-      traefik.http.routers.librecode-dashboard-catchall.entrypoints: websecure
       traefik.http.routers.librecode-dashboard-catchall.priority: "1"
-      traefik.http.routers.librecode-dashboard-catchall.tls: "true"
       traefik.http.routers.librecode-dashboard-catchall.service: librecode-dashboard
       traefik.http.routers.librecode-dashboard-catchall.middlewares: librecode-not-found
       traefik.http.middlewares.librecode-not-found.replacepath.path: /__librecode_not_found__
