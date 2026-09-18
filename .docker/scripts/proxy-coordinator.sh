@@ -18,8 +18,8 @@ export COORDINATOR_CONTAINER PROJECT_NAME
 # analyze the complete dependency graph without file-wide suppressions.
 # shellcheck source=.docker/scripts/proxy/infrastructure.sh
 . "$proxy_lib_dir/infrastructure.sh"
-# shellcheck source=.docker/scripts/proxy/assets.sh
-. "$proxy_lib_dir/assets.sh"
+# shellcheck source=.docker/scripts/proxy/dashboard.sh
+. "$proxy_lib_dir/dashboard.sh"
 # shellcheck source=.docker/scripts/proxy/diagnostics.sh
 . "$proxy_lib_dir/diagnostics.sh"
 # shellcheck source=.docker/scripts/proxy/services.sh
@@ -86,9 +86,8 @@ wait_for_shutdown() {
 run() {
 	validate_environment
 	ensure_proxy_network
-	install_proxy_assets
-
 	proxy_state="$(ensure_proxy_running)"
+	install_dashboard_assets
 	install_runtime_diagnostics
 
 	acquire_proxy_lease

@@ -79,10 +79,13 @@ runtime_diagnostics_json() {
 }
 
 install_runtime_diagnostics() {
-	proxy_container="$(compatible_proxy_container)"
-	[ -n "$proxy_container" ] || return 1
+	dashboard_container="${PROXY_DASHBOARD_CONTAINER:-librecode-dev-dashboard}"
+
+	if ! Docker inspect "$dashboard_container" >/dev/null 2>&1; then
+		return 1
+	fi
 
 	runtime_diagnostics_json |
-		Docker exec -i "$proxy_container" \
+		Docker exec -i "$dashboard_container" \
 			sh -c 'cat > /usr/share/nginx/html/runtime.json'
 }

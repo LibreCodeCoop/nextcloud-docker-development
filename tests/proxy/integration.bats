@@ -73,10 +73,10 @@ wait_for_https_path_status() {
 	path="$2"
 	expected="$3"
 
-	for _ in $(seq 1 60); do
+	for _ in $(seq 1 30); do
 		status="$(curl --silent --show-error --insecure \
-			--connect-timeout 2 \
-			--max-time 5 \
+			--connect-timeout 1 \
+			--max-time 2 \
 			--resolve "$host:443:127.0.0.1" \
 			--output "$BODY" \
 			--write-out '%{http_code}' \
@@ -84,6 +84,13 @@ wait_for_https_path_status() {
 		[ "$status" = "$expected" ] && return 0
 		sleep 0.5
 	done
+	printf 'Timed out waiting for https://%s%s to return %s; last status was %s\n' "$host" "$path" "$expected" "${status:-none}" >&2
+	docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}' >&2 || true
+	docker inspect proxytesta-nginx-1 --format '{{json .NetworkSettings.Networks}}' >&2 2>/dev/null || true
+	curl --silent --show-error --insecure --connect-timeout 1 --max-time 2 \
+		--resolve 'localhost:443:127.0.0.1' https://localhost/api/http/routers >&2 || true
+	docker logs librecode-dev-proxy >&2 || true
+	docker logs librecode-dev-dashboard >&2 || true
 	return 1
 }
 
@@ -101,7 +108,7 @@ certificate_matches_host() {
 	compose_test proxytesta up --detach
 
 	wait_for_running librecode-dev-proxy
-	wait_for_running librecode-dev-proxy-ssl-companion
+	wait_for_running librecode-dev-dashboard
 
 	wait_for_network librecode-dev-proxy proxytesta_default
 	backend_networks="$(docker inspect --format '{{json .NetworkSettings.Networks}}' proxytesta-nginx-1)"
@@ -119,6 +126,9 @@ certificate_matches_host() {
 	grep -q 'Contribute on GitHub' "$BODY"
 	grep -q 'Report an issue' "$BODY"
 	grep -q 'Star on GitHub' "$BODY"
+
+	wait_for_https_path_status localhost /api/http/routers 200
+	grep -q 'librecode-proxytesta--nextcloud' "$BODY"
 
 	wait_for_https_path_status localhost /runtime.json 200
 	grep -q '"docker":"' "$BODY"
@@ -138,7 +148,7 @@ certificate_matches_host() {
 	compose_test proxytesta stop
 
 	wait_for_absent librecode-dev-proxy
-	wait_for_absent librecode-dev-proxy-ssl-companion
+	wait_for_absent librecode-dev-dashboard
 }
 
 @test "Ctrl+C on attached compose stops the last shared proxy promptly" {
@@ -152,7 +162,7 @@ certificate_matches_host() {
 	compose_pid=$!
 
 	wait_for_running librecode-dev-proxy
-	wait_for_running librecode-dev-proxy-ssl-companion
+	wait_for_running librecode-dev-dashboard
 	wait_for_https_status proxytesta.localhost 200
 
 	started_at="$(date +%s)"
@@ -161,7 +171,7 @@ certificate_matches_host() {
 	finished_at="$(date +%s)"
 
 	wait_for_absent librecode-dev-proxy
-	wait_for_absent librecode-dev-proxy-ssl-companion
+	wait_for_absent librecode-dev-dashboard
 
 	elapsed=$((finished_at - started_at))
 	[ "$elapsed" -lt 10 ]
@@ -183,5 +193,5 @@ certificate_matches_host() {
 	compose_test proxytestb stop
 
 	wait_for_absent librecode-dev-proxy
-	wait_for_absent librecode-dev-proxy-ssl-companion
+	wait_for_absent librecode-dev-dashboard
 }

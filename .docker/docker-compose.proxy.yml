@@ -1,38 +1,49 @@
 services:
-  nginx-proxy:
-    image: nginxproxy/nginx-proxy:1.11.6-alpine@sha256:99376e95c8754547213d411222a2c4dca046d974e753ae2a1c9aef09b2c03364
+  traefik:
+    image: traefik:v3.7.13@sha256:f86a2cab1b5c649070c49f883c743dd32d8485a56e3368c5f93b9e91f1e91259
     container_name: librecode-dev-proxy
     labels:
       coop.librecode.dev-proxy: "true"
-    working_dir: /dashboard
-    command: ["forego", "start", "-r"]
+      traefik.enable: "true"
+      traefik.http.routers.librecode-api.rule: Path(`/api/http/routers`)
+      traefik.http.routers.librecode-api.priority: "200"
+      traefik.http.routers.librecode-api.entrypoints: api
+      traefik.http.routers.librecode-api.service: api@internal
+    command:
+      - --api=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=librecode-dev-proxy
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.api.address=:8080
+      - --entrypoints.websecure.asdefault=true
+      - --entrypoints.websecure.http.tls=true
     ports:
       - "${PROXY_IP_BIND:-127.0.0.1}:80:80"
       - "${PROXY_IP_BIND:-127.0.0.1}:443:443"
     volumes:
-      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/tmp/docker.sock:ro
-      - librecode-dev-proxy-vhost:/etc/nginx/vhost.d
-      - librecode-dev-proxy-assets:/dashboard:ro
-      - librecode-dev-proxy-log:/etc/nginx/log
-      - librecode-dev-proxy-certs:/etc/nginx/certs:ro
-    environment:
-      - ENABLE_IPV6=true
-      - VIRTUAL_HOST=localhost,*.localhost
-      - VIRTUAL_PORT=80
-      - SELF_SIGNED_HOST=localhost,*.localhost
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
     networks:
       - proxy
 
-  ssl-companion:
-    image: sebastienheyd/self-signed-proxy-companion:1.1.0@sha256:dd698341f804aaffe2974931a185aa088561d76094e040e374847f3a64004d43
-    container_name: librecode-dev-proxy-ssl-companion
+  dashboard:
+    image: nginx:1.31.5-alpine@sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3
+    container_name: librecode-dev-dashboard
     labels:
-      coop.librecode.dev-proxy-companion: "true"
-    volumes:
-      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
-      - librecode-dev-proxy-certs:/etc/nginx/certs:rw
-    environment:
-      - NGINX_PROXY_CONTAINER=librecode-dev-proxy
+      coop.librecode.dev-proxy-dashboard: "true"
+      traefik.enable: "true"
+      traefik.http.routers.librecode-dashboard.rule: Host(`localhost`)
+      traefik.http.routers.librecode-dashboard.priority: "100"
+      traefik.http.routers.librecode-dashboard.service: librecode-dashboard
+      traefik.http.routers.librecode-dashboard-catchall.rule: HostRegexp(`[a-z0-9-]+\.localhost`)
+      traefik.http.routers.librecode-dashboard-catchall.priority: "1"
+      traefik.http.routers.librecode-dashboard-catchall.service: librecode-dashboard
+      traefik.http.routers.librecode-dashboard-catchall.middlewares: librecode-not-found
+      traefik.http.middlewares.librecode-not-found.replacepath.path: /__librecode_not_found__
+      traefik.http.services.librecode-dashboard.loadbalancer.server.port: "80"
     networks:
       - proxy
 
@@ -40,13 +51,3 @@ networks:
   proxy:
     name: librecode-dev-proxy
     external: true
-
-volumes:
-  librecode-dev-proxy-vhost:
-    name: librecode-dev-proxy-vhost
-  librecode-dev-proxy-assets:
-    name: librecode-dev-proxy-assets
-  librecode-dev-proxy-log:
-    name: librecode-dev-proxy-log
-  librecode-dev-proxy-certs:
-    name: librecode-dev-proxy-certs

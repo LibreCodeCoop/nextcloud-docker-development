@@ -10,13 +10,8 @@ setup() {
 	grep -Eq '^[[:space:]]+image: redis:[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' "$REPO_ROOT/docker-compose.yml"
 	grep -Eq '^[[:space:]]+image: mysql:8\.4@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/database-services.yml"
 	grep -Eq '^[[:space:]]+image: postgres:13-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/database-services.yml"
-	grep -Eq '^[[:space:]]+image: nginxproxy/nginx-proxy:[0-9]+\.[0-9]+\.[0-9]+-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
-	grep -Eq '^[[:space:]]+image: sebastienheyd/self-signed-proxy-companion:[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
-}
-
-@test "proxy helper reuses the coordinator image instead of duplicating its version" {
-	grep -q 'container_image "${COORDINATOR_CONTAINER:-}"' "$REPO_ROOT/.docker/scripts/proxy/assets.sh"
-	! grep -Eq 'docker:[0-9]+\.[0-9]+\.[0-9]+-cli@sha256:' "$REPO_ROOT/.docker/scripts/proxy/assets.sh"
+	grep -Eq '^[[:space:]]+image: traefik:v[0-9]+\.[0-9]+\.[0-9]+@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
+	grep -Eq '^[[:space:]]+image: nginx:[0-9]+\.[0-9]+\.[0-9]+-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/docker-compose.proxy.yml"
 }
 
 @test "proxy integration fixture images are pinned by tag and digest" {
@@ -60,13 +55,14 @@ setup() {
 	[ "$main_socket_mounts" -eq 1 ]
 
 	proxy_socket_mounts="$(grep -Ec '^[[:space:]]+- .*DOCKER_SOCKET.*:/.*docker\.sock:ro$' "$REPO_ROOT/.docker/docker-compose.proxy.yml")"
-	[ "$proxy_socket_mounts" -eq 2 ]
+	[ "$proxy_socket_mounts" -eq 1 ]
 }
 
-@test "dashboard does not use innerHTML for Docker metadata" {
-	! grep -q 'innerHTML' "$REPO_ROOT/.docker/nginx-proxy/dashboard.tmpl"
-	grep -q 'textContent = currentProject' "$REPO_ROOT/.docker/nginx-proxy/dashboard.tmpl"
-	grep -q 'textContent = link.href' "$REPO_ROOT/.docker/nginx-proxy/dashboard.tmpl"
+@test "dashboard does not use innerHTML for Traefik route metadata" {
+	dashboard="$REPO_ROOT/.docker/traefik/dashboard.html"
+	! grep -q 'innerHTML' "$dashboard"
+	grep -q 'heading.textContent = currentProject' "$dashboard"
+	grep -q 'link.textContent = link.href' "$dashboard"
 }
 
 @test "GitHub Actions are pinned to immutable commit SHAs" {
