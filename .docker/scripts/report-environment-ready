@@ -33,8 +33,8 @@ emit_banner() {
 	[ -z "${ENV_ADMIN_USER:-}" ] || printf '│ %-16s %s\n' 'Admin user' "$ENV_ADMIN_USER"
 	[ -z "${ENV_ADMIN_PASSWORD:-}" ] || printf '│ %-16s %s\n' 'Admin password' "$ENV_ADMIN_PASSWORD"
 	printf '│\n'
-	printf '│ 🔐 HTTPS uses the LibreCode local development CA.\n'
-	printf '│    Trust it once if your browser shows a warning.\n'
+	printf '│ 🔐 HTTPS uses a local self-signed development certificate.\n'
+	printf '│    Your browser may show a warning until you trust the local certificate.\n'
 	printf '│\n'
 	printf '└──────────────────────────────────────────────────\n'
 	} > /proc/1/fd/2
