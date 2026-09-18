@@ -91,6 +91,11 @@ wait_for_https_status() {
 	wait_for_running librecode-dev-proxy
 	wait_for_running librecode-dev-dashboard
 
+	proxy_networks="$(docker inspect --format '{{json .NetworkSettings.Networks}}' librecode-dev-proxy)"
+	backend_networks="$(docker inspect --format '{{json .NetworkSettings.Networks}}' proxytesta-nginx-1)"
+	[[ "$proxy_networks" == *'"proxytesta_default"'* ]]
+	[[ "$backend_networks" != *'"librecode-dev-proxy"'* ]]
+
 	http_host_ip="$(docker inspect --format '{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostIp}}' librecode-dev-proxy)"
 	https_host_ip="$(docker inspect --format '{{(index (index .NetworkSettings.Ports "443/tcp") 0).HostIp}}' librecode-dev-proxy)"
 	[ "$http_host_ip" = "127.0.0.1" ]
