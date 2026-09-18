@@ -59,7 +59,6 @@ services:
       - ./volumes/nextcloud:/var/www/html:ro
       - ./volumes/nginx/includes:/etc/nginx/conf.d/includes/
       - ./volumes/nginx/certs:/certs
-    environment:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
@@ -87,7 +86,6 @@ services:
       - nextcloud
   mailpit:
     image: axllent/mailpit:v1.31.1@sha256:98b916bd3c8d61f7633a52d3ea2f58d00620cb01ca57ab59edde68c347a95365
-    environment:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
