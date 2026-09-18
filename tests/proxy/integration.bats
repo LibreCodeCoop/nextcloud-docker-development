@@ -60,10 +60,10 @@ wait_for_https_path_status() {
 	path="$2"
 	expected="$3"
 
-	for _ in $(seq 1 60); do
+	for _ in $(seq 1 30); do
 		status="$(curl --silent --show-error --insecure \
-			--connect-timeout 2 \
-			--max-time 5 \
+			--connect-timeout 1 \
+			--max-time 2 \
 			--resolve "$host:443:127.0.0.1" \
 			--output "$BODY" \
 			--write-out '%{http_code}' \
@@ -71,6 +71,10 @@ wait_for_https_path_status() {
 		[ "$status" = "$expected" ] && return 0
 		sleep 0.5
 	done
+	printf 'Timed out waiting for https://%s%s to return %s\n' "$host" "$path" "$expected" >&2
+	docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Image}}' >&2 || true
+	docker logs librecode-dev-proxy >&2 || true
+	docker logs librecode-dev-dashboard >&2 || true
 	return 1
 }
 
