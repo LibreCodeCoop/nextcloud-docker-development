@@ -90,7 +90,7 @@ services:
       - VIRTUAL_PORT=8025
       - SELF_SIGNED_HOST=${COMPOSE_PROJECT_NAME}-mailpit.localhost
   redis:
-    image: redis:8.8.2@sha256:37227fff5638322f4ebea25d6d0dc3ee50848604e82b81426f11507b3ec7d2cc
+    image: redis:8.10.1@sha256:8a1efc5f479551822b47424ccae982026b633f28818eab0387348120a61e10e2
   eurooffice:
     image: ghcr.io/euro-office/documentserver:latest
     profiles:
