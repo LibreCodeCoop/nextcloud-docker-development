@@ -107,7 +107,7 @@ Expose development services only on trusted networks and with an appropriate hos
 
 ## Docker daemon access
 
-The proxy coordinator, reverse proxy, and certificate companion access the Docker daemon as part of the development workflow. This is an intentional trust boundary: code running through these infrastructure components can interact with the local Docker daemon.
+The proxy coordinator and Traefik reverse proxy access the Docker daemon as part of the development workflow. This is an intentional trust boundary: code running through these infrastructure components can interact with the local Docker daemon.
 
 Application containers do not receive the Docker socket. Use this development environment only with repository code you trust.
 

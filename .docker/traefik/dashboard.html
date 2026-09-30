@@ -1,42 +1,3 @@
-{{- $routes := list -}}
-{{- $proxyNetworks := dict -}}
-{{- range $container := . -}}
-  {{- if eq (index $container.Labels "coop.librecode.dev-proxy") "true" -}}
-    {{- range $network := $container.Networks -}}
-      {{- $_ := set $proxyNetworks $network.Name true -}}
-    {{- end -}}
-  {{- end -}}
-{{- end -}}
-{{- range $hostname, $containers := groupByMulti . "Env.VIRTUAL_HOST" "," -}}
-  {{- $hostname = trim $hostname -}}
-  {{- if or (eq $hostname "") (eq $hostname "localhost") (eq $hostname "*.localhost") -}}
-    {{- continue -}}
-  {{- end -}}
-
-  {{- range $container := $containers -}}
-    {{- $reachableFromProxy := false -}}
-    {{- range $network := $container.Networks -}}
-      {{- if index $proxyNetworks $network.Name -}}
-        {{- $reachableFromProxy = true -}}
-      {{- end -}}
-    {{- end -}}
-    {{- if not $reachableFromProxy -}}
-      {{- continue -}}
-    {{- end -}}
-
-    {{- $project := index $container.Labels "com.docker.compose.project" -}}
-    {{- $service := index $container.Labels "com.docker.compose.service" -}}
-    {{- if not $project -}}
-      {{- $project = "Docker" -}}
-    {{- end -}}
-    {{- if not $service -}}
-      {{- $service = "Service" -}}
-    {{- end -}}
-
-    {{- $routes = append $routes (dict "host" $hostname "project" $project "service" $service) -}}
-    {{- break -}}
-  {{- end -}}
-{{- end -}}
 <!doctype html>
 <html lang="en">
 <head>
@@ -82,7 +43,7 @@
     </section>
 
     <h2>Active environments</h2>
-    <div id="environments"></div>
+    <div id="environments"><p class="muted">Loading active development routes…</p></div>
 
     <section id="runtime-section" hidden>
       <h2>Environment checks</h2>
@@ -102,27 +63,44 @@
     </footer>
   </main>
 
-  <script type="application/json" id="routes">{{ toJson $routes }}</script>
   <script>
     const serviceNames = {
-      nginx: 'Nextcloud',
+      nextcloud: 'Nextcloud',
       mailpit: 'Mailpit',
       playwright: 'Playwright',
       eurooffice: 'EuroOffice',
       'signal-gateway': 'Signal Gateway',
     };
 
-    const routes = JSON.parse(document.getElementById('routes').textContent)
-      .filter(({ host }) => !host.includes('*') && !host.startsWith('~'))
-      .sort((a, b) => a.project.localeCompare(b.project) || a.host.localeCompare(b.host));
+    const routerPrefix = 'librecode-';
+    const routerSeparator = '--';
 
-    const environments = document.getElementById('environments');
-    if (routes.length === 0) {
-      const empty = document.createElement('p');
-      empty.className = 'muted';
-      empty.textContent = 'No development environments are active.';
-      environments.appendChild(empty);
-    } else {
+    const parseRoute = (router) => {
+      const name = String(router.name || '').replace(/@docker$/, '');
+      if (!name.startsWith(routerPrefix) || !name.includes(routerSeparator)) return null;
+
+      const payload = name.slice(routerPrefix.length);
+      const separatorIndex = payload.lastIndexOf(routerSeparator);
+      const project = payload.slice(0, separatorIndex);
+      const service = payload.slice(separatorIndex + routerSeparator.length);
+      const match = String(router.rule || '').match(/Host\(\`([^\`]+)\`\)/);
+
+      if (!project || !service || !match) return null;
+      return { host: match[1], project, service };
+    };
+
+    const renderRoutes = (routes) => {
+      const environments = document.getElementById('environments');
+      environments.replaceChildren();
+
+      if (routes.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'muted';
+        empty.textContent = 'No development environments are active.';
+        environments.appendChild(empty);
+        return;
+      }
+
       let currentProject = null;
       let list = null;
 
@@ -147,10 +125,12 @@
         item.append(label, link);
         list.appendChild(item);
       }
-    }
+    };
 
-    const requestedHost = window.location.hostname;
-    if (requestedHost !== 'localhost') {
+    const showUnknownHost = (routes) => {
+      const requestedHost = window.location.hostname;
+      if (requestedHost === 'localhost') return;
+
       const panel = document.getElementById('not-found');
       document.getElementById('requested-host').textContent = requestedHost;
       panel.hidden = false;
@@ -178,7 +158,11 @@
         link.textContent = closest;
         suggestion.hidden = false;
       }
-    } else {
+    };
+
+    const loadRuntime = () => {
+      if (window.location.hostname !== 'localhost') return;
+
       const runtimeSection = document.getElementById('runtime-section');
       runtimeSection.hidden = false;
 
@@ -219,7 +203,6 @@
 
             const panel = document.createElement('div');
             panel.className = 'runtime-hint';
-
             const title = document.createElement('strong');
             title.textContent = 'ℹ Shorter local URLs are available';
 
@@ -252,7 +235,31 @@
           checks.textContent = 'Runtime information is not available.';
           checks.className = 'muted';
         });
-    }
+    };
+
+    fetch('/api/http/routers', { cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((routers) => {
+        const routes = routers
+          .filter(({ provider, status }) => provider === 'docker' && status === 'enabled')
+          .map(parseRoute)
+          .filter(Boolean)
+          .sort((a, b) => a.project.localeCompare(b.project) || a.host.localeCompare(b.host));
+
+        renderRoutes(routes);
+        showUnknownHost(routes);
+      })
+      .catch(() => {
+        const environments = document.getElementById('environments');
+        environments.textContent = 'Active route information is not available.';
+        environments.className = 'muted';
+        showUnknownHost([]);
+      });
+
+    loadRuntime();
   </script>
 </body>
 </html>
