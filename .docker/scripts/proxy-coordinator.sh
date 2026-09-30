@@ -34,7 +34,7 @@ validate_environment() {
 	fi
 
 	if [ -z "${PROJECT_DIR:-}" ]; then
-		echo 'The host project directory was not provided to the coordinator.' >&2
+		echo 'The project directory was not provided to the coordinator.' >&2
 		return 1
 	fi
 
