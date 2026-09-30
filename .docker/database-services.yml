@@ -2,14 +2,14 @@ services:
   mysql:
     # Pin to 8.4: mysql:latest currently resolves to 9.x, and Nextcloud autoinstall
     # runs with the application user, which cannot read mysql.component there.
-    image: mysql:8.4
+    image: mysql:8.4@sha256:b3b90af2a6552ae30c266fdb7d5dd55f3afb72404bb78d37fe8a23eb857fd3fb
     volumes:
       - ../volumes/mysql/init:/docker-entrypoint-initdb.d
       - ../volumes/mysql/data:/var/lib/mysql
     ports:
       - target: 3306
         published: "3306-3325"
-        host_ip: ${IP_BIND:-127.0.0.1}
+        host_ip: ${MYSQL_IP_BIND:-127.0.0.1}
     command: ["mysqld"]
     environment:
       - TZ=${TZ:-CET}
@@ -18,13 +18,13 @@ services:
       - MYSQL_USER=${MYSQL_USER:-nextcloud}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
   pgsql:
-    image: postgres:13-alpine
+    image: postgres:13-alpine@sha256:fb9065b6e3e213bdc07edd372a5b2a26245840b7fb65d1fd8b6700106d51805c
     volumes:
       - ../volumes/postgres/data:/var/lib/postgresql/data
     ports:
       - target: 5432
         published: "5432-5451"
-        host_ip: ${IP_BIND:-127.0.0.1}
+        host_ip: ${POSTGRES_IP_BIND:-127.0.0.1}
     command: ["postgres", "-c", "log_statement=all"]
     environment:
       - POSTGRES_DB=${POSTGRES_DB:-nextcloud}

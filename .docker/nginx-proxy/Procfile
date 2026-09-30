@@ -1,0 +1,2 @@
+dockergen: docker-gen -config /dashboard/docker-gen.cfg -event-filter event=connect -event-filter event=disconnect
+nginx: nginx -g "daemon off;"

@@ -1,29 +1,31 @@
 services:
   nginx-proxy:
-    image: nginxproxy/nginx-proxy:1.11-alpine
+    image: nginxproxy/nginx-proxy:1.11.6-alpine@sha256:99376e95c8754547213d411222a2c4dca046d974e753ae2a1c9aef09b2c03364
     container_name: librecode-dev-proxy
-    restart: unless-stopped
     labels:
       coop.librecode.dev-proxy: "true"
+    working_dir: /dashboard
+    command: ["forego", "start", "-r"]
     ports:
-      - "80:80"
-      - "443:443"
+      - "${PROXY_IP_BIND:-127.0.0.1}:80:80"
+      - "${PROXY_IP_BIND:-127.0.0.1}:443:443"
     volumes:
       - ${DOCKER_SOCKET:-/var/run/docker.sock}:/tmp/docker.sock:ro
       - librecode-dev-proxy-vhost:/etc/nginx/vhost.d
-      - librecode-dev-proxy-conf:/etc/nginx/conf.d
+      - librecode-dev-proxy-assets:/dashboard:ro
       - librecode-dev-proxy-log:/etc/nginx/log
       - librecode-dev-proxy-certs:/etc/nginx/certs:ro
-      - librecode-dev-proxy-html:/usr/share/nginx/html
     environment:
       - ENABLE_IPV6=true
+      - VIRTUAL_HOST=localhost,*.localhost
+      - VIRTUAL_PORT=80
+      - SELF_SIGNED_HOST=localhost,*.localhost
     networks:
       - proxy
 
   ssl-companion:
-    image: sebastienheyd/self-signed-proxy-companion:latest
+    image: sebastienheyd/self-signed-proxy-companion:1.1.0@sha256:dd698341f804aaffe2974931a185aa088561d76094e040e374847f3a64004d43
     container_name: librecode-dev-proxy-ssl-companion
-    restart: unless-stopped
     labels:
       coop.librecode.dev-proxy-companion: "true"
     volumes:
@@ -37,15 +39,14 @@ services:
 networks:
   proxy:
     name: librecode-dev-proxy
+    external: true
 
 volumes:
   librecode-dev-proxy-vhost:
     name: librecode-dev-proxy-vhost
-  librecode-dev-proxy-conf:
-    name: librecode-dev-proxy-conf
+  librecode-dev-proxy-assets:
+    name: librecode-dev-proxy-assets
   librecode-dev-proxy-log:
     name: librecode-dev-proxy-log
   librecode-dev-proxy-certs:
     name: librecode-dev-proxy-certs
-  librecode-dev-proxy-html:
-    name: librecode-dev-proxy-html

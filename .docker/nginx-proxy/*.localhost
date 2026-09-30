@@ -1,0 +1,6 @@
+root /usr/share/nginx/html;
+error_page 404 =404 @librecode_dashboard_404;
+
+location @librecode_dashboard_404 {
+    try_files /index.html =404;
+}

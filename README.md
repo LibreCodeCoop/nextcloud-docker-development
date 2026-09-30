@@ -13,7 +13,7 @@ Start the basic environment with MySQL:
 docker compose up
 ```
 
-For PostgreSQL, optional services, dynamic host ports, multiple environments,
+For PostgreSQL, optional services, multiple environments, proxy settings,
 and other advanced configuration, see the
 [advanced setup guide](docs/advanced-setup.md).
 
