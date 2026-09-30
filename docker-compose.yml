@@ -71,10 +71,10 @@ services:
     volumes:
       - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock
       - ./.docker/scripts:/usr/local/lib/librecode:ro
-      - .:${PWD}:ro
-    working_dir: ${PWD}
+      - .:/project:ro
+    working_dir: /project
     environment:
-      - PROJECT_DIR=${PWD}
+      - PROJECT_DIR=/project
       - DOCKER_SOCKET=${DOCKER_SOCKET:-/var/run/docker.sock}
       - PROXY_IP_BIND=${PROXY_IP_BIND:-127.0.0.1}
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-admin}
