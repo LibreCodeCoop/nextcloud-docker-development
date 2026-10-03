@@ -44,3 +44,37 @@ jobs:
           REPO_ROOT="$GITHUB_WORKSPACE" COMPOSE_PROJECT_NAME=proxytesta docker compose --file tests/proxy/fixtures/compose.yml config --quiet
       - name: Run Docker integration tests
         run: bats tests/proxy/integration.bats
+
+
+  sqlite-worker:
+    name: SQLite worker integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build PHP 8.3 development image
+        run: docker build -f .docker/Dockerfile.php83 -t ghcr.io/librecodecoop/nextcloud-dev-php83:latest .docker
+      - name: Start isolated SQLite workers
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a up
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b up
+      - name: Verify SQLite and worker isolation
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a exec php -r 'exit(extension_loaded("pdo_sqlite") ? 0 : 1);'
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a exec occ status | grep -q 'installed: true'
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b exec occ status | grep -q 'installed: true'
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a exec occ config:system:set worker_probe --value alpha
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b exec occ config:system:set worker_probe --value beta
+          test "$(DB_TYPE=sqlite sh ./dev-worker sqlite-a exec occ config:system:get worker_probe)" = alpha
+          test "$(DB_TYPE=sqlite sh ./dev-worker sqlite-b exec occ config:system:get worker_probe)" = beta
+          ! docker ps --format '{{.Names}}' | grep -Eq '^ncdev-sqlite-(a|b)-database-1$'
+      - name: Collect worker logs
+        if: failure()
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a logs || true
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b logs || true
+      - name: Destroy workers
+        if: always()
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a destroy || true
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b destroy || true

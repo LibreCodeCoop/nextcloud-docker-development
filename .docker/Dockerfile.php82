@@ -43,6 +43,7 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     pdo \
     pdo_mysql \
     pdo_pgsql \
+    pdo_sqlite \
     pgsql \
     redis \
     sockets \

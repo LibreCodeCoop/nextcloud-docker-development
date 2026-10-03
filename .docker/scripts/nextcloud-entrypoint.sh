@@ -49,6 +49,9 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     elif [[ "${db_type}" == 'pgsql' ]]; then
         occ maintenance:install --verbose --database="${db_driver}" --database-name="${POSTGRES_DB}" --database-host="${db_host}" --database-port= --database-user="${POSTGRES_USER}" --database-pass="${POSTGRES_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
         install_cmd_status=$?
+    elif [[ "${db_type}" == 'sqlite' ]]; then
+        occ maintenance:install --verbose --database="sqlite" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
+        install_cmd_status=$?
     else
         occ maintenance:install --verbose --database="${db_driver}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
         install_cmd_status=$?
