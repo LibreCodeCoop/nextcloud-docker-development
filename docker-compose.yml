@@ -2,7 +2,7 @@ services:
   database:
     extends:
       file: .docker/database-services.yml
-      service: ${DB_TYPE:-${DB_HOST:-mysql}}
+      service: ${DB_SERVICE_TYPE:-${DB_TYPE:-${DB_HOST:-mysql}}}
     networks:
       default:
         aliases:
