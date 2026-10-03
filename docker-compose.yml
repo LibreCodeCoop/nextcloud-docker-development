@@ -2,11 +2,11 @@ services:
   database:
     extends:
       file: .docker/database-services.yml
-      service: ${DB_HOST:-mysql}
+      service: ${DB_TYPE:-${DB_HOST:-mysql}}
     networks:
       default:
         aliases:
-          - ${DB_HOST:-mysql}
+          - ${DB_HOST:-${DB_TYPE:-mysql}}
   nextcloud:
     image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-83}:latest
     # build:
@@ -14,10 +14,10 @@ services:
     #   dockerfile: Dockerfile.php${PHP_VERSION:-83}
     volumes:
       - ./.docker/scripts/wait-for-db.php:/var/www/scripts/wait-for-db.php
-      - ./volumes/php:/var/www/php-config
+      - ${WORKER_VOLUMES_DIR:-./volumes}/php:/var/www/php-config
       - ~/.composer:/var/www/.composer/
       - ~/.npm:/var/www/.npm/
-      - ./volumes/nextcloud:/var/www/html
+      - ${WORKER_VOLUMES_DIR:-./volumes}/nextcloud:/var/www/html
     restart: unless-stopped
     depends_on:
       - database
@@ -28,7 +28,9 @@ services:
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-admin}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD:-admin}
       - NEXTCLOUD_ADMIN_EMAIL=${NEXTCLOUD_ADMIN_EMAIL:-a@test.tld}
-      - DB_HOST=${DB_HOST:-mysql}
+      - DB_TYPE=${DB_TYPE:-${DB_HOST:-mysql}}
+      - DB_HOST=${DB_HOST:-${DB_TYPE:-mysql}}
+      - DB_DRIVER=${DB_DRIVER:-${DB_TYPE:-${DB_HOST:-mysql}}}
       - MYSQL_DATABASE=${MYSQL_DATABASE:-nextcloud}
       - MYSQL_USER=${MYSQL_USER:-nextcloud}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
@@ -56,9 +58,9 @@ services:
     depends_on:
       - nextcloud
     volumes:
-      - ./volumes/nextcloud:/var/www/html:ro
-      - ./volumes/nginx/includes:/etc/nginx/conf.d/includes/
-      - ./volumes/nginx/certs:/certs
+      - ${WORKER_VOLUMES_DIR:-./volumes}/nextcloud:/var/www/html:ro
+      - ${WORKER_VOLUMES_DIR:-./volumes}/nginx/includes:/etc/nginx/conf.d/includes/
+      - ${WORKER_VOLUMES_DIR:-./volumes}/nginx/certs:/certs
     environment:
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}.localhost
       - VIRTUAL_PORT=80
@@ -97,9 +99,9 @@ services:
       - eurooffice
     restart: always
     volumes:
-      - ./volumes/eurooffice:/home/eurooffice/.eurooffice
-      - ./volumes/eurooffice/local.json:/etc/onlyoffice/documentserver/local.json
-      - ./volumes/nextcloud/apps-extra/eurooffice-plugin:/var/www/onlyoffice/documentserver/sdkjs-plugins/libresign:ro
+      - ${WORKER_VOLUMES_DIR:-./volumes}/eurooffice:/home/eurooffice/.eurooffice
+      - ${WORKER_VOLUMES_DIR:-./volumes}/eurooffice/local.json:/etc/onlyoffice/documentserver/local.json
+      - ${WORKER_VOLUMES_DIR:-./volumes}/nextcloud/apps-extra/eurooffice-plugin:/var/www/onlyoffice/documentserver/sdkjs-plugins/libresign:ro
     environment:
       - EXAMPLE_ENABLED=true
       - JWT_SECRET=${JWT_SECRET:-my_jwt_secret}
@@ -116,7 +118,7 @@ services:
       - playwright
     user: pwuser
     volumes:
-      - ./volumes/nextcloud:/var/www/html
+      - ${WORKER_VOLUMES_DIR:-./volumes}/nextcloud:/var/www/html
     working_dir: /var/www/html
     environment:
       - PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://${COMPOSE_PROJECT_NAME}.localhost}
@@ -137,7 +139,7 @@ services:
       - signal
     restart: unless-stopped
     volumes:
-      - ./volumes/signal:/home/.local/share/signal-cli
+      - ${WORKER_VOLUMES_DIR:-./volumes}/signal:/home/.local/share/signal-cli
     environment:
       - LOG_LEVEL=info
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-signal.localhost
@@ -159,4 +161,4 @@ services:
       - WHATSAPP_WEBHOOK_EVENTS=${WHATSAPP_WEBHOOK_EVENTS:-message,message.ack,group.participants,chat_presence}
       - WHATSAPP_AUTO_REPLY="Conta de sistema. Para falar com a LibreCode, mande email para contato@libresign.coop"
     volumes:
-      - ./volumes/go-whatsapp-web:/usr/src/app/files
+      - ${WORKER_VOLUMES_DIR:-./volumes}/go-whatsapp-web:/usr/src/app/files

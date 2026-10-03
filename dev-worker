@@ -1,0 +1,137 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 LibreCode coop and contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+set -eu
+
+usage() {
+	cat <<'EOF'
+Usage: ./dev-worker <worker-id> <command> [arguments...]
+
+Commands:
+  up                 Start the isolated worker and wait for Nextcloud installation
+  exec <command...>  Run a command in the worker's Nextcloud container
+  logs               Print worker logs
+  config             Render the resolved Compose configuration
+  status             Run occ status in the worker
+  destroy            Stop the worker and remove only its mutable state
+
+Environment:
+  DB_TYPE=mysql|pgsql       Database backend for the foundation lifecycle
+  DB_HOST=<hostname>        Connection hostname (defaults to DB_TYPE)
+  PHP_VERSION=<version>     Existing PHP image selector
+  VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
+  WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
+EOF
+}
+
+[ "$#" -ge 2 ] || {
+	usage >&2
+	exit 2
+}
+
+worker_id="$1"
+command="$2"
+shift 2
+
+case "$worker_id" in
+	*[!a-z0-9_-]*|'')
+		echo "Invalid worker id: $worker_id" >&2
+		exit 2
+		;;
+esac
+
+case "$worker_id" in
+	[a-z0-9]*) ;;
+	*)
+		echo "Worker id must start with a lowercase letter or digit: $worker_id" >&2
+		exit 2
+		;;
+esac
+
+repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+db_type="${DB_TYPE:-mysql}"
+
+case "$db_type" in
+	mysql|pgsql) ;;
+	sqlite|mariadb)
+		echo "DB_TYPE=$db_type is reserved by the worker contract but is not implemented by this foundation yet." >&2
+		exit 3
+		;;
+	*)
+		echo "Unsupported DB_TYPE: $db_type" >&2
+		exit 2
+		;;
+esac
+
+worker_root="${WORKER_ROOT:-$repo_root/.workers/$worker_id}"
+worker_volumes_dir="$worker_root/volumes"
+
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ncdev-$worker_id}"
+export WORKER_VOLUMES_DIR="$worker_volumes_dir"
+export DB_TYPE="$db_type"
+export DB_HOST="${DB_HOST:-$db_type}"
+
+compose() {
+	docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
+}
+
+wait_until_ready() {
+	timeout="${WORKER_READY_TIMEOUT:-180}"
+	started="$(date +%s)"
+
+	while :; do
+		if compose exec -T nextcloud occ status 2>/dev/null | grep -q 'installed: true'; then
+			return 0
+		fi
+
+		now="$(date +%s)"
+		if [ $((now - started)) -ge "$timeout" ]; then
+			echo "Worker $worker_id did not become ready within ${timeout}s." >&2
+			compose logs --no-color nextcloud >&2 || true
+			return 1
+		fi
+
+		sleep 2
+	done
+}
+
+case "$command" in
+	up)
+		mkdir -p "$worker_volumes_dir"
+		compose up -d
+		wait_until_ready
+		;;
+	exec)
+		[ "$#" -gt 0 ] || {
+			echo "exec requires a command" >&2
+			exit 2
+		}
+		compose exec -T nextcloud "$@"
+		;;
+	logs)
+		compose logs --no-color "$@"
+		;;
+	config)
+		mkdir -p "$worker_volumes_dir"
+		compose config "$@"
+		;;
+	status)
+		compose exec -T nextcloud occ status
+		;;
+	destroy)
+		compose down --remove-orphans
+		case "$worker_root" in
+			"$repo_root"/.workers/"$worker_id"|"$repo_root"/.workers/"$worker_id"/) ;;
+			*)
+				echo "Refusing to remove unexpected worker path: $worker_root" >&2
+				exit 4
+				;;
+		esac
+		rm -rf -- "$worker_root"
+		;;
+	*)
+		usage >&2
+		exit 2
+		;;
+esac
