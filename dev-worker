@@ -92,6 +92,26 @@ compose() {
 	docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
 }
 
+wait_for_mariadb() {
+	timeout="${WORKER_READY_TIMEOUT:-180}"
+	started="$(date +%s)"
+
+	while :; do
+		if compose exec -T database mariadb-admin ping -h 127.0.0.1 -uroot -p"${MYSQL_ROOT_PASSWORD:-root}" --silent >/dev/null 2>&1; then
+			return 0
+		fi
+
+		now="$(date +%s)"
+		if [ $((now - started)) -ge "$timeout" ]; then
+			echo "MariaDB for worker $worker_id did not become ready within ${timeout}s." >&2
+			compose logs --no-color database >&2 || true
+			return 1
+		fi
+
+		sleep 1
+	done
+}
+
 wait_until_ready() {
 	timeout="${WORKER_READY_TIMEOUT:-180}"
 	started="$(date +%s)"
@@ -115,6 +135,16 @@ wait_until_ready() {
 case "$command" in
 	up)
 		mkdir -p "$worker_volumes_dir"
+		if [ "$db_type" = "mariadb" ]; then
+			compose up -d database
+			wait_for_mariadb
+			if [ -n "${DB_SQL_MODE:-}" ]; then
+				case "${DB_SQL_MODE}" in
+					*[!A-Z0-9_,]*) echo "DB_SQL_MODE contains unsupported characters" >&2; exit 2 ;;
+				esac
+				compose exec -T database mariadb -uroot -p"${MYSQL_ROOT_PASSWORD:-root}" -e "SET GLOBAL sql_mode='${DB_SQL_MODE}'"
+			fi
+		fi
 		compose up -d
 		wait_until_ready
 		;;
@@ -147,12 +177,13 @@ case "$command" in
 		compose exec -T database "$@"
 		;;
 	destroy)
-		# Remove container-owned mutable files while the service image can still
-		# access the bind mounts. Host users may not own files created as www-data.
-		if compose ps -q nextcloud 2>/dev/null | grep -q .; then
-			compose exec -T -u 0 nextcloud sh -c 'find /var/www/html -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +' || true
-		fi
 		compose down --remove-orphans
+		# Mutable bind mounts contain files created by container UIDs. Clean the
+		# worker root through the existing Nextcloud image as root instead of
+		# relying on host ownership.
+		if [ -d "$worker_root" ]; then
+			compose run --rm --no-deps -u 0 --entrypoint sh -v "$worker_root:/worker" nextcloud -c 'find /worker -mindepth 1 -exec rm -rf -- {} +' >/dev/null 2>&1 || true
+		fi
 		case "$worker_root" in
 			"$repo_root"/.workers/"$worker_id"|"$repo_root"/.workers/"$worker_id"/) ;;
 			*)
