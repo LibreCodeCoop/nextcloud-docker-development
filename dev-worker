@@ -130,6 +130,11 @@ case "$command" in
 		compose exec -T nextcloud occ status
 		;;
 	destroy)
+		# Remove container-owned mutable files while the service image can still
+		# access the bind mounts. Host users may not own files created as www-data.
+		if compose ps -q nextcloud 2>/dev/null | grep -q .; then
+			compose exec -T -u 0 nextcloud sh -c 'find /var/www/html -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +' || true
+		fi
 		compose down --remove-orphans
 		case "$worker_root" in
 			"$repo_root"/.workers/"$worker_id"|"$repo_root"/.workers/"$worker_id"/) ;;
