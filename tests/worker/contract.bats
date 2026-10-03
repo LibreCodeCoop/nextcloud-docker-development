@@ -42,11 +42,21 @@ setup() {
 	[[ "$output" == *"image: postgres:13-alpine"* ]]
 }
 
-@test "reserved future database types fail before starting a partial worker" {
+@test "SQLite is a supported worker backend" {
 	run env DB_TYPE=sqlite sh "$WORKER" sqlite config
-	[ "$status" -eq 3 ]
-	[[ "$output" == *"not implemented by this foundation yet"* ]]
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"DB_TYPE: sqlite"* ]]
+	[[ "$output" == *"DB_DRIVER: sqlite"* ]]
+}
 
+@test "MariaDB remains reserved for its dedicated implementation" {
 	run env DB_TYPE=mariadb sh "$WORKER" mariadb config
 	[ "$status" -eq 3 ]
+	[[ "$output" == *"not implemented yet"* ]]
+}
+
+@test "supported PHP images install PDO SQLite" {
+	for dockerfile in "$REPO_ROOT"/.docker/Dockerfile.php81 "$REPO_ROOT"/.docker/Dockerfile.php82 "$REPO_ROOT"/.docker/Dockerfile.php83; do
+		grep -q 'pdo_sqlite' "$dockerfile"
+	done
 }
