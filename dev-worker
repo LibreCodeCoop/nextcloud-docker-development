@@ -14,11 +14,14 @@ Commands:
   logs               Print worker logs
   config             Render the resolved Compose configuration
   status             Run occ status in the worker
+  db-exec <command...> Run a command in the selected database container
   destroy            Stop the worker and remove only its mutable state
 
 Environment:
-  DB_TYPE=mysql|pgsql       Database backend for the foundation lifecycle
+  DB_TYPE=mysql|mariadb|pgsql Database backend
   DB_HOST=<hostname>        Connection hostname (defaults to DB_TYPE)
+  MARIADB_VERSION=10.6|10.11 MariaDB series (default: 10.11)
+  DB_SQL_MODE=<modes>        Optional global SQL mode for MySQL-compatible backends
   PHP_VERSION=<version>     Existing PHP image selector
   VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
   WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
@@ -53,9 +56,9 @@ repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 db_type="${DB_TYPE:-mysql}"
 
 case "$db_type" in
-	mysql|pgsql) ;;
-	sqlite|mariadb)
-		echo "DB_TYPE=$db_type is reserved by the worker contract but is not implemented by this foundation yet." >&2
+	mysql|mariadb|pgsql) ;;
+	sqlite)
+		echo "DB_TYPE=$db_type is reserved by the worker contract but is not implemented yet." >&2
 		exit 3
 		;;
 	*)
@@ -71,6 +74,19 @@ export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ncdev-$worker_id}"
 export WORKER_VOLUMES_DIR="$worker_volumes_dir"
 export DB_TYPE="$db_type"
 export DB_HOST="${DB_HOST:-$db_type}"
+
+if [ "$db_type" = "mariadb" ]; then
+	mariadb_version="${MARIADB_VERSION:-10.11}"
+	case "$mariadb_version" in
+		10.6) export DB_SERVICE_TYPE=mariadb106 ;;
+		10.11) export DB_SERVICE_TYPE=mariadb1011 ;;
+		*)
+			echo "Unsupported MARIADB_VERSION: $mariadb_version (supported: 10.6, 10.11)" >&2
+			exit 2
+			;;
+	esac
+	export DB_DRIVER=mysql
+fi
 
 compose() {
 	docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
@@ -118,6 +134,17 @@ case "$command" in
 		;;
 	status)
 		compose exec -T nextcloud occ status
+		;;
+	db-exec)
+		[ "$db_type" != "sqlite" ] || {
+			echo "SQLite workers do not have a database container" >&2
+			exit 3
+		}
+		[ "$#" -gt 0 ] || {
+			echo "db-exec requires a command" >&2
+			exit 2
+		}
+		compose exec -T database "$@"
 		;;
 	destroy)
 		compose down --remove-orphans

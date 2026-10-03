@@ -34,6 +34,7 @@ connection hostname.
 The currently implemented backends are:
 
 - `mysql` (default)
+- `mariadb`
 - `pgsql`
 
 To use PostgreSQL:
@@ -68,9 +69,23 @@ Each worker stores mutable state under `.workers/<worker-id>/volumes` and uses
 its own Compose project name. Destroying one worker removes only that worker's
 Compose resources and mutable directory.
 
-The lifecycle currently enables MySQL and PostgreSQL. SQLite and MariaDB are
-reserved by the `DB_TYPE` contract and are added by their database-specific
-workstreams.
+MariaDB workers support the 10.6 and 10.11 series without editing Compose YAML:
+
+```bash
+DB_TYPE=mariadb MARIADB_VERSION=10.6 sh ./dev-worker maria106 up
+DB_TYPE=mariadb MARIADB_VERSION=10.11 sh ./dev-worker maria1011 up
+```
+
+The worker maps each supported series to a pinned image. Use `DB_SQL_MODE` to
+request a deterministic global SQL mode when a test suite needs one:
+
+```bash
+DB_TYPE=mariadb MARIADB_VERSION=10.11 DB_SQL_MODE=ONLY_FULL_GROUP_BY \
+  sh ./dev-worker maria-full-group-by up
+```
+
+SQLite remains reserved by the `DB_TYPE` contract until its dedicated backend
+implementation lands.
 
 ## Optional services
 
