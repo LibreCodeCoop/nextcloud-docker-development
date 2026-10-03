@@ -29,7 +29,7 @@ setup() {
 }
 
 @test "DB_TYPE selects PostgreSQL while DB_HOST remains the connection host" {
-	run env DB_TYPE=pgsql DB_HOST=database.internal "$WORKER" pg config
+	run env DB_TYPE=pgsql DB_HOST=database.internal sh "$WORKER" pg config
 	[ "$status" -eq 0 ]
 	[[ "$output" == *"image: postgres:13-alpine"* ]]
 	[[ "$output" == *"DB_TYPE: pgsql"* ]]
@@ -43,10 +43,10 @@ setup() {
 }
 
 @test "reserved future database types fail before starting a partial worker" {
-	run env DB_TYPE=sqlite "$WORKER" sqlite config
+	run env DB_TYPE=sqlite sh "$WORKER" sqlite config
 	[ "$status" -eq 3 ]
 	[[ "$output" == *"not implemented by this foundation yet"* ]]
 
-	run env DB_TYPE=mariadb "$WORKER" mariadb config
+	run env DB_TYPE=mariadb sh "$WORKER" mariadb config
 	[ "$status" -eq 3 ]
 }
