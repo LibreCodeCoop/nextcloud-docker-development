@@ -25,15 +25,6 @@ services:
       - target: 3306
         published: "3306-3325"
         host_ip: ${MARIADB_IP_BIND:-127.0.0.1}
-    command:
-      - /bin/sh
-      - -c
-      - |
-        set -- mariadbd
-        if [ -n "$DB_SQL_MODE" ]; then
-          set -- "$@" "--sql-mode=$DB_SQL_MODE"
-        fi
-        exec "$@"
     environment:
       - TZ=${TZ:-CET}
       - MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
@@ -48,15 +39,6 @@ services:
       - target: 3306
         published: "3306-3325"
         host_ip: ${MARIADB_IP_BIND:-127.0.0.1}
-    command:
-      - /bin/sh
-      - -c
-      - |
-        set -- mariadbd
-        if [ -n "$DB_SQL_MODE" ]; then
-          set -- "$@" "--sql-mode=$DB_SQL_MODE"
-        fi
-        exec "$@"
     environment:
       - TZ=${TZ:-CET}
       - MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
