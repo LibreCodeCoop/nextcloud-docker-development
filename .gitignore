@@ -4,6 +4,7 @@
 
 # Docker volumes
 /volumes
+/.workers
 
 .env
 docker-compose.override.yml

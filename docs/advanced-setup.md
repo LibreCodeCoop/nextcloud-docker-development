@@ -28,16 +28,49 @@ MySQL is used by default:
 docker compose up
 ```
 
-The supported `DB_HOST` values are:
+Use `DB_TYPE` to select the database backend and keep `DB_HOST` for the
+connection hostname.
 
-- `mysql`
+The currently implemented backends are:
+
+- `mysql` (default)
 - `pgsql`
 
 To use PostgreSQL:
 
 ```bash
-DB_HOST=pgsql docker compose up
+DB_TYPE=pgsql docker compose up
 ```
+
+Existing callers that use `DB_HOST=pgsql docker compose up` remain supported
+for compatibility. New automation should use `DB_TYPE`.
+
+### Isolated workers
+
+The `dev-worker` helper gives automation a deterministic Compose project and
+mutable data directory per worker:
+
+```bash
+sh ./dev-worker test-a up
+sh ./dev-worker test-a exec occ status
+sh ./dev-worker test-a logs
+sh ./dev-worker test-a destroy
+```
+
+Select the existing PHP and Nextcloud dimensions in the same invocation:
+
+```bash
+PHP_VERSION=83 VERSION_NEXTCLOUD=stable35 DB_TYPE=pgsql \
+  sh ./dev-worker test-pg up
+```
+
+Each worker stores mutable state under `.workers/<worker-id>/volumes` and uses
+its own Compose project name. Destroying one worker removes only that worker's
+Compose resources and mutable directory.
+
+The lifecycle currently enables MySQL and PostgreSQL. SQLite and MariaDB are
+reserved by the `DB_TYPE` contract and are added by their database-specific
+workstreams.
 
 ## Optional services
 

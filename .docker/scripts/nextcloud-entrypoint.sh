@@ -21,6 +21,14 @@ install -d -o www-data -g www-data \
     config \
     apps-extra
 
+db_type="${DB_TYPE:-${DB_HOST:-mysql}}"
+db_host="${DB_HOST:-$db_type}"
+db_driver="${DB_DRIVER:-$db_type}"
+
+export DB_TYPE="$db_type"
+export DB_HOST="$db_host"
+export DB_DRIVER="$db_driver"
+
 # Wait for database
 php /var/www/scripts/wait-for-db.php
 
@@ -35,22 +43,22 @@ fi
 # Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     echo "⌛️ Starting installation ..."
-    if [[ ${DB_HOST} == 'mysql' ]]; then
-        occ maintenance:install --verbose --database="${DB_HOST}" --database-name="${MYSQL_DATABASE}" --database-host="${DB_HOST}" --database-port= --database-user="${MYSQL_USER}" --database-pass="${MYSQL_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
+    if [[ "${db_type}" == 'mysql' ]]; then
+        occ maintenance:install --verbose --database="${db_driver}" --database-name="${MYSQL_DATABASE}" --database-host="${db_host}" --database-port= --database-user="${MYSQL_USER}" --database-pass="${MYSQL_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
         install_cmd_status=$?
-    elif [[ "${DB_HOST}" == 'pgsql' ]]; then
-        occ maintenance:install --verbose --database="${DB_HOST}" --database-name="${POSTGRES_DB}" --database-host="${DB_HOST}" --database-port= --database-user="${POSTGRES_USER}" --database-pass="${POSTGRES_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
+    elif [[ "${db_type}" == 'pgsql' ]]; then
+        occ maintenance:install --verbose --database="${db_driver}" --database-name="${POSTGRES_DB}" --database-host="${db_host}" --database-port= --database-user="${POSTGRES_USER}" --database-pass="${POSTGRES_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
         install_cmd_status=$?
     else
-        occ maintenance:install --verbose --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
+        occ maintenance:install --verbose --database="${db_driver}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
         install_cmd_status=$?
     fi
 
     if [[ ${install_cmd_status} -ne 0 ]]; then
         db_reset_hint="volumes/nextcloud/config and volumes/nextcloud/data"
-        if [[ ${DB_HOST} == 'mysql' ]]; then
+        if [[ "${db_type}" == 'mysql' ]]; then
             db_reset_hint="volumes/mysql/data, ${db_reset_hint}"
-        elif [[ ${DB_HOST} == 'pgsql' ]]; then
+        elif [[ "${db_type}" == 'pgsql' ]]; then
             db_reset_hint="volumes/postgres/data, ${db_reset_hint}"
         fi
 

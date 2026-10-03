@@ -1,16 +1,18 @@
 #!/usr/bin/env php
 <?php
-$dbName = (getenv('DB_HOST') === 'mysql' ? '🐬' : '🐘' ) . getenv('DB_HOST');
+$dbType = getenv('DB_TYPE') ?: (getenv('DB_HOST') ?: 'mysql');
+$dbHost = getenv('DB_HOST') ?: $dbType;
+$dbName = ($dbType === 'mysql' ? '🐬' : ($dbType === 'pgsql' ? '🐘' : '💾')) . $dbType;
 
 echo "⌛ Waiting for database $dbName\n";
 
 function dbIsUp(string $dbName): bool {
     try {
-        if (getenv('DB_HOST') === 'mysql') {
-            $dsn = getenv('DB_HOST') . ':dbname='.getenv('MYSQL_DATABASE').';host='.getenv('DB_HOST');
+        if ($GLOBALS['dbType'] === 'mysql') {
+            $dsn = 'mysql:dbname='.getenv('MYSQL_DATABASE').';host='.$GLOBALS['dbHost'];
             new PDO($dsn, getenv('MYSQL_USER'), getenv('MYSQL_PASSWORD'));
-        } elseif (getenv('DB_HOST') === 'pgsql') {
-            $dsn = getenv('DB_HOST') . ':dbname='.getenv('POSTGRES_DB').';host='.getenv('DB_HOST');
+        } elseif ($GLOBALS['dbType'] === 'pgsql') {
+            $dsn = 'pgsql:dbname='.getenv('POSTGRES_DB').';host='.$GLOBALS['dbHost'];
             new PDO($dsn, getenv('POSTGRES_USER'), getenv('POSTGRES_PASSWORD'));
         } else {
             // Will use SQLite
