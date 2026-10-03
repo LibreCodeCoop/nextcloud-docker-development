@@ -8,7 +8,7 @@ echo "⌛ Waiting for database $dbName\n";
 
 function dbIsUp(string $dbName): bool {
     try {
-        if ($GLOBALS['dbType'] === 'mysql') {
+        if ($GLOBALS['dbType'] === 'mysql' || $GLOBALS['dbType'] === 'mariadb') {
             $dsn = 'mysql:dbname='.getenv('MYSQL_DATABASE').';host='.$GLOBALS['dbHost'];
             new PDO($dsn, getenv('MYSQL_USER'), getenv('MYSQL_PASSWORD'));
         } elseif ($GLOBALS['dbType'] === 'pgsql') {

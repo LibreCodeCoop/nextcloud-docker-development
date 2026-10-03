@@ -14,11 +14,14 @@ Commands:
   logs               Print worker logs
   config             Render the resolved Compose configuration
   status             Run occ status in the worker
+  db-exec <command...> Run a command in the selected database container
   destroy            Stop the worker and remove only its mutable state
 
 Environment:
-  DB_TYPE=mysql|pgsql       Database backend for the foundation lifecycle
+  DB_TYPE=mysql|mariadb|pgsql Database backend
   DB_HOST=<hostname>        Connection hostname (defaults to DB_TYPE)
+  MARIADB_VERSION=10.6|10.11 MariaDB series (default: 10.11)
+  DB_SQL_MODE=<modes>        Optional global SQL mode for MySQL-compatible backends
   PHP_VERSION=<version>     Existing PHP image selector
   VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
   WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
@@ -53,9 +56,9 @@ repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 db_type="${DB_TYPE:-mysql}"
 
 case "$db_type" in
-	mysql|pgsql) ;;
-	sqlite|mariadb)
-		echo "DB_TYPE=$db_type is reserved by the worker contract but is not implemented by this foundation yet." >&2
+	mysql|mariadb|pgsql) ;;
+	sqlite)
+		echo "DB_TYPE=$db_type is reserved by the worker contract but is not implemented yet." >&2
 		exit 3
 		;;
 	*)
@@ -72,8 +75,41 @@ export WORKER_VOLUMES_DIR="$worker_volumes_dir"
 export DB_TYPE="$db_type"
 export DB_HOST="${DB_HOST:-$db_type}"
 
+if [ "$db_type" = "mariadb" ]; then
+	mariadb_version="${MARIADB_VERSION:-10.11}"
+	case "$mariadb_version" in
+		10.6) export DB_SERVICE_TYPE=mariadb106 ;;
+		10.11) export DB_SERVICE_TYPE=mariadb1011 ;;
+		*)
+			echo "Unsupported MARIADB_VERSION: $mariadb_version (supported: 10.6, 10.11)" >&2
+			exit 2
+			;;
+	esac
+	export DB_DRIVER=mysql
+fi
+
 compose() {
 	docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
+}
+
+wait_for_mariadb() {
+	timeout="${WORKER_READY_TIMEOUT:-180}"
+	started="$(date +%s)"
+
+	while :; do
+		if compose exec -T database mariadb-admin ping -h 127.0.0.1 -uroot -p"${MYSQL_ROOT_PASSWORD:-root}" --silent >/dev/null 2>&1; then
+			return 0
+		fi
+
+		now="$(date +%s)"
+		if [ $((now - started)) -ge "$timeout" ]; then
+			echo "MariaDB for worker $worker_id did not become ready within ${timeout}s." >&2
+			compose logs --no-color database >&2 || true
+			return 1
+		fi
+
+		sleep 1
+	done
 }
 
 wait_until_ready() {
@@ -99,6 +135,16 @@ wait_until_ready() {
 case "$command" in
 	up)
 		mkdir -p "$worker_volumes_dir"
+		if [ "$db_type" = "mariadb" ]; then
+			compose up -d database
+			wait_for_mariadb
+			if [ -n "${DB_SQL_MODE:-}" ]; then
+				case "${DB_SQL_MODE}" in
+					*[!A-Z0-9_,]*) echo "DB_SQL_MODE contains unsupported characters" >&2; exit 2 ;;
+				esac
+				compose exec -T database mariadb -uroot -p"${MYSQL_ROOT_PASSWORD:-root}" -e "SET GLOBAL sql_mode='${DB_SQL_MODE}'"
+			fi
+		fi
 		compose up -d
 		wait_until_ready
 		;;
@@ -119,8 +165,25 @@ case "$command" in
 	status)
 		compose exec -T nextcloud occ status
 		;;
+	db-exec)
+		[ "$db_type" != "sqlite" ] || {
+			echo "SQLite workers do not have a database container" >&2
+			exit 3
+		}
+		[ "$#" -gt 0 ] || {
+			echo "db-exec requires a command" >&2
+			exit 2
+		}
+		compose exec -T database "$@"
+		;;
 	destroy)
 		compose down --remove-orphans
+		# Mutable bind mounts contain files created by container UIDs. Clean the
+		# worker root through the existing Nextcloud image as root instead of
+		# relying on host ownership.
+		if [ -d "$worker_root" ]; then
+			compose run --rm --no-deps -u 0 --entrypoint sh -v "$worker_root:/worker" nextcloud -c 'find /worker -mindepth 1 -exec rm -rf -- {} +' >/dev/null 2>&1 || true
+		fi
 		case "$worker_root" in
 			"$repo_root"/.workers/"$worker_id"|"$repo_root"/.workers/"$worker_id"/) ;;
 			*)

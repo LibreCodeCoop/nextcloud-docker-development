@@ -17,6 +17,34 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE:-nextcloud}
       - MYSQL_USER=${MYSQL_USER:-nextcloud}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
+  mariadb106:
+    image: mariadb:10.6.28@sha256:23616f0bd3aff922f4dea4130f1d0a09f3571d20b7b36c8f49840672dc309e8c
+    volumes:
+      - ${WORKER_VOLUMES_DIR:-../volumes}/mariadb/data:/var/lib/mysql
+    ports:
+      - target: 3306
+        published: "3306-3325"
+        host_ip: ${MARIADB_IP_BIND:-127.0.0.1}
+    environment:
+      - TZ=${TZ:-CET}
+      - MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MARIADB_DATABASE=${MYSQL_DATABASE:-nextcloud}
+      - MARIADB_USER=${MYSQL_USER:-nextcloud}
+      - MARIADB_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
+  mariadb1011:
+    image: mariadb:10.11.19@sha256:07c0aaff7396b74cb7975cba78257178d188e30f531a5db2b617c48beef13c41
+    volumes:
+      - ${WORKER_VOLUMES_DIR:-../volumes}/mariadb/data:/var/lib/mysql
+    ports:
+      - target: 3306
+        published: "3306-3325"
+        host_ip: ${MARIADB_IP_BIND:-127.0.0.1}
+    environment:
+      - TZ=${TZ:-CET}
+      - MARIADB_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
+      - MARIADB_DATABASE=${MYSQL_DATABASE:-nextcloud}
+      - MARIADB_USER=${MYSQL_USER:-nextcloud}
+      - MARIADB_PASSWORD=${MYSQL_PASSWORD:-nextcloud}
   pgsql:
     image: postgres:13-alpine@sha256:fb9065b6e3e213bdc07edd372a5b2a26245840b7fb65d1fd8b6700106d51805c
     volumes:
