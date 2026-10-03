@@ -8,20 +8,20 @@ setup() {
 }
 
 @test "worker id rejects path traversal and uppercase names" {
-	run "$WORKER" '../bad' config
+	run sh "$WORKER" '../bad' config
 	[ "$status" -eq 2 ]
 
-	run "$WORKER" 'WorkerA' config
+	run sh "$WORKER" 'WorkerA' config
 	[ "$status" -eq 2 ]
 }
 
 @test "worker config isolates mutable paths and compose project names" {
-	run "$WORKER" alpha config
+	run sh "$WORKER" alpha config
 	[ "$status" -eq 0 ]
 	[[ "$output" == *"name: ncdev-alpha"* ]]
 	[[ "$output" == *"$REPO_ROOT/.workers/alpha/volumes/nextcloud"* ]]
 
-	run "$WORKER" beta config
+	run sh "$WORKER" beta config
 	[ "$status" -eq 0 ]
 	[[ "$output" == *"name: ncdev-beta"* ]]
 	[[ "$output" == *"$REPO_ROOT/.workers/beta/volumes/nextcloud"* ]]
@@ -32,8 +32,8 @@ setup() {
 	run env DB_TYPE=pgsql DB_HOST=database.internal "$WORKER" pg config
 	[ "$status" -eq 0 ]
 	[[ "$output" == *"image: postgres:13-alpine"* ]]
-	[[ "$output" == *"DB_TYPE=pgsql"* ]]
-	[[ "$output" == *"DB_HOST=database.internal"* ]]
+	[[ "$output" == *"DB_TYPE: pgsql"* ]]
+	[[ "$output" == *"DB_HOST: database.internal"* ]]
 }
 
 @test "legacy DB_HOST PostgreSQL selection still resolves the PostgreSQL service" {

@@ -51,17 +51,17 @@ The `dev-worker` helper gives automation a deterministic Compose project and
 mutable data directory per worker:
 
 ```bash
-./dev-worker test-a up
-./dev-worker test-a exec occ status
-./dev-worker test-a logs
-./dev-worker test-a destroy
+sh ./dev-worker test-a up
+sh ./dev-worker test-a exec occ status
+sh ./dev-worker test-a logs
+sh ./dev-worker test-a destroy
 ```
 
 Select the existing PHP and Nextcloud dimensions in the same invocation:
 
 ```bash
 PHP_VERSION=83 VERSION_NEXTCLOUD=stable35 DB_TYPE=pgsql \
-  ./dev-worker test-pg up
+  sh ./dev-worker test-pg up
 ```
 
 Each worker stores mutable state under `.workers/<worker-id>/volumes` and uses

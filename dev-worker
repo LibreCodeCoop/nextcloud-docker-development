@@ -6,7 +6,7 @@ set -eu
 
 usage() {
 	cat <<'EOF'
-Usage: ./dev-worker <worker-id> <command> [arguments...]
+Usage: sh ./dev-worker <worker-id> <command> [arguments...]
 
 Commands:
   up                 Start the isolated worker and wait for Nextcloud installation
@@ -64,7 +64,7 @@ case "$db_type" in
 		;;
 esac
 
-worker_root="${WORKER_ROOT:-$repo_root/.workers/$worker_id}"
+worker_root="$repo_root/.workers/$worker_id"
 worker_volumes_dir="$worker_root/volumes"
 
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ncdev-$worker_id}"
