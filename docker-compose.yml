@@ -46,12 +46,12 @@ services:
       - host.docker.internal:host-gateway
   nginx:
     image: ghcr.io/librecodecoop/nextcloud-dev-nginx:latest
-    # build:
-    #   context: .docker/
-    #   dockerfile: Dockerfile.nginx
     restart: unless-stopped
     depends_on:
-      - nextcloud
+      nextcloud:
+        condition: service_started
+      proxy-coordinator:
+        condition: service_healthy
     volumes:
       - ${WORKER_VOLUMES_DIR:-./volumes}/nextcloud:/var/www/html:ro
       - ${WORKER_VOLUMES_DIR:-./volumes}/nginx/includes:/etc/nginx/conf.d/includes/
@@ -77,9 +77,13 @@ services:
       - NEXTCLOUD_ADMIN_USER=${NEXTCLOUD_ADMIN_USER:-admin}
       - NEXTCLOUD_ADMIN_PASSWORD=${NEXTCLOUD_ADMIN_PASSWORD:-admin}
       - VERSION_NEXTCLOUD=${VERSION_NEXTCLOUD:-master}
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/librecode-proxy-ready"]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+      start_period: 1s
     restart: "no"
-    depends_on:
-      - nextcloud
   mailpit:
     image: axllent/mailpit:v1.31.3@sha256:ed9b00c609e77e99c79b93f1178255ebc271868920f2c69a8d166bd5634ed10d
     environment:

@@ -6,8 +6,8 @@
 <info>
 	<id>sample_app</id>
 	<name>Worker fixture app</name>
-	<summary>Fixture for the downstream worker contract</summary>
-	<description>Fixture for the downstream worker contract.</description>
+	<summary>Fixture for the worker workspace contract</summary>
+	<description>Fixture for the worker workspace contract.</description>
 	<version>1.0.0</version>
 	<licence>agpl</licence>
 	<author>LibreCode coop and contributors</author>

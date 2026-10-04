@@ -5,6 +5,7 @@ set -eu
 script_dir="$(cd -- "$(dirname -- "$0")" && pwd)"
 proxy_lib_dir="${PROXY_LIB_DIR:-$script_dir/proxy}"
 release_marker=/tmp/librecode-proxy-lease-released
+ready_marker=/tmp/librecode-proxy-ready
 
 # shellcheck source=.docker/scripts/proxy/common.sh
 . "$proxy_lib_dir/common.sh"
@@ -47,7 +48,7 @@ success() {
 		reused)
 			echo '✅ Existing LibreCode development proxy reused. Coordinator lease is active.'
 		;;
-	started)
+		started)
 			echo '✅ Development proxy started successfully. Coordinator lease is active.'
 		;;
 	esac
@@ -58,6 +59,7 @@ release() {
 		return 0
 	fi
 
+	rm -f "$ready_marker"
 	echo 'Releasing shared development proxy lease.'
 	disconnect_proxy_from_project_network
 	if release_proxy_if_unused; then
@@ -84,6 +86,7 @@ wait_for_shutdown() {
 }
 
 run() {
+	rm -f "$ready_marker"
 	validate_environment
 	ensure_proxy_network
 	install_proxy_assets
@@ -96,6 +99,7 @@ run() {
 	trap shutdown INT TERM HUP
 
 	connect_proxy_to_project_network
+	touch "$ready_marker"
 
 	if ! report_environment_ready; then
 		echo 'Could not print environment banner.' >&2

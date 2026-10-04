@@ -48,3 +48,16 @@ setup() {
 
 	grep -q '^docker network disconnect current_default librecode-dev-proxy$' "$TEST_LOG"
 }
+
+@test "backend services wait for coordinator network readiness" {
+	main="$REPO_ROOT/docker-compose.yml"
+	fixture="$REPO_ROOT/tests/proxy/fixtures/compose.yml"
+
+	grep -A8 '^  nginx:' "$main" | grep -q 'proxy-coordinator:'
+	grep -A10 '^  nginx:' "$main" | grep -q 'condition: service_healthy'
+	grep -A8 '^  nginx:' "$fixture" | grep -q 'proxy-coordinator:'
+	grep -A10 '^  nginx:' "$fixture" | grep -q 'condition: service_healthy'
+
+	grep -A20 '^  proxy-coordinator:' "$main" | grep -q 'test -f /tmp/librecode-proxy-ready'
+	grep -A20 '^  proxy-coordinator:' "$fixture" | grep -q 'test -f /tmp/librecode-proxy-ready'
+}

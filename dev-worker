@@ -21,11 +21,11 @@ Commands:
 Environment:
   DB_TYPE=sqlite|mysql|mariadb|pgsql Database backend
   DB_HOST=<hostname>        Connection hostname (defaults to DB_TYPE)
-  MARIADB_VERSION=10.6|10.11 MariaDB series (default: 10.11)
+  MARIADB_VERSION=<version> MariaDB series (default: 10.11)
   DB_SQL_MODE=<modes>        Optional global SQL mode for MySQL-compatible backends
   PHP_VERSION=<version>     Existing PHP image selector
   VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
-  NCDD_COMPOSE_OVERRIDE=<file> Optional Compose override appended to the base topology
+  NCDD_WORKSPACE=<path>     Optional directory mounted as /var/www/html/apps-extra
   WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
 EOF
 }
@@ -56,25 +56,15 @@ esac
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 db_type="${DB_TYPE:-mysql}"
-compose_override="${NCDD_COMPOSE_OVERRIDE:-}"
+workspace="${NCDD_WORKSPACE:-}"
 
-if [ -n "$compose_override" ]; then
-	case "$compose_override" in
-		/*) ;;
-		*)
-			override_dir="$(dirname -- "$compose_override")"
-			override_name="$(basename -- "$compose_override")"
-			[ -d "$override_dir" ] || {
-				echo "NCDD_COMPOSE_OVERRIDE directory does not exist: $override_dir" >&2
-				exit 2
-			}
-			compose_override="$(CDPATH= cd -- "$override_dir" && pwd -P)/$override_name"
-			;;
-	esac
-	[ -f "$compose_override" ] || {
-		echo "NCDD_COMPOSE_OVERRIDE is not a file: $compose_override" >&2
+if [ -n "$workspace" ]; then
+	[ -d "$workspace" ] || {
+		echo "NCDD_WORKSPACE is not a directory: $workspace" >&2
 		exit 2
 	}
+	workspace="$(CDPATH= cd -- "$workspace" && pwd -P)"
+	export NCDD_WORKSPACE="$workspace"
 fi
 
 case "$db_type" in
@@ -97,24 +87,29 @@ if [ "$db_type" = "sqlite" ]; then
 	export DB_DRIVER=sqlite
 elif [ "$db_type" = "mariadb" ]; then
 	mariadb_version="${MARIADB_VERSION:-10.11}"
-	case "$mariadb_version" in
-		10.6) export DB_SERVICE_TYPE=mariadb106 ;;
-		10.11) export DB_SERVICE_TYPE=mariadb1011 ;;
-		*)
-			echo "Unsupported MARIADB_VERSION: $mariadb_version (supported: 10.6, 10.11)" >&2
+	mariadb_suffix="$(printf '%s' "$mariadb_version" | tr -d '.')"
+	case "$mariadb_suffix" in
+		*[!0-9]*|'')
+			echo "Invalid MARIADB_VERSION: $mariadb_version" >&2
 			exit 2
 			;;
 	esac
+	mariadb_service="mariadb$mariadb_suffix"
+	if ! grep -q "^  $mariadb_service:" "$repo_root/.docker/database-services.yml"; then
+		echo "Unsupported MARIADB_VERSION: $mariadb_version" >&2
+		exit 2
+	fi
+	export DB_SERVICE_TYPE="$mariadb_service"
 	export DB_DRIVER=mysql
 else
 	export DB_SERVICE_TYPE="${DB_SERVICE_TYPE:-$db_type}"
 fi
 
 compose() {
-	if [ -n "$compose_override" ]; then
+	if [ -n "$workspace" ]; then
 		docker compose --project-directory "$repo_root" \
 			--file "$repo_root/docker-compose.yml" \
-			--file "$compose_override" "$@"
+			--file "$repo_root/.docker/workspace.yml" "$@"
 	else
 		docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
 	fi
@@ -216,7 +211,8 @@ case "$command" in
 		compose down --remove-orphans
 		# Mutable bind mounts contain files created by container UIDs. Clean the
 		# worker root through the existing Nextcloud image as root instead of
-		# relying on host ownership.
+		# relying on host ownership. The optional workspace is outside worker_root
+		# and is never removed.
 		if [ -d "$worker_root" ]; then
 			docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" \
 				run --rm --no-deps -u 0 --entrypoint sh -v "$worker_root:/worker" nextcloud \

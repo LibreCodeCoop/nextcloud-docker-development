@@ -21,5 +21,5 @@ and other advanced configuration, see the
 
 - [Advanced setup](docs/advanced-setup.md)
 - [App development](docs/apps-development.md)
-- [Compose extensions and devcontainers](docs/compose-extensions.md)
+- [Worker workspaces and devcontainers](docs/worker-workspaces.md)
 - [FAQ](docs/faq.md)

@@ -101,20 +101,6 @@ jobs:
           esac
           DB_TYPE=mariadb sh ./dev-worker "$worker" db-exec mariadb -uroot -proot -Nse 'SELECT @@GLOBAL.sql_mode' | grep -q 'ONLY_FULL_GROUP_BY'
           DB_TYPE=mariadb sh ./dev-worker "$worker" status | grep -q 'installed: true'
-      - name: Verify two-worker isolation
-        if: matrix.mariadb == '10.11'
-        env:
-          MARIADB_VERSION: ${{ matrix.mariadb }}
-          DB_SQL_MODE: ONLY_FULL_GROUP_BY
-        run: |
-          DB_TYPE=mariadb sh ./dev-worker maria-peer up
-          DB_TYPE=mariadb sh ./dev-worker maria-10-11 exec sh -c 'printf alpha > /var/www/html/data/worker-probe'
-          DB_TYPE=mariadb sh ./dev-worker maria-peer exec sh -c 'printf beta > /var/www/html/data/worker-probe'
-          alpha="$(DB_TYPE=mariadb sh ./dev-worker maria-10-11 exec cat /var/www/html/data/worker-probe)"
-          beta="$(DB_TYPE=mariadb sh ./dev-worker maria-peer exec cat /var/www/html/data/worker-probe)"
-          printf 'maria-10-11 worker_probe=%s\nmaria-peer worker_probe=%s\n' "$alpha" "$beta"
-          test "$alpha" = alpha
-          test "$beta" = beta
       - name: Collect worker logs
         if: failure()
         env:
@@ -122,54 +108,46 @@ jobs:
         run: |
           worker="maria-${MARIADB_VERSION//./-}"
           DB_TYPE=mariadb sh ./dev-worker "$worker" logs || true
-          if [ "$MARIADB_VERSION" = 10.11 ]; then
-            DB_TYPE=mariadb sh ./dev-worker maria-peer logs || true
-          fi
-      - name: Destroy workers
+      - name: Destroy worker
         if: always()
         env:
           MARIADB_VERSION: ${{ matrix.mariadb }}
         run: |
           worker="maria-${MARIADB_VERSION//./-}"
           DB_TYPE=mariadb sh ./dev-worker "$worker" destroy || true
-          if [ "$MARIADB_VERSION" = 10.11 ]; then
-            DB_TYPE=mariadb sh ./dev-worker maria-peer destroy || true
-          fi
 
-  compose-extension:
-    name: Compose extension integration
+  workspace:
+    name: Worker workspace integration
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Build default PHP development image
         run: sh .docker/bin/build-nextcloud-image
-      - name: Start a worker with two externally mounted apps
+      - name: Start worker with a multi-app workspace
         env:
-          NCDD_COMPOSE_OVERRIDE: ${{ github.workspace }}/tests/worker/fixtures/compose-extension.yml
-          TEST_APP_A: ${{ github.workspace }}/tests/worker/fixtures/sample-app
-          TEST_APP_B: ${{ github.workspace }}/tests/worker/fixtures/other-app
-        run: DB_TYPE=sqlite sh ./dev-worker extension up
-      - name: Verify both apps use the same worker runtime
+          NCDD_WORKSPACE: ${{ github.workspace }}/tests/worker/fixtures/workspace
+        run: DB_TYPE=sqlite sh ./dev-worker workspace up
+      - name: Verify all workspace apps are available
         env:
-          NCDD_COMPOSE_OVERRIDE: ${{ github.workspace }}/tests/worker/fixtures/compose-extension.yml
-          TEST_APP_A: ${{ github.workspace }}/tests/worker/fixtures/sample-app
-          TEST_APP_B: ${{ github.workspace }}/tests/worker/fixtures/other-app
+          NCDD_WORKSPACE: ${{ github.workspace }}/tests/worker/fixtures/workspace
         run: |
-          test "$(DB_TYPE=sqlite sh ./dev-worker extension exec cat /var/www/html/apps-extra/sample_app/marker.txt)" = alpha
-          test "$(DB_TYPE=sqlite sh ./dev-worker extension exec cat /var/www/html/apps-extra/other_app/marker.txt)" = other
-          DB_TYPE=sqlite sh ./dev-worker extension status | grep -q 'installed: true'
+          test "$(DB_TYPE=sqlite sh ./dev-worker workspace exec cat /var/www/html/apps-extra/sample_app/marker.txt)" = alpha
+          test "$(DB_TYPE=sqlite sh ./dev-worker workspace exec cat /var/www/html/apps-extra/other_app/marker.txt)" = other
+          DB_TYPE=sqlite sh ./dev-worker workspace status | grep -q 'installed: true'
+      - name: Verify worker state does not enter the workspace
+        env:
+          NCDD_WORKSPACE: ${{ github.workspace }}/tests/worker/fixtures/workspace
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker workspace exec sh -c 'printf state > /var/www/html/data/worker-probe'
+          test ! -e "$NCDD_WORKSPACE/worker-probe"
       - name: Collect worker logs
         if: failure()
         env:
-          NCDD_COMPOSE_OVERRIDE: ${{ github.workspace }}/tests/worker/fixtures/compose-extension.yml
-          TEST_APP_A: ${{ github.workspace }}/tests/worker/fixtures/sample-app
-          TEST_APP_B: ${{ github.workspace }}/tests/worker/fixtures/other-app
-        run: DB_TYPE=sqlite sh ./dev-worker extension logs || true
+          NCDD_WORKSPACE: ${{ github.workspace }}/tests/worker/fixtures/workspace
+        run: DB_TYPE=sqlite sh ./dev-worker workspace logs || true
       - name: Destroy worker
         if: always()
         env:
-          NCDD_COMPOSE_OVERRIDE: ${{ github.workspace }}/tests/worker/fixtures/compose-extension.yml
-          TEST_APP_A: ${{ github.workspace }}/tests/worker/fixtures/sample-app
-          TEST_APP_B: ${{ github.workspace }}/tests/worker/fixtures/other-app
-        run: DB_TYPE=sqlite sh ./dev-worker extension destroy || true
+          NCDD_WORKSPACE: ${{ github.workspace }}/tests/worker/fixtures/workspace
+        run: DB_TYPE=sqlite sh ./dev-worker workspace destroy || true
