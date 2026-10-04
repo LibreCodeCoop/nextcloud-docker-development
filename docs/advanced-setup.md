@@ -114,6 +114,24 @@ docker compose \
 	up
 ```
 
+## Public Nextcloud URL
+
+By default, each environment is available through the shared proxy at
+`https://<compose-project>.localhost`.
+
+Remote development platforms may expose the proxy through a different public
+hostname. Set `NEXTCLOUD_HOST` and, when needed, `NEXTCLOUD_PROTOCOL` so the
+proxy routing and Nextcloud canonical URL stay consistent:
+
+```bash
+NEXTCLOUD_HOST=example.dev NEXTCLOUD_PROTOCOL=https docker compose up
+```
+
+These values configure the routed host, Nextcloud `trusted_domains`,
+`overwritehost`, `overwriteprotocol`, diagnostics and the default Playwright
+base URL. Do not bypass the proxy by forwarding the nginx service directly
+under a different hostname.
+
 ## Multiple environments
 
 Multiple checkouts can run at the same time. Each checkout keeps its own Compose network, while the shared development proxy connects to the active project networks.

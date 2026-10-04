@@ -25,6 +25,8 @@ Environment:
   DB_SQL_MODE=<modes>        Optional global SQL mode for MySQL-compatible backends
   PHP_VERSION=<version>     Existing PHP image selector
   VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
+  NEXTCLOUD_HOST=<hostname>  Public hostname (default: <project>.localhost)
+  NEXTCLOUD_PROTOCOL=http|https Public protocol (default: https)
   NCDD_WORKSPACE=<path>     Optional directory mounted as /var/www/html/apps-extra
   WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
 EOF
@@ -193,7 +195,7 @@ case "$command" in
 		compose exec -T nextcloud occ status
 		;;
 	urls)
-		printf 'Nextcloud: https://%s.localhost\n' "$COMPOSE_PROJECT_NAME"
+		printf 'Nextcloud: %s://%s\n' "${NEXTCLOUD_PROTOCOL:-https}" "${NEXTCLOUD_HOST:-$COMPOSE_PROJECT_NAME.localhost}"
 		printf 'Mailpit:   https://%s-mailpit.localhost\n' "$COMPOSE_PROJECT_NAME"
 		;;
 	db-exec)
