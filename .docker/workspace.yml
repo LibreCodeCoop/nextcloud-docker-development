@@ -18,9 +18,3 @@ services:
       - type: bind
         source: ${NCDD_WORKSPACE:?NCDD_WORKSPACE is required}
         target: /var/www/html/apps-extra
-  eurooffice:
-    volumes:
-      - type: bind
-        source: ${NCDD_WORKSPACE:?NCDD_WORKSPACE is required}/eurooffice-plugin
-        target: /var/www/onlyoffice/documentserver/sdkjs-plugins/libresign
-        read_only: true

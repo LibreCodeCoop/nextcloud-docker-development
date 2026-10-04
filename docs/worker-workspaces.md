@@ -13,18 +13,18 @@ A workspace is a normal host directory whose direct children are Nextcloud
 application checkouts:
 
 ```text
-/work/issue-8985/
-├── libresign/
-├── twofactor_gateway/
-└── notifications/
+/work/issue-123/
+├── app_a/
+├── app_b/
+└── app_c/
 ```
 
 Start a worker with:
 
 ```bash
-NCDD_WORKSPACE=/work/issue-8985 \
+NCDD_WORKSPACE=/work/issue-123 \
 DB_TYPE=sqlite \
-sh ./dev-worker issue-8985 up
+sh ./dev-worker issue-123 up
 ```
 
 NCDD mounts that directory as:
@@ -68,7 +68,7 @@ than the NCDD lifecycle:
 ```bash
 NCDD_WORKSPACE=/work/pr-123 \
 sh ./dev-worker pr-123 exec sh -lc \
-  'cd /var/www/html/apps-extra/libresign && composer install'
+  'cd /var/www/html/apps-extra/app_a && composer install'
 ```
 
 This lets agents create whatever set of app worktrees a task requires without

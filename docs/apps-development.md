@@ -32,19 +32,18 @@ A workspace is simply a directory containing the applications needed by that
 worker:
 
 ```text
-/tmp/workspaces/issue-8985/
-├── libresign/
-├── twofactor_gateway/
-├── notifications/
+/tmp/workspaces/issue-123/
+├── app_a/
+├── app_b/
 └── any_other_app/
 ```
 
 Start an isolated worker with that directory:
 
 ```bash
-NCDD_WORKSPACE=/tmp/workspaces/issue-8985 \
+NCDD_WORKSPACE=/tmp/workspaces/issue-123 \
 DB_TYPE=sqlite \
-sh ./dev-worker issue-8985 up
+sh ./dev-worker issue-123 up
 ```
 
 The complete workspace is mounted at:
@@ -61,10 +60,10 @@ Application-specific setup remains owned by the application repository or the
 agent operating the worker:
 
 ```bash
-NCDD_WORKSPACE=/tmp/workspaces/issue-8985 \
+NCDD_WORKSPACE=/tmp/workspaces/issue-123 \
 DB_TYPE=sqlite \
-sh ./dev-worker issue-8985 exec sh -lc \
-  'cd /var/www/html/apps-extra/libresign && composer install'
+sh ./dev-worker issue-123 exec sh -lc \
+  'cd /var/www/html/apps-extra/app_a && composer install'
 ```
 
 Worker runtime state remains under `.workers/<worker-id>`; destroying a worker
