@@ -124,18 +124,23 @@ else
 fi
 
 compose() {
-	set -- docker compose --project-directory "$repo_root" \
-		--file "$repo_root/docker-compose.yml" "$@"
-
-	if [ -n "$workspace" ]; then
-		set -- "$@" --file "$repo_root/.docker/workspace.yml"
+	if [ -n "$workspace" ] && [ -n "$nextcloud_port" ]; then
+		docker compose --project-directory "$repo_root" \
+			--file "$repo_root/docker-compose.yml" \
+			--file "$repo_root/.docker/workspace.yml" \
+			--file "$repo_root/.docker/public-port.yml" "$@"
+	elif [ -n "$workspace" ]; then
+		docker compose --project-directory "$repo_root" \
+			--file "$repo_root/docker-compose.yml" \
+			--file "$repo_root/.docker/workspace.yml" "$@"
+	elif [ -n "$nextcloud_port" ]; then
+		docker compose --project-directory "$repo_root" \
+			--file "$repo_root/docker-compose.yml" \
+			--file "$repo_root/.docker/public-port.yml" "$@"
+	else
+		docker compose --project-directory "$repo_root" \
+			--file "$repo_root/docker-compose.yml" "$@"
 	fi
-
-	if [ -n "$nextcloud_port" ]; then
-		set -- "$@" --file "$repo_root/.docker/public-port.yml"
-	fi
-
-	"$@"
 }
 
 wait_for_mariadb() {

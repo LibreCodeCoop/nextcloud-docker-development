@@ -123,7 +123,7 @@ services:
       - ${WORKER_VOLUMES_DIR:-./volumes}/nextcloud:/var/www/html
     working_dir: /var/www/html
     environment:
-      - PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-${NEXTCLOUD_PROTOCOL:-https}://${NEXTCLOUD_HOST:-${COMPOSE_PROJECT_NAME}.localhost}}
+      - PLAYWRIGHT_BASE_URL=${PLAYWRIGHT_BASE_URL:-https://${NEXTCLOUD_HOST:-${COMPOSE_PROJECT_NAME}.localhost}}
       - NODE_ENV=test
       - CI=${CI:-false}
       - VIRTUAL_HOST=${COMPOSE_PROJECT_NAME}-playwright.localhost
