@@ -98,11 +98,12 @@ if [ -n "$app_id" ] || [ -n "$app_source" ]; then
 			exit 2
 			;;
 	esac
-	[ -d "$app_source" ] || {
+	if [ -d "$app_source" ]; then
+		app_source="$(CDPATH= cd -- "$app_source" && pwd -P)"
+	elif [ "$command" != "destroy" ]; then
 		echo "APP_SOURCE_DIR is not a directory: $app_source" >&2
 		exit 2
-	}
-	app_source="$(CDPATH= cd -- "$app_source" && pwd -P)"
+	fi
 	if [ -n "$stored_app_id" ] && [ "$stored_app_id" != "$app_id" ]; then
 		echo "Worker $worker_id is already bound to APP_ID=$stored_app_id" >&2
 		exit 2
@@ -252,7 +253,9 @@ case "$command" in
 		# worker root through the existing Nextcloud image as root instead of
 		# relying on host ownership.
 		if [ -d "$worker_root" ]; then
-			compose run --rm --no-deps -u 0 --entrypoint sh -v "$worker_root:/worker" nextcloud -c 'find /worker -mindepth 1 -exec rm -rf -- {} +' >/dev/null 2>&1 || true
+			docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" \
+				run --rm --no-deps -u 0 --entrypoint sh -v "$worker_root:/worker" nextcloud \
+				-c 'find /worker -mindepth 1 -exec rm -rf -- {} +' >/dev/null 2>&1 || true
 		fi
 		case "$worker_root" in
 			"$repo_root"/.workers/"$worker_id"|"$repo_root"/.workers/"$worker_id"/) ;;
