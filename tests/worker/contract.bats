@@ -49,10 +49,24 @@ setup() {
 	[[ "$output" == *"DB_DRIVER: sqlite"* ]]
 }
 
-@test "MariaDB remains reserved for its dedicated implementation" {
-	run env DB_TYPE=mariadb sh "$WORKER" mariadb config
-	[ "$status" -eq 3 ]
-	[[ "$output" == *"not implemented yet"* ]]
+@test "MariaDB 10.6 selects the pinned 10.6 service" {
+	run env DB_TYPE=mariadb MARIADB_VERSION=10.6 sh "$WORKER" maria106 config
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"mariadb:10.6.28@sha256:23616f0bd3aff922f4dea4130f1d0a09f3571d20b7b36c8f49840672dc309e8c"* ]]
+	[[ "$output" == *"DB_TYPE: mariadb"* ]]
+	[[ "$output" == *"DB_DRIVER: mysql"* ]]
+}
+
+@test "MariaDB 10.11 selects the pinned 10.11 service" {
+	run env DB_TYPE=mariadb MARIADB_VERSION=10.11 sh "$WORKER" maria1011 config
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"mariadb:10.11.19@sha256:07c0aaff7396b74cb7975cba78257178d188e30f531a5db2b617c48beef13c41"* ]]
+}
+
+@test "unsupported MariaDB versions fail before startup" {
+	run env DB_TYPE=mariadb MARIADB_VERSION=11.4 sh "$WORKER" maria114 config
+	[ "$status" -eq 2 ]
+	[[ "$output" == *"Unsupported MARIADB_VERSION"* ]]
 }
 
 @test "supported PHP images install PDO SQLite" {

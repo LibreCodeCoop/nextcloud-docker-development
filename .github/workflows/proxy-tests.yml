@@ -88,3 +88,70 @@ jobs:
         run: |
           DB_TYPE=sqlite sh ./dev-worker sqlite-a destroy || true
           DB_TYPE=sqlite sh ./dev-worker sqlite-b destroy || true
+
+  mariadb-worker:
+    name: MariaDB ${{ matrix.mariadb }} worker integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        mariadb: ['10.6', '10.11']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build PHP 8.3 development image
+        run: docker build -f .docker/Dockerfile.php83 -t ghcr.io/librecodecoop/nextcloud-dev-php83:latest .docker
+      - name: Start MariaDB worker
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+          DB_SQL_MODE: ONLY_FULL_GROUP_BY
+        run: |
+          worker="maria-${MARIADB_VERSION//./-}"
+          DB_TYPE=mariadb sh ./dev-worker "$worker" up
+      - name: Verify MariaDB version and SQL mode
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+          DB_SQL_MODE: ONLY_FULL_GROUP_BY
+        run: |
+          worker="maria-${MARIADB_VERSION//./-}"
+          version="$(DB_TYPE=mariadb sh ./dev-worker "$worker" db-exec mariadb -uroot -proot -Nse 'SELECT VERSION()')"
+          case "$version" in
+            "$MARIADB_VERSION".*) ;;
+            *) echo "Unexpected MariaDB version: $version" >&2; exit 1 ;;
+          esac
+          DB_TYPE=mariadb sh ./dev-worker "$worker" db-exec mariadb -uroot -proot -Nse 'SELECT @@GLOBAL.sql_mode' | grep -q 'ONLY_FULL_GROUP_BY'
+          DB_TYPE=mariadb sh ./dev-worker "$worker" status | grep -q 'installed: true'
+      - name: Verify two-worker isolation
+        if: matrix.mariadb == '10.11'
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+          DB_SQL_MODE: ONLY_FULL_GROUP_BY
+        run: |
+          DB_TYPE=mariadb sh ./dev-worker maria-peer up
+          DB_TYPE=mariadb sh ./dev-worker maria-10-11 exec sh -c 'printf alpha > /var/www/html/data/worker-probe'
+          DB_TYPE=mariadb sh ./dev-worker maria-peer exec sh -c 'printf beta > /var/www/html/data/worker-probe'
+          alpha="$(DB_TYPE=mariadb sh ./dev-worker maria-10-11 exec cat /var/www/html/data/worker-probe)"
+          beta="$(DB_TYPE=mariadb sh ./dev-worker maria-peer exec cat /var/www/html/data/worker-probe)"
+          printf 'maria-10-11 worker_probe=%s\nmaria-peer worker_probe=%s\n' "$alpha" "$beta"
+          test "$alpha" = alpha
+          test "$beta" = beta
+      - name: Collect worker logs
+        if: failure()
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+        run: |
+          worker="maria-${MARIADB_VERSION//./-}"
+          DB_TYPE=mariadb sh ./dev-worker "$worker" logs || true
+          if [ "$MARIADB_VERSION" = 10.11 ]; then
+            DB_TYPE=mariadb sh ./dev-worker maria-peer logs || true
+          fi
+      - name: Destroy workers
+        if: always()
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+        run: |
+          worker="maria-${MARIADB_VERSION//./-}"
+          DB_TYPE=mariadb sh ./dev-worker "$worker" destroy || true
+          if [ "$MARIADB_VERSION" = 10.11 ]; then
+            DB_TYPE=mariadb sh ./dev-worker maria-peer destroy || true
+          fi
