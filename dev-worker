@@ -86,8 +86,14 @@ if [ -n "$app_id" ] || [ -n "$app_source" ]; then
 		exit 2
 	}
 	case "$app_id" in
-		[a-z][a-z0-9_]*) ;;
+		[a-z]*) ;;
 		*)
+			echo "Invalid APP_ID: $app_id" >&2
+			exit 2
+			;;
+	esac
+	case "$app_id" in
+		*[!a-z0-9_]*)
 			echo "Invalid APP_ID: $app_id" >&2
 			exit 2
 			;;
@@ -205,7 +211,7 @@ case "$command" in
 		fi
 		wait_until_ready
 		if [ -n "${APP_SETUP_COMMAND:-}" ]; then
-			compose exec -T nextcloud sh -lc "$APP_SETUP_COMMAND"
+			compose exec -T -u www-data nextcloud sh -lc "$APP_SETUP_COMMAND"
 		fi
 		;;
 	exec)
