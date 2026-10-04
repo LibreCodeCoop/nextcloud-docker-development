@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 LibreCode coop and contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+services:
+  nginx:
+    ports:
+      - name: nextcloud-public
+        target: 80
+        published: ${NEXTCLOUD_PORT:?NEXTCLOUD_PORT is required}
+        host_ip: 127.0.0.1
+        protocol: tcp

@@ -129,8 +129,23 @@ NEXTCLOUD_HOST=example.dev NEXTCLOUD_PROTOCOL=https docker compose up
 
 These values configure the routed host, Nextcloud `trusted_domains`,
 `overwritehost`, `overwriteprotocol`, diagnostics and the default Playwright
-base URL. Do not bypass the proxy by forwarding the nginx service directly
-under a different hostname.
+base URL.
+
+For remote platforms that expose applications by forwarding a host port, a
+worker can additionally publish its nginx service on a caller-selected loopback
+port:
+
+```bash
+NEXTCLOUD_HOST=remote.example.dev \
+NEXTCLOUD_PROTOCOL=https \
+NEXTCLOUD_PORT=18080 \
+DB_TYPE=sqlite \
+sh ./dev-worker remote up
+```
+
+The local development default remains the shared HTTPS proxy. Use
+`NEXTCLOUD_PORT` only when the remote platform needs a concrete per-worker
+port. The caller is responsible for assigning a non-conflicting port.
 
 ## Multiple environments
 

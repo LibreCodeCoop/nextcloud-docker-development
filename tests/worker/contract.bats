@@ -112,3 +112,22 @@ setup() {
 	[[ "$output" == *"VIRTUAL_HOST: example.test"* ]]
 	[[ "$output" == *"PLAYWRIGHT_BASE_URL: https://example.test"* ]]
 }
+
+
+@test "worker can publish its nginx on a caller-selected host port" {
+	run env DB_TYPE=sqlite NEXTCLOUD_PORT=18080 sh "$WORKER" public-port config
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"published: \"18080\""* ]]
+	[[ "$output" == *"target: 80"* ]]
+	[[ "$output" == *"host_ip: 127.0.0.1"* ]]
+}
+
+@test "worker rejects invalid public ports" {
+	run env NEXTCLOUD_PORT=not-a-port sh "$WORKER" invalid-port config
+	[ "$status" -eq 2 ]
+	[[ "$output" == *"Invalid NEXTCLOUD_PORT"* ]]
+
+	run env NEXTCLOUD_PORT=70000 sh "$WORKER" invalid-port config
+	[ "$status" -eq 2 ]
+	[[ "$output" == *"Invalid NEXTCLOUD_PORT"* ]]
+}

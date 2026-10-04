@@ -27,6 +27,7 @@ Environment:
   VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
   NEXTCLOUD_HOST=<hostname>  Public hostname (default: <project>.localhost)
   NEXTCLOUD_PROTOCOL=http|https Public protocol (default: https)
+  NEXTCLOUD_PORT=<port>      Optional host port exposing this worker's nginx
   NCDD_WORKSPACE=<path>     Optional directory mounted as /var/www/html/apps-extra
   WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
 EOF
@@ -59,6 +60,21 @@ esac
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 db_type="${DB_TYPE:-mysql}"
 workspace="${NCDD_WORKSPACE:-}"
+nextcloud_port="${NEXTCLOUD_PORT:-}"
+
+if [ -n "$nextcloud_port" ]; then
+	case "$nextcloud_port" in
+		*[!0-9]*|'')
+			echo "Invalid NEXTCLOUD_PORT: $nextcloud_port" >&2
+			exit 2
+			;;
+	esac
+	if [ "$nextcloud_port" -lt 1 ] || [ "$nextcloud_port" -gt 65535 ]; then
+		echo "Invalid NEXTCLOUD_PORT: $nextcloud_port" >&2
+		exit 2
+	fi
+	export NEXTCLOUD_PORT="$nextcloud_port"
+fi
 
 if [ -n "$workspace" ]; then
 	[ -d "$workspace" ] || {
@@ -108,13 +124,18 @@ else
 fi
 
 compose() {
+	set -- docker compose --project-directory "$repo_root" \
+		--file "$repo_root/docker-compose.yml" "$@"
+
 	if [ -n "$workspace" ]; then
-		docker compose --project-directory "$repo_root" \
-			--file "$repo_root/docker-compose.yml" \
-			--file "$repo_root/.docker/workspace.yml" "$@"
-	else
-		docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
+		set -- "$@" --file "$repo_root/.docker/workspace.yml"
 	fi
+
+	if [ -n "$nextcloud_port" ]; then
+		set -- "$@" --file "$repo_root/.docker/public-port.yml"
+	fi
+
+	"$@"
 }
 
 wait_for_mariadb() {
