@@ -43,7 +43,7 @@ fi
 # Set configurations, if needed
 if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
     echo "⌛️ Starting installation ..."
-    if [[ "${db_type}" == 'mysql' ]]; then
+    if [[ "${db_type}" == 'mysql' || "${db_type}" == 'mariadb' ]]; then
         occ maintenance:install --verbose --database="${db_driver}" --database-name="${MYSQL_DATABASE}" --database-host="${db_host}" --database-port= --database-user="${MYSQL_USER}" --database-pass="${MYSQL_PASSWORD}" --admin-user="${NEXTCLOUD_ADMIN_USER}" --admin-pass="${NEXTCLOUD_ADMIN_PASSWORD}" --admin-email="${NEXTCLOUD_ADMIN_EMAIL}"
         install_cmd_status=$?
     elif [[ "${db_type}" == 'pgsql' ]]; then
@@ -61,6 +61,8 @@ if [[ ! -f "config/config.php" && ${AUTOINSTALL} -eq 1 ]]; then
         db_reset_hint="volumes/nextcloud/config and volumes/nextcloud/data"
         if [[ "${db_type}" == 'mysql' ]]; then
             db_reset_hint="volumes/mysql/data, ${db_reset_hint}"
+        elif [[ "${db_type}" == 'mariadb' ]]; then
+            db_reset_hint="volumes/mariadb/data, ${db_reset_hint}"
         elif [[ "${db_type}" == 'pgsql' ]]; then
             db_reset_hint="volumes/postgres/data, ${db_reset_hint}"
         fi

@@ -35,6 +35,7 @@ The currently implemented backends are:
 
 - `sqlite`
 - `mysql` (default)
+- `mariadb`
 - `pgsql`
 
 To use PostgreSQL:
@@ -78,8 +79,20 @@ DB_TYPE=sqlite sh ./dev-worker sqlite-a status
 DB_TYPE=sqlite sh ./dev-worker sqlite-a destroy
 ```
 
-MariaDB remains reserved by the `DB_TYPE` contract until its dedicated
-backend implementation lands.
+MariaDB workers support the 10.6 and 10.11 series without editing Compose YAML:
+
+```bash
+DB_TYPE=mariadb MARIADB_VERSION=10.6 sh ./dev-worker maria106 up
+DB_TYPE=mariadb MARIADB_VERSION=10.11 sh ./dev-worker maria1011 up
+```
+
+The worker maps each supported series to a pinned image. Use `DB_SQL_MODE` to
+request a deterministic global SQL mode when a test suite needs one:
+
+```bash
+DB_TYPE=mariadb MARIADB_VERSION=10.11 DB_SQL_MODE=ONLY_FULL_GROUP_BY \
+  sh ./dev-worker maria-full-group-by up
+```
 
 ## Optional services
 
