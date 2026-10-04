@@ -1,29 +1,61 @@
 # Start development of apps
 
-You will need create (or clone) the folder of the app that you will work inside the folder `volumes/nextcloud/apps-extra`.
+Nextcloud applications can continue to be developed directly under
+`volumes/nextcloud/apps-extra`. That directory is an app space and may contain
+as many applications as a development setup needs.
 
-It's not required install all dependencis like php or nodejs to develop apps, with this project is only use the bash in container to compile app.
+For repositories that keep application checkouts outside this repository, use a
+[Compose extension](compose-extensions.md) rather than creating another
+Nextcloud topology. The extension may mount one app, several apps, or add
+supporting services while NCDD remains responsible for the runtime.
 
-## Sample
+## Local apps-extra workflow
 
-Using the [LibreSign](https://github.com/LibreSign/libresign):
+Clone or create applications under:
 
-To install LibreSign in the structure of develop is required [up servicer](#up-services). After nextcloud config and install.
-  - open folder `volumes/nextcloud/app-extra`
-  - clone project with `git clone https://github.com/LibreSign/libresign.git`
-  - open bash in nextcloud container with `docker compose exec -u www-data nextcloud bash`
-  - go to folder `apps-extra/libresign`
-    ```bash
-    cd apps-extra/libresign
-    ```
-  - Now you can run all the necessaries commands to build the project, i.e:
-    ```bash
-    # download composer dependencies
-    composer install
-    # download JS dependencies
-    npm ci
-    # build and watch JS changes
-    npm run watch
-    ```
+```text
+volumes/nextcloud/apps-extra/
+```
+
+Then use the `nextcloud` container to install dependencies or run development
+commands:
+
+```bash
+docker compose exec -u www-data nextcloud bash
+cd apps-extra/my_app
+composer install
+npm ci
+```
+
+## External application checkouts
+
+A project-specific Compose override can mount any number of source trees into
+the same worker. For example:
+
+```yaml
+services:
+  nextcloud:
+    volumes:
+      - /work/my_app:/var/www/html/apps-extra/my_app
+      - /work/my_dependency:/var/www/html/apps-extra/my_dependency
+```
+
+Start the runtime with:
+
+```bash
+NCDD_COMPOSE_OVERRIDE=/work/project/ncdd.override.yml \
+DB_TYPE=sqlite \
+sh ./dev-worker my-project up
+```
+
+Application-specific setup remains owned by the application repository. It can
+run commands explicitly through the worker, for example:
+
+```bash
+NCDD_COMPOSE_OVERRIDE=/work/project/ncdd.override.yml \
+DB_TYPE=sqlite \
+sh ./dev-worker my-project exec sh -lc \
+  'cd /var/www/html/apps-extra/my_app && composer install'
+```
 
 ⬅️ [Back to index](../README.md)

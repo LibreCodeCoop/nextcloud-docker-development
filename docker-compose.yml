@@ -9,9 +9,6 @@ services:
           - ${DB_HOST:-${DB_TYPE:-mysql}}
   nextcloud:
     image: ghcr.io/librecodecoop/nextcloud-dev-php${PHP_VERSION:-83}:latest
-    # build:
-    #   context: .docker/
-    #   dockerfile: Dockerfile.php${PHP_VERSION:-83}
     volumes:
       - ./.docker/scripts/wait-for-db.php:/var/www/scripts/wait-for-db.php
       - ${WORKER_VOLUMES_DIR:-./volumes}/php:/var/www/php-config

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!--
+  - SPDX-FileCopyrightText: 2026 LibreCode coop and contributors
+  - SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<info>
+	<id>other_app</id>
+	<name>Worker fixture app</name>
+	<summary>Fixture for the downstream worker contract</summary>
+	<description>Fixture for the downstream worker contract.</description>
+	<version>1.0.0</version>
+	<licence>agpl</licence>
+	<author>LibreCode coop and contributors</author>
+	<namespace>OtherApp</namespace>
+	<dependencies>
+		<nextcloud min-version="30" max-version="40"/>
+	</dependencies>
+</info>
