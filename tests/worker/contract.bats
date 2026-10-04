@@ -80,7 +80,8 @@ setup() {
 	fixture="$REPO_ROOT/tests/worker/fixtures/sample-app"
 	run env APP_ID=sample_app APP_SOURCE_DIR="$fixture" DB_TYPE=sqlite sh "$WORKER" consumer-a config
 	[ "$status" -eq 0 ]
-	[[ "$output" == *"$fixture:/var/www/html/apps-extra/sample_app"* ]]
+	[[ "$output" == *"source: $fixture"* ]]
+	[[ "$output" == *"target: /var/www/html/apps-extra/sample_app"* ]]
 	[[ "$output" == *"name: ncdev-consumer-a"* ]]
 }
 
@@ -91,7 +92,8 @@ setup() {
 
 	run env DB_TYPE=sqlite sh "$WORKER" consumer-memory config
 	[ "$status" -eq 0 ]
-	[[ "$output" == *"$fixture:/var/www/html/apps-extra/sample_app"* ]]
+	[[ "$output" == *"source: $fixture"* ]]
+	[[ "$output" == *"target: /var/www/html/apps-extra/sample_app"* ]]
 
 	rm -rf "$REPO_ROOT/.workers/consumer-memory"
 }
