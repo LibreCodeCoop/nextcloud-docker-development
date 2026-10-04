@@ -84,8 +84,8 @@ if [ -n "${APP_SOURCE:-}" ] || [ -n "${APP_ID:-}" ] || [ -n "${APP_SETUP_HOOK:-}
 	esac
 
 	if [ -n "${APP_SETUP_HOOK:-}" ]; then
-		case "/$APP_SETUP_HOOK/" in
-			*/../*|//*|/*/) echo "APP_SETUP_HOOK must be a relative path without '..': $APP_SETUP_HOOK" >&2; exit 2 ;;
+		case "$APP_SETUP_HOOK" in
+			/*|../*|*/../*|*/..) echo "APP_SETUP_HOOK must be a relative path without '..': $APP_SETUP_HOOK" >&2; exit 2 ;;
 		esac
 		[ -f "$APP_SOURCE/$APP_SETUP_HOOK" ] || { echo "APP_SETUP_HOOK does not exist: $APP_SOURCE/$APP_SETUP_HOOK" >&2; exit 2; }
 	fi
