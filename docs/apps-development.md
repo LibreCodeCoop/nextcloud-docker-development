@@ -1,29 +1,28 @@
 # Start development of apps
 
-You will need create (or clone) the folder of the app that you will work inside the folder `volumes/nextcloud/apps-extra`.
+For new app-development workflows, keep the app checkout outside NCDD and use
+the [downstream app and devcontainer contract](downstream-consumers.md). This
+avoids cloning application source into NCDD's mutable Nextcloud data directory
+and allows multiple isolated worktrees to reuse the same canonical runtime.
 
-It's not required install all dependencis like php or nodejs to develop apps, with this project is only use the bash in container to compile app.
+The legacy `volumes/nextcloud/apps-extra` workflow remains possible for
+existing local setups, but downstream repositories should prefer the worker
+contract for automation, concurrent worktrees and devcontainer integration.
 
-## Sample
+## Example
 
-Using the [LibreSign](https://github.com/LibreSign/libresign):
+```bash
+APP_ID=my_app \
+APP_SOURCE_DIR=/path/to/my_app \
+DB_TYPE=sqlite \
+sh ./dev-worker my-app up
 
-To install LibreSign in the structure of develop is required [up servicer](#up-services). After nextcloud config and install.
-  - open folder `volumes/nextcloud/app-extra`
-  - clone project with `git clone https://github.com/LibreSign/libresign.git`
-  - open bash in nextcloud container with `docker compose exec -u www-data nextcloud bash`
-  - go to folder `apps-extra/libresign`
-    ```bash
-    cd apps-extra/libresign
-    ```
-  - Now you can run all the necessaries commands to build the project, i.e:
-    ```bash
-    # download composer dependencies
-    composer install
-    # download JS dependencies
-    npm ci
-    # build and watch JS changes
-    npm run watch
-    ```
+DB_TYPE=sqlite sh ./dev-worker my-app urls
+DB_TYPE=sqlite sh ./dev-worker my-app exec sh -lc \
+  'cd /var/www/html/apps-extra/my_app && composer install'
+```
+
+The app checkout stays owned by the downstream repository. NCDD owns only the
+isolated runtime state under `.workers/<worker-id>`.
 
 ⬅️ [Back to index](../README.md)

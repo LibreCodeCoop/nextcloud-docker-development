@@ -74,3 +74,37 @@ setup() {
 		grep -q 'pdo_sqlite' "$dockerfile"
 	done
 }
+
+
+@test "downstream app checkout is mounted through the shared worker contract" {
+	fixture="$REPO_ROOT/tests/worker/fixtures/sample-app"
+	run env APP_ID=sample_app APP_SOURCE_DIR="$fixture" DB_TYPE=sqlite sh "$WORKER" consumer-a config
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"$fixture:/var/www/html/apps-extra/sample_app"* ]]
+	[[ "$output" == *"name: ncdev-consumer-a"* ]]
+}
+
+@test "worker remembers downstream app binding by worker id" {
+	fixture="$REPO_ROOT/tests/worker/fixtures/sample-app"
+	run env APP_ID=sample_app APP_SOURCE_DIR="$fixture" DB_TYPE=sqlite sh "$WORKER" consumer-memory config
+	[ "$status" -eq 0 ]
+
+	run env DB_TYPE=sqlite sh "$WORKER" consumer-memory config
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"$fixture:/var/www/html/apps-extra/sample_app"* ]]
+
+	rm -rf "$REPO_ROOT/.workers/consumer-memory"
+}
+
+@test "worker rejects rebinding an existing consumer to another checkout" {
+	fixture="$REPO_ROOT/tests/worker/fixtures/sample-app"
+	other="$REPO_ROOT/tests/worker/fixtures/other-app"
+	run env APP_ID=sample_app APP_SOURCE_DIR="$fixture" DB_TYPE=sqlite sh "$WORKER" consumer-bound config
+	[ "$status" -eq 0 ]
+
+	run env APP_ID=sample_app APP_SOURCE_DIR="$other" DB_TYPE=sqlite sh "$WORKER" consumer-bound config
+	[ "$status" -eq 2 ]
+	[[ "$output" == *"already bound to APP_SOURCE_DIR"* ]]
+
+	rm -rf "$REPO_ROOT/.workers/consumer-bound"
+}
