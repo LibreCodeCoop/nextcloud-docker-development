@@ -1,29 +1,27 @@
-# Start development of apps
+# Develop a Nextcloud app
 
-You will need create (or clone) the folder of the app that you will work inside the folder `volumes/nextcloud/apps-extra`.
+For a one-off local checkout, an app can still be placed under
+`volumes/nextcloud/apps-extra` and used from the `nextcloud` container.
 
-It's not required install all dependencis like php or nodejs to develop apps, with this project is only use the bash in container to compile app.
+For app repositories that need a reusable development/devcontainer contract,
+prefer the [downstream app consumer](downstream-consumers.md) workflow instead
+of cloning or copying the full Docker Compose topology.
 
-## Sample
+The consumer contract mounts the app checkout into `apps-extra` while this
+repository remains responsible for Nextcloud, database, proxy, mail and runtime
+services.
 
-Using the [LibreSign](https://github.com/LibreSign/libresign):
+Example:
 
-To install LibreSign in the structure of develop is required [up servicer](#up-services). After nextcloud config and install.
-  - open folder `volumes/nextcloud/app-extra`
-  - clone project with `git clone https://github.com/LibreSign/libresign.git`
-  - open bash in nextcloud container with `docker compose exec -u www-data nextcloud bash`
-  - go to folder `apps-extra/libresign`
-    ```bash
-    cd apps-extra/libresign
-    ```
-  - Now you can run all the necessaries commands to build the project, i.e:
-    ```bash
-    # download composer dependencies
-    composer install
-    # download JS dependencies
-    npm ci
-    # build and watch JS changes
-    npm run watch
-    ```
+```bash
+APP_SOURCE=/work/my-app APP_ID=my_app DB_TYPE=sqlite \
+  sh ./dev-worker my-app up
+
+APP_SOURCE=/work/my-app APP_ID=my_app DB_TYPE=sqlite \
+  sh ./dev-worker my-app exec sh -lc 'cd /var/www/html/apps-extra/my_app && composer install'
+```
+
+See [Downstream app consumers](downstream-consumers.md) for setup hooks and the
+minimal Compose adapter used by devcontainers.
 
 ⬅️ [Back to index](../README.md)

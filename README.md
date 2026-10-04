@@ -21,4 +21,5 @@ and other advanced configuration, see the
 
 - [Advanced setup](docs/advanced-setup.md)
 - [App development](docs/apps-development.md)
+- [Downstream app consumers](docs/downstream-consumers.md)
 - [FAQ](docs/faq.md)

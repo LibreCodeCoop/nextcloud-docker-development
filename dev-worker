@@ -25,6 +25,9 @@ Environment:
   PHP_VERSION=<version>     Existing PHP image selector
   VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
   WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
+  APP_SOURCE=<path>         Optional downstream app checkout to mount
+  APP_ID=<id>              App directory name under apps-extra
+  APP_SETUP_HOOK=<path>    Optional POSIX shell hook relative to APP_SOURCE
 EOF
 }
 
@@ -65,6 +68,34 @@ esac
 
 worker_root="$repo_root/.workers/$worker_id"
 worker_volumes_dir="$worker_root/volumes"
+consumer_enabled=0
+
+if [ -n "${APP_SOURCE:-}" ] || [ -n "${APP_ID:-}" ] || [ -n "${APP_SETUP_HOOK:-}" ]; then
+	[ -n "${APP_SOURCE:-}" ] || { echo "APP_SOURCE is required when configuring a downstream app" >&2; exit 2; }
+	[ -n "${APP_ID:-}" ] || { echo "APP_ID is required when configuring a downstream app" >&2; exit 2; }
+	[ -d "$APP_SOURCE" ] || { echo "APP_SOURCE is not a directory: $APP_SOURCE" >&2; exit 2; }
+
+	case "$APP_ID" in
+		*[!a-z0-9_-]*|'') echo "Invalid APP_ID: $APP_ID" >&2; exit 2 ;;
+	esac
+	case "$APP_ID" in
+		[a-z0-9]*) ;;
+		*) echo "APP_ID must start with a lowercase letter or digit: $APP_ID" >&2; exit 2 ;;
+	esac
+
+	if [ -n "${APP_SETUP_HOOK:-}" ]; then
+		case "/$APP_SETUP_HOOK/" in
+			*/../*|//*|/*/) echo "APP_SETUP_HOOK must be a relative path without '..': $APP_SETUP_HOOK" >&2; exit 2 ;;
+		esac
+		[ -f "$APP_SOURCE/$APP_SETUP_HOOK" ] || { echo "APP_SETUP_HOOK does not exist: $APP_SOURCE/$APP_SETUP_HOOK" >&2; exit 2; }
+	fi
+
+	APP_SOURCE="$(CDPATH= cd -- "$APP_SOURCE" && pwd)"
+	export APP_SOURCE
+	export APP_ID
+	export APP_CONTAINER_PATH="/var/www/html/apps-extra/$APP_ID"
+	consumer_enabled=1
+fi
 
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ncdev-$worker_id}"
 export WORKER_VOLUMES_DIR="$worker_volumes_dir"
@@ -89,7 +120,13 @@ else
 fi
 
 compose() {
-	docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
+	if [ "$consumer_enabled" -eq 1 ]; then
+		docker compose --project-directory "$repo_root" \
+			--file "$repo_root/docker-compose.yml" \
+			--file "$repo_root/.docker/consumer-app.yml" "$@"
+	else
+		docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
+	fi
 }
 
 wait_for_mariadb() {
@@ -151,6 +188,9 @@ case "$command" in
 			compose up -d
 		fi
 		wait_until_ready
+		if [ "$consumer_enabled" -eq 1 ] && [ -n "${APP_SETUP_HOOK:-}" ]; then
+			compose exec -T -u www-data nextcloud sh "$APP_CONTAINER_PATH/$APP_SETUP_HOOK"
+		fi
 		;;
 	exec)
 		[ "$#" -gt 0 ] || {

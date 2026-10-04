@@ -1,0 +1,15 @@
+# SPDX-FileCopyrightText: 2026 LibreCode coop and contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+services:
+  nextcloud:
+    volumes:
+      - type: bind
+        source: ${APP_SOURCE:?APP_SOURCE must point to the downstream app checkout}
+        target: ${APP_CONTAINER_PATH:?APP_CONTAINER_PATH must be set by the consumer contract}
+  nginx:
+    volumes:
+      - type: bind
+        source: ${APP_SOURCE:?APP_SOURCE must point to the downstream app checkout}
+        target: ${APP_CONTAINER_PATH:?APP_CONTAINER_PATH must be set by the consumer contract}
+        read_only: true

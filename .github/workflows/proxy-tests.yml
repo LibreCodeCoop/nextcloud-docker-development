@@ -155,3 +155,36 @@ jobs:
           if [ "$MARIADB_VERSION" = 10.11 ]; then
             DB_TYPE=mariadb sh ./dev-worker maria-peer destroy || true
           fi
+
+  consumer-worker:
+    name: Downstream app consumer integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build PHP 8.3 development image
+        run: docker build -f .docker/Dockerfile.php83 -t ghcr.io/librecodecoop/nextcloud-dev-php83:latest .docker
+      - name: Start two downstream consumers
+        run: |
+          APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-a" APP_ID=fixture APP_SETUP_HOOK=setup.sh DB_TYPE=sqlite sh ./dev-worker consumer-a up
+          APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-b" APP_ID=fixture APP_SETUP_HOOK=setup.sh DB_TYPE=sqlite sh ./dev-worker consumer-b up
+      - name: Verify source and hook isolation
+        run: |
+          test "$(APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-a" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-a exec cat /var/www/html/apps-extra/fixture/identity.txt)" = alpha
+          test "$(APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-b" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-b exec cat /var/www/html/apps-extra/fixture/identity.txt)" = beta
+          test "$(APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-a" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-a exec cat /var/www/html/data/consumer-hook)" = alpha
+          test "$(APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-b" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-b exec cat /var/www/html/data/consumer-hook)" = beta
+      - name: Verify teardown is worker-scoped
+        run: |
+          APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-a" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-a destroy
+          APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-b" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-b status | grep -q 'installed: true'
+      - name: Collect consumer logs
+        if: failure()
+        run: |
+          APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-a" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-a logs || true
+          APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-b" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-b logs || true
+      - name: Destroy remaining consumer
+        if: always()
+        run: |
+          APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-a" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-a destroy || true
+          APP_SOURCE="$GITHUB_WORKSPACE/tests/worker/fixtures/consumer-b" APP_ID=fixture DB_TYPE=sqlite sh ./dev-worker consumer-b destroy || true

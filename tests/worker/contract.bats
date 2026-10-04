@@ -74,3 +74,18 @@ setup() {
 		grep -q 'pdo_sqlite' "$dockerfile"
 	done
 }
+
+@test "downstream app contract mounts an app checkout without duplicating the base topology" {
+	run env APP_SOURCE="$REPO_ROOT/tests/worker/fixtures/consumer-a" APP_ID=fixture DB_TYPE=sqlite sh "$WORKER" consumer-a config
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"$REPO_ROOT/tests/worker/fixtures/consumer-a"* ]]
+	[[ "$output" == *"/var/www/html/apps-extra/fixture"* ]]
+}
+
+@test "downstream app contract rejects unsafe identifiers and setup hook traversal" {
+	run env APP_SOURCE="$REPO_ROOT/tests/worker/fixtures/consumer-a" APP_ID='../fixture' DB_TYPE=sqlite sh "$WORKER" consumer-a config
+	[ "$status" -eq 2 ]
+
+	run env APP_SOURCE="$REPO_ROOT/tests/worker/fixtures/consumer-a" APP_ID=fixture APP_SETUP_HOOK='../setup.sh' DB_TYPE=sqlite sh "$WORKER" consumer-a config
+	[ "$status" -eq 2 ]
+}
