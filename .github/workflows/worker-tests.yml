@@ -1,0 +1,175 @@
+name: Worker tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: Worker contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Setup Bats-core
+        uses: bats-core/bats-action@77d6fb60505b4d0d1d73e48bd035b55074bbfb43 # 4.0.0
+        with:
+          support-install: false
+          assert-install: false
+          detik-install: false
+          file-install: false
+      - name: Run worker contract tests
+        run: bats tests/worker/contract.bats
+
+  sqlite:
+    name: SQLite worker integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build default PHP development image
+        run: sh .docker/bin/build-nextcloud-image
+      - name: Start isolated SQLite workers
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a up
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b up
+      - name: Verify SQLite runtime
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a exec php -r 'exit(extension_loaded("pdo_sqlite") ? 0 : 1);'
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a exec occ status | grep -q 'installed: true'
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b exec occ status | grep -q 'installed: true'
+      - name: Verify SQLite worker state isolation
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a exec sh -c 'printf alpha > /var/www/html/data/worker-probe'
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b exec sh -c 'printf beta > /var/www/html/data/worker-probe'
+          alpha="$(DB_TYPE=sqlite sh ./dev-worker sqlite-a exec cat /var/www/html/data/worker-probe)"
+          beta="$(DB_TYPE=sqlite sh ./dev-worker sqlite-b exec cat /var/www/html/data/worker-probe)"
+          printf 'sqlite-a worker_probe=%s\nsqlite-b worker_probe=%s\n' "$alpha" "$beta"
+          test "$alpha" = alpha
+          test "$beta" = beta
+      - name: Verify SQLite starts no database service
+        run: |
+          database_containers="$(docker ps --format '{{.Names}}' | grep -E '^ncdev-sqlite-(a|b)-database-1$' || true)"
+          if [ -n "$database_containers" ]; then
+            printf 'Unexpected database containers:\n%s\n' "$database_containers" >&2
+            exit 1
+          fi
+      - name: Collect worker logs
+        if: failure()
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a logs || true
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b logs || true
+      - name: Destroy workers
+        if: always()
+        run: |
+          DB_TYPE=sqlite sh ./dev-worker sqlite-a destroy || true
+          DB_TYPE=sqlite sh ./dev-worker sqlite-b destroy || true
+
+  mariadb:
+    name: MariaDB ${{ matrix.mariadb }} worker integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        mariadb: ['10.6', '10.11']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build default PHP development image
+        run: sh .docker/bin/build-nextcloud-image
+      - name: Start MariaDB worker
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+          DB_SQL_MODE: ONLY_FULL_GROUP_BY
+        run: |
+          worker="maria-${MARIADB_VERSION//./-}"
+          DB_TYPE=mariadb sh ./dev-worker "$worker" up
+      - name: Verify MariaDB version and SQL mode
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+          DB_SQL_MODE: ONLY_FULL_GROUP_BY
+        run: |
+          worker="maria-${MARIADB_VERSION//./-}"
+          version="$(DB_TYPE=mariadb sh ./dev-worker "$worker" db-exec mariadb -uroot -proot -Nse 'SELECT VERSION()')"
+          case "$version" in
+            "$MARIADB_VERSION".*) ;;
+            *) echo "Unexpected MariaDB version: $version" >&2; exit 1 ;;
+          esac
+          DB_TYPE=mariadb sh ./dev-worker "$worker" db-exec mariadb -uroot -proot -Nse 'SELECT @@GLOBAL.sql_mode' | grep -q 'ONLY_FULL_GROUP_BY'
+          DB_TYPE=mariadb sh ./dev-worker "$worker" status | grep -q 'installed: true'
+      - name: Verify two-worker isolation
+        if: matrix.mariadb == '10.11'
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+          DB_SQL_MODE: ONLY_FULL_GROUP_BY
+        run: |
+          DB_TYPE=mariadb sh ./dev-worker maria-peer up
+          DB_TYPE=mariadb sh ./dev-worker maria-10-11 exec sh -c 'printf alpha > /var/www/html/data/worker-probe'
+          DB_TYPE=mariadb sh ./dev-worker maria-peer exec sh -c 'printf beta > /var/www/html/data/worker-probe'
+          alpha="$(DB_TYPE=mariadb sh ./dev-worker maria-10-11 exec cat /var/www/html/data/worker-probe)"
+          beta="$(DB_TYPE=mariadb sh ./dev-worker maria-peer exec cat /var/www/html/data/worker-probe)"
+          printf 'maria-10-11 worker_probe=%s\nmaria-peer worker_probe=%s\n' "$alpha" "$beta"
+          test "$alpha" = alpha
+          test "$beta" = beta
+      - name: Collect worker logs
+        if: failure()
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+        run: |
+          worker="maria-${MARIADB_VERSION//./-}"
+          DB_TYPE=mariadb sh ./dev-worker "$worker" logs || true
+          if [ "$MARIADB_VERSION" = 10.11 ]; then
+            DB_TYPE=mariadb sh ./dev-worker maria-peer logs || true
+          fi
+      - name: Destroy workers
+        if: always()
+        env:
+          MARIADB_VERSION: ${{ matrix.mariadb }}
+        run: |
+          worker="maria-${MARIADB_VERSION//./-}"
+          DB_TYPE=mariadb sh ./dev-worker "$worker" destroy || true
+          if [ "$MARIADB_VERSION" = 10.11 ]; then
+            DB_TYPE=mariadb sh ./dev-worker maria-peer destroy || true
+          fi
+
+  compose-extension:
+    name: Compose extension integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Build default PHP development image
+        run: sh .docker/bin/build-nextcloud-image
+      - name: Start a worker with two externally mounted apps
+        env:
+          NCDD_COMPOSE_OVERRIDE: ${{ github.workspace }}/tests/worker/fixtures/compose-extension.yml
+          TEST_APP_A: ${{ github.workspace }}/tests/worker/fixtures/sample-app
+          TEST_APP_B: ${{ github.workspace }}/tests/worker/fixtures/other-app
+        run: DB_TYPE=sqlite sh ./dev-worker extension up
+      - name: Verify both apps use the same worker runtime
+        env:
+          NCDD_COMPOSE_OVERRIDE: ${{ github.workspace }}/tests/worker/fixtures/compose-extension.yml
+          TEST_APP_A: ${{ github.workspace }}/tests/worker/fixtures/sample-app
+          TEST_APP_B: ${{ github.workspace }}/tests/worker/fixtures/other-app
+        run: |
+          test "$(DB_TYPE=sqlite sh ./dev-worker extension exec cat /var/www/html/apps-extra/sample_app/marker.txt)" = alpha
+          test "$(DB_TYPE=sqlite sh ./dev-worker extension exec cat /var/www/html/apps-extra/other_app/marker.txt)" = other
+          DB_TYPE=sqlite sh ./dev-worker extension status | grep -q 'installed: true'
+      - name: Collect worker logs
+        if: failure()
+        env:
+          NCDD_COMPOSE_OVERRIDE: ${{ github.workspace }}/tests/worker/fixtures/compose-extension.yml
+          TEST_APP_A: ${{ github.workspace }}/tests/worker/fixtures/sample-app
+          TEST_APP_B: ${{ github.workspace }}/tests/worker/fixtures/other-app
+        run: DB_TYPE=sqlite sh ./dev-worker extension logs || true
+      - name: Destroy worker
+        if: always()
+        env:
+          NCDD_COMPOSE_OVERRIDE: ${{ github.workspace }}/tests/worker/fixtures/compose-extension.yml
+          TEST_APP_A: ${{ github.workspace }}/tests/worker/fixtures/sample-app
+          TEST_APP_B: ${{ github.workspace }}/tests/worker/fixtures/other-app
+        run: DB_TYPE=sqlite sh ./dev-worker extension destroy || true

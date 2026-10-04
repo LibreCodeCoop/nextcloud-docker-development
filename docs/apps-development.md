@@ -1,28 +1,61 @@
 # Start development of apps
 
-For new app-development workflows, keep the app checkout outside NCDD and use
-the [downstream app and devcontainer contract](downstream-consumers.md). This
-avoids cloning application source into NCDD's mutable Nextcloud data directory
-and allows multiple isolated worktrees to reuse the same canonical runtime.
+Nextcloud applications can continue to be developed directly under
+`volumes/nextcloud/apps-extra`. That directory is an app space and may contain
+as many applications as a development setup needs.
 
-The legacy `volumes/nextcloud/apps-extra` workflow remains possible for
-existing local setups, but downstream repositories should prefer the worker
-contract for automation, concurrent worktrees and devcontainer integration.
+For repositories that keep application checkouts outside this repository, use a
+[Compose extension](compose-extensions.md) rather than creating another
+Nextcloud topology. The extension may mount one app, several apps, or add
+supporting services while NCDD remains responsible for the runtime.
 
-## Example
+## Local apps-extra workflow
 
-```bash
-APP_ID=my_app \
-APP_SOURCE_DIR=/path/to/my_app \
-DB_TYPE=sqlite \
-sh ./dev-worker my-app up
+Clone or create applications under:
 
-DB_TYPE=sqlite sh ./dev-worker my-app urls
-DB_TYPE=sqlite sh ./dev-worker my-app exec sh -lc \
-  'cd /var/www/html/apps-extra/my_app && composer install'
+```text
+volumes/nextcloud/apps-extra/
 ```
 
-The app checkout stays owned by the downstream repository. NCDD owns only the
-isolated runtime state under `.workers/<worker-id>`.
+Then use the `nextcloud` container to install dependencies or run development
+commands:
+
+```bash
+docker compose exec -u www-data nextcloud bash
+cd apps-extra/my_app
+composer install
+npm ci
+```
+
+## External application checkouts
+
+A project-specific Compose override can mount any number of source trees into
+the same worker. For example:
+
+```yaml
+services:
+  nextcloud:
+    volumes:
+      - /work/my_app:/var/www/html/apps-extra/my_app
+      - /work/my_dependency:/var/www/html/apps-extra/my_dependency
+```
+
+Start the runtime with:
+
+```bash
+NCDD_COMPOSE_OVERRIDE=/work/project/ncdd.override.yml \
+DB_TYPE=sqlite \
+sh ./dev-worker my-project up
+```
+
+Application-specific setup remains owned by the application repository. It can
+run commands explicitly through the worker, for example:
+
+```bash
+NCDD_COMPOSE_OVERRIDE=/work/project/ncdd.override.yml \
+DB_TYPE=sqlite \
+sh ./dev-worker my-project exec sh -lc \
+  'cd /var/www/html/apps-extra/my_app && composer install'
+```
 
 ⬅️ [Back to index](../README.md)

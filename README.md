@@ -21,5 +21,5 @@ and other advanced configuration, see the
 
 - [Advanced setup](docs/advanced-setup.md)
 - [App development](docs/apps-development.md)
-- [Downstream app and devcontainer contract](docs/downstream-consumers.md)
+- [Compose extensions and devcontainers](docs/compose-extensions.md)
 - [FAQ](docs/faq.md)

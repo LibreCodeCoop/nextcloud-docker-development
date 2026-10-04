@@ -69,44 +69,42 @@ setup() {
 	[[ "$output" == *"Unsupported MARIADB_VERSION"* ]]
 }
 
-@test "supported PHP images install PDO SQLite" {
-	for dockerfile in "$REPO_ROOT"/.docker/Dockerfile.php81 "$REPO_ROOT"/.docker/Dockerfile.php82 "$REPO_ROOT"/.docker/Dockerfile.php83; do
+@test "all PHP development images install PDO SQLite" {
+	found=0
+	for dockerfile in "$REPO_ROOT"/.docker/Dockerfile.php*; do
+		[ -f "$dockerfile" ] || continue
+		found=1
 		grep -q 'pdo_sqlite' "$dockerfile"
 	done
+	[ "$found" -eq 1 ]
 }
 
+@test "worker accepts a generic Compose override with multiple app mounts" {
+	override="$REPO_ROOT/tests/worker/fixtures/compose-extension.yml"
+	app_a="$REPO_ROOT/tests/worker/fixtures/sample-app"
+	app_b="$REPO_ROOT/tests/worker/fixtures/other-app"
 
-@test "downstream app checkout is mounted through the shared worker contract" {
-	fixture="$REPO_ROOT/tests/worker/fixtures/sample-app"
-	run env APP_ID=sample_app APP_SOURCE_DIR="$fixture" DB_TYPE=sqlite sh "$WORKER" consumer-a config
+	run env \
+		NCDD_COMPOSE_OVERRIDE="$override" \
+		TEST_APP_A="$app_a" \
+		TEST_APP_B="$app_b" \
+		DB_TYPE=sqlite \
+		sh "$WORKER" compose-extension config
+
 	[ "$status" -eq 0 ]
-	[[ "$output" == *"source: $fixture"* ]]
+	[[ "$output" == *"source: $app_a"* ]]
 	[[ "$output" == *"target: /var/www/html/apps-extra/sample_app"* ]]
-	[[ "$output" == *"name: ncdev-consumer-a"* ]]
+	[[ "$output" == *"source: $app_b"* ]]
+	[[ "$output" == *"target: /var/www/html/apps-extra/other_app"* ]]
 }
 
-@test "worker remembers downstream app binding by worker id" {
-	fixture="$REPO_ROOT/tests/worker/fixtures/sample-app"
-	run env APP_ID=sample_app APP_SOURCE_DIR="$fixture" DB_TYPE=sqlite sh "$WORKER" consumer-memory config
-	[ "$status" -eq 0 ]
-
-	run env DB_TYPE=sqlite sh "$WORKER" consumer-memory config
-	[ "$status" -eq 0 ]
-	[[ "$output" == *"source: $fixture"* ]]
-	[[ "$output" == *"target: /var/www/html/apps-extra/sample_app"* ]]
-
-	rm -rf "$REPO_ROOT/.workers/consumer-memory"
-}
-
-@test "worker rejects rebinding an existing consumer to another checkout" {
-	fixture="$REPO_ROOT/tests/worker/fixtures/sample-app"
-	other="$REPO_ROOT/tests/worker/fixtures/other-app"
-	run env APP_ID=sample_app APP_SOURCE_DIR="$fixture" DB_TYPE=sqlite sh "$WORKER" consumer-bound config
-	[ "$status" -eq 0 ]
-
-	run env APP_ID=sample_app APP_SOURCE_DIR="$other" DB_TYPE=sqlite sh "$WORKER" consumer-bound config
+@test "worker rejects a missing Compose override before startup" {
+	run env NCDD_COMPOSE_OVERRIDE="$REPO_ROOT/does-not-exist.yml" sh "$WORKER" missing-override config
 	[ "$status" -eq 2 ]
-	[[ "$output" == *"already bound to APP_SOURCE_DIR"* ]]
+	[[ "$output" == *"NCDD_COMPOSE_OVERRIDE is not a file"* ]]
+}
 
-	rm -rf "$REPO_ROOT/.workers/consumer-bound"
+@test "worker CI does not pin a concrete PHP series" {
+	workflow="$REPO_ROOT/.github/workflows/worker-tests.yml"
+	! grep -Eq 'Dockerfile\.php[0-9]+|nextcloud-dev-php[0-9]+' "$workflow"
 }

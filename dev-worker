@@ -25,9 +25,7 @@ Environment:
   DB_SQL_MODE=<modes>        Optional global SQL mode for MySQL-compatible backends
   PHP_VERSION=<version>     Existing PHP image selector
   VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
-  APP_ID=<app-id>           Optional downstream Nextcloud app identifier
-  APP_SOURCE_DIR=<path>     Optional downstream app checkout to mount
-  APP_SETUP_COMMAND=<cmd>   Optional idempotent command run after readiness
+  NCDD_COMPOSE_OVERRIDE=<file> Optional Compose override appended to the base topology
   WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
 EOF
 }
@@ -58,6 +56,26 @@ esac
 
 repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 db_type="${DB_TYPE:-mysql}"
+compose_override="${NCDD_COMPOSE_OVERRIDE:-}"
+
+if [ -n "$compose_override" ]; then
+	case "$compose_override" in
+		/*) ;;
+		*)
+			override_dir="$(dirname -- "$compose_override")"
+			override_name="$(basename -- "$compose_override")"
+			[ -d "$override_dir" ] || {
+				echo "NCDD_COMPOSE_OVERRIDE directory does not exist: $override_dir" >&2
+				exit 2
+			}
+			compose_override="$(CDPATH= cd -- "$override_dir" && pwd -P)/$override_name"
+			;;
+	esac
+	[ -f "$compose_override" ] || {
+		echo "NCDD_COMPOSE_OVERRIDE is not a file: $compose_override" >&2
+		exit 2
+	}
+fi
 
 case "$db_type" in
 	sqlite|mysql|mariadb|pgsql) ;;
@@ -69,56 +87,6 @@ esac
 
 worker_root="$repo_root/.workers/$worker_id"
 worker_volumes_dir="$worker_root/volumes"
-worker_app_id_file="$worker_root/app-id"
-worker_app_source_file="$worker_root/app-source"
-
-stored_app_id=""
-stored_app_source=""
-[ ! -f "$worker_app_id_file" ] || stored_app_id="$(cat "$worker_app_id_file")"
-[ ! -f "$worker_app_source_file" ] || stored_app_source="$(cat "$worker_app_source_file")"
-
-app_id="${APP_ID:-$stored_app_id}"
-app_source="${APP_SOURCE_DIR:-$stored_app_source}"
-
-if [ -n "$app_id" ] || [ -n "$app_source" ]; then
-	[ -n "$app_id" ] && [ -n "$app_source" ] || {
-		echo "APP_ID and APP_SOURCE_DIR must be provided together" >&2
-		exit 2
-	}
-	case "$app_id" in
-		[a-z]*) ;;
-		*)
-			echo "Invalid APP_ID: $app_id" >&2
-			exit 2
-			;;
-	esac
-	case "$app_id" in
-		*[!a-z0-9_]*)
-			echo "Invalid APP_ID: $app_id" >&2
-			exit 2
-			;;
-	esac
-	if [ -d "$app_source" ]; then
-		app_source="$(CDPATH= cd -- "$app_source" && pwd -P)"
-	elif [ "$command" != "destroy" ]; then
-		echo "APP_SOURCE_DIR is not a directory: $app_source" >&2
-		exit 2
-	fi
-	if [ -n "$stored_app_id" ] && [ "$stored_app_id" != "$app_id" ]; then
-		echo "Worker $worker_id is already bound to APP_ID=$stored_app_id" >&2
-		exit 2
-	fi
-	if [ -n "$stored_app_source" ] && [ "$stored_app_source" != "$app_source" ]; then
-		echo "Worker $worker_id is already bound to APP_SOURCE_DIR=$stored_app_source" >&2
-		exit 2
-	fi
-	mkdir -p "$worker_root"
-	printf '%s\n' "$app_id" > "$worker_app_id_file"
-	printf '%s\n' "$app_source" > "$worker_app_source_file"
-	export APP_ID="$app_id"
-	export APP_SOURCE_DIR="$app_source"
-	export APP_TARGET_DIR="/var/www/html/apps-extra/$app_id"
-fi
 
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ncdev-$worker_id}"
 export WORKER_VOLUMES_DIR="$worker_volumes_dir"
@@ -143,10 +111,10 @@ else
 fi
 
 compose() {
-	if [ -n "${APP_SOURCE_DIR:-}" ]; then
+	if [ -n "$compose_override" ]; then
 		docker compose --project-directory "$repo_root" \
 			--file "$repo_root/docker-compose.yml" \
-			--file "$repo_root/.docker/downstream-app.yml" "$@"
+			--file "$compose_override" "$@"
 	else
 		docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
 	fi
@@ -211,9 +179,6 @@ case "$command" in
 			compose up -d
 		fi
 		wait_until_ready
-		if [ -n "${APP_SETUP_COMMAND:-}" ]; then
-			compose exec -T -u www-data nextcloud sh -lc "$APP_SETUP_COMMAND"
-		fi
 		;;
 	exec)
 		[ "$#" -gt 0 ] || {

@@ -1,0 +1,38 @@
+#!/bin/sh
+# SPDX-FileCopyrightText: 2026 LibreCode coop and contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+set -eu
+
+repo_root="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
+compose_file="$repo_root/docker-compose.yml"
+
+image="$(
+	docker compose --project-directory "$repo_root" --file "$compose_file" config --images |
+		grep '^ghcr.io/librecodecoop/nextcloud-dev-php' |
+		head -n 1
+)"
+
+[ -n "$image" ] || {
+	echo "Could not resolve the Nextcloud development image from docker-compose.yml" >&2
+	exit 2
+}
+
+case "$image" in
+	ghcr.io/librecodecoop/nextcloud-dev-php*:latest) ;;
+	*)
+		echo "Unexpected Nextcloud development image: $image" >&2
+		exit 2
+		;;
+esac
+
+php_version="${image#*nextcloud-dev-php}"
+php_version="${php_version%%:*}"
+dockerfile="$repo_root/.docker/Dockerfile.php$php_version"
+
+[ -f "$dockerfile" ] || {
+	echo "No Dockerfile for PHP $php_version: $dockerfile" >&2
+	exit 2
+}
+
+docker build -f "$dockerfile" -t "$image" "$repo_root/.docker"

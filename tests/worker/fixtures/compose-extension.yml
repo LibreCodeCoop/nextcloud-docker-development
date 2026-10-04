@@ -1,0 +1,30 @@
+# SPDX-FileCopyrightText: 2026 LibreCode coop and contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+services:
+  nextcloud:
+    volumes:
+      - type: bind
+        source: ${TEST_APP_A:?TEST_APP_A is required}
+        target: /var/www/html/apps-extra/sample_app
+      - type: bind
+        source: ${TEST_APP_B:?TEST_APP_B is required}
+        target: /var/www/html/apps-extra/other_app
+  nginx:
+    volumes:
+      - type: bind
+        source: ${TEST_APP_A:?TEST_APP_A is required}
+        target: /var/www/html/apps-extra/sample_app
+        read_only: true
+      - type: bind
+        source: ${TEST_APP_B:?TEST_APP_B is required}
+        target: /var/www/html/apps-extra/other_app
+        read_only: true
+  playwright:
+    volumes:
+      - type: bind
+        source: ${TEST_APP_A:?TEST_APP_A is required}
+        target: /var/www/html/apps-extra/sample_app
+      - type: bind
+        source: ${TEST_APP_B:?TEST_APP_B is required}
+        target: /var/www/html/apps-extra/other_app
