@@ -49,22 +49,20 @@ setup() {
 	[[ "$output" == *"DB_DRIVER: sqlite"* ]]
 }
 
-@test "MariaDB 10.6 selects the pinned 10.6 service" {
-	run env DB_TYPE=mariadb MARIADB_VERSION=10.6 sh "$WORKER" maria106 config
-	[ "$status" -eq 0 ]
-	[[ "$output" == *"mariadb:10.6.28@sha256:23616f0bd3aff922f4dea4130f1d0a09f3571d20b7b36c8f49840672dc309e8c"* ]]
-	[[ "$output" == *"DB_TYPE: mariadb"* ]]
-	[[ "$output" == *"DB_DRIVER: mysql"* ]]
-}
-
-@test "MariaDB 10.11 selects the pinned 10.11 service" {
-	run env DB_TYPE=mariadb MARIADB_VERSION=10.11 sh "$WORKER" maria1011 config
-	[ "$status" -eq 0 ]
-	[[ "$output" == *"mariadb:10.11.19@sha256:07c0aaff7396b74cb7975cba78257178d188e30f531a5db2b617c48beef13c41"* ]]
+@test "MariaDB version selects the matching configured service" {
+	for version in 10.6 10.11; do
+		service="mariadb${version//./}"
+		run env DB_TYPE=mariadb MARIADB_VERSION="$version" sh "$WORKER" "maria-${version//./-}" config
+		[ "$status" -eq 0 ]
+		[[ "$output" == *"image: mariadb:$version"* ]]
+		[[ "$output" == *"DB_TYPE: mariadb"* ]]
+		[[ "$output" == *"DB_DRIVER: mysql"* ]]
+		grep -q "^  $service:" "$REPO_ROOT/.docker/database-services.yml"
+	done
 }
 
 @test "unsupported MariaDB versions fail before startup" {
-	run env DB_TYPE=mariadb MARIADB_VERSION=11.4 sh "$WORKER" maria114 config
+	run env DB_TYPE=mariadb MARIADB_VERSION=99.99 sh "$WORKER" maria-unsupported config
 	[ "$status" -eq 2 ]
 	[[ "$output" == *"Unsupported MARIADB_VERSION"* ]]
 }
@@ -79,32 +77,28 @@ setup() {
 	[ "$found" -eq 1 ]
 }
 
-@test "worker accepts a generic Compose override with multiple app mounts" {
-	override="$REPO_ROOT/tests/worker/fixtures/compose-extension.yml"
-	app_a="$REPO_ROOT/tests/worker/fixtures/sample-app"
-	app_b="$REPO_ROOT/tests/worker/fixtures/other-app"
-
-	run env \
-		NCDD_COMPOSE_OVERRIDE="$override" \
-		TEST_APP_A="$app_a" \
-		TEST_APP_B="$app_b" \
-		DB_TYPE=sqlite \
-		sh "$WORKER" compose-extension config
-
+@test "worker mounts one workspace as the complete apps-extra directory" {
+	workspace="$REPO_ROOT/tests/worker/fixtures/workspace"
+	run env NCDD_WORKSPACE="$workspace" DB_TYPE=sqlite sh "$WORKER" workspace-config config
 	[ "$status" -eq 0 ]
-	[[ "$output" == *"source: $app_a"* ]]
-	[[ "$output" == *"target: /var/www/html/apps-extra/sample_app"* ]]
-	[[ "$output" == *"source: $app_b"* ]]
-	[[ "$output" == *"target: /var/www/html/apps-extra/other_app"* ]]
+	[[ "$output" == *"source: $workspace"* ]]
+	[[ "$output" == *"target: /var/www/html/apps-extra"* ]]
+	[[ "$output" != *"target: /var/www/html/apps-extra/sample_app"* ]]
+	[[ "$output" != *"target: /var/www/html/apps-extra/other_app"* ]]
 }
 
-@test "worker rejects a missing Compose override before startup" {
-	run env NCDD_COMPOSE_OVERRIDE="$REPO_ROOT/does-not-exist.yml" sh "$WORKER" missing-override config
+@test "worker rejects a missing workspace before startup" {
+	run env NCDD_WORKSPACE="$REPO_ROOT/does-not-exist" sh "$WORKER" missing-workspace config
 	[ "$status" -eq 2 ]
-	[[ "$output" == *"NCDD_COMPOSE_OVERRIDE is not a file"* ]]
+	[[ "$output" == *"NCDD_WORKSPACE is not a directory"* ]]
 }
 
-@test "worker CI does not pin a concrete PHP series" {
+@test "worker CI does not pin a concrete PHP series outside its matrix inputs" {
 	workflow="$REPO_ROOT/.github/workflows/worker-tests.yml"
 	! grep -Eq 'Dockerfile\.php[0-9]+|nextcloud-dev-php[0-9]+' "$workflow"
+}
+
+@test "MariaDB matrix version is not repeated in workflow conditionals or worker names" {
+	workflow="$REPO_ROOT/.github/workflows/worker-tests.yml"
+	! grep -Eq "matrix\.mariadb ==|MARIADB_VERSION\" = \"[0-9]|maria-[0-9]+-[0-9]+" "$workflow"
 }

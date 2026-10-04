@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 LibreCode coop and contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+services:
+  nextcloud:
+    volumes:
+      - type: bind
+        source: ${NCDD_WORKSPACE:?NCDD_WORKSPACE is required}
+        target: /var/www/html/apps-extra
+  nginx:
+    volumes:
+      - type: bind
+        source: ${NCDD_WORKSPACE:?NCDD_WORKSPACE is required}
+        target: /var/www/html/apps-extra
+        read_only: true
+  playwright:
+    volumes:
+      - type: bind
+        source: ${NCDD_WORKSPACE:?NCDD_WORKSPACE is required}
+        target: /var/www/html/apps-extra
+  eurooffice:
+    volumes:
+      - type: bind
+        source: ${NCDD_WORKSPACE:?NCDD_WORKSPACE is required}/eurooffice-plugin
+        target: /var/www/onlyoffice/documentserver/sdkjs-plugins/libresign
+        read_only: true
