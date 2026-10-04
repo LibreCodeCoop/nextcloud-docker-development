@@ -2,7 +2,7 @@ services:
   database:
     extends:
       file: .docker/database-services.yml
-      service: ${DB_TYPE:-${DB_HOST:-mysql}}
+      service: ${DB_SERVICE_TYPE:-${DB_TYPE:-${DB_HOST:-mysql}}}
     networks:
       default:
         aliases:
@@ -19,8 +19,6 @@ services:
       - ~/.npm:/var/www/.npm/
       - ${WORKER_VOLUMES_DIR:-./volumes}/nextcloud:/var/www/html
     restart: unless-stopped
-    depends_on:
-      - database
     environment:
       - HOST_UID=${HOST_UID:-1000}
       - HOST_GID=${HOST_GID:-1000}

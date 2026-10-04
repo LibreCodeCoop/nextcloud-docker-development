@@ -33,6 +33,7 @@ connection hostname.
 
 The currently implemented backends are:
 
+- `sqlite`
 - `mysql` (default)
 - `pgsql`
 
@@ -68,9 +69,17 @@ Each worker stores mutable state under `.workers/<worker-id>/volumes` and uses
 its own Compose project name. Destroying one worker removes only that worker's
 Compose resources and mutable directory.
 
-The lifecycle currently enables MySQL and PostgreSQL. SQLite and MariaDB are
-reserved by the `DB_TYPE` contract and are added by their database-specific
-workstreams.
+SQLite workers do not start a network database container. Their database file
+lives inside the worker's isolated Nextcloud filesystem:
+
+```bash
+DB_TYPE=sqlite sh ./dev-worker sqlite-a up
+DB_TYPE=sqlite sh ./dev-worker sqlite-a status
+DB_TYPE=sqlite sh ./dev-worker sqlite-a destroy
+```
+
+MariaDB remains reserved by the `DB_TYPE` contract until its dedicated
+backend implementation lands.
 
 ## Optional services
 

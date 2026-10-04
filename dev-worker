@@ -17,7 +17,7 @@ Commands:
   destroy            Stop the worker and remove only its mutable state
 
 Environment:
-  DB_TYPE=mysql|pgsql       Database backend for the foundation lifecycle
+  DB_TYPE=sqlite|mysql|pgsql Database backend
   DB_HOST=<hostname>        Connection hostname (defaults to DB_TYPE)
   PHP_VERSION=<version>     Existing PHP image selector
   VERSION_NEXTCLOUD=<ref>   Existing Nextcloud ref selector
@@ -53,9 +53,9 @@ repo_root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 db_type="${DB_TYPE:-mysql}"
 
 case "$db_type" in
-	mysql|pgsql) ;;
-	sqlite|mariadb)
-		echo "DB_TYPE=$db_type is reserved by the worker contract but is not implemented by this foundation yet." >&2
+	sqlite|mysql|pgsql) ;;
+	mariadb)
+		echo "DB_TYPE=$db_type is reserved by the worker contract but is not implemented yet." >&2
 		exit 3
 		;;
 	*)
@@ -71,6 +71,12 @@ export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-ncdev-$worker_id}"
 export WORKER_VOLUMES_DIR="$worker_volumes_dir"
 export DB_TYPE="$db_type"
 export DB_HOST="${DB_HOST:-$db_type}"
+if [ "$db_type" = "sqlite" ]; then
+	export DB_SERVICE_TYPE=mysql
+	export DB_DRIVER=sqlite
+else
+	export DB_SERVICE_TYPE="${DB_SERVICE_TYPE:-$db_type}"
+fi
 
 compose() {
 	docker compose --project-directory "$repo_root" --file "$repo_root/docker-compose.yml" "$@"
@@ -99,7 +105,11 @@ wait_until_ready() {
 case "$command" in
 	up)
 		mkdir -p "$worker_volumes_dir"
-		compose up -d
+		if [ "$db_type" = "sqlite" ]; then
+			compose up -d nextcloud nginx proxy-coordinator mailpit redis
+		else
+			compose up -d
+		fi
 		wait_until_ready
 		;;
 	exec)
@@ -121,6 +131,12 @@ case "$command" in
 		;;
 	destroy)
 		compose down --remove-orphans
+		# Mutable bind mounts contain files created by container UIDs. Clean the
+		# worker root through the existing Nextcloud image as root instead of
+		# relying on host ownership.
+		if [ -d "$worker_root" ]; then
+			compose run --rm --no-deps -u 0 --entrypoint sh -v "$worker_root:/worker" nextcloud -c 'find /worker -mindepth 1 -exec rm -rf -- {} +' >/dev/null 2>&1 || true
+		fi
 		case "$worker_root" in
 			"$repo_root"/.workers/"$worker_id"|"$repo_root"/.workers/"$worker_id"/) ;;
 			*)
