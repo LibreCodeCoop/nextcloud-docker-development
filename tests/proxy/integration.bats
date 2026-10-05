@@ -152,8 +152,8 @@ certificate_matches_host() {
 		'nc -z -w 2 proxytesta.localhost 80 && nc -z -w 2 proxytesta.localhost 443'
 	[ "$status" -eq 0 ]
 
-	run timeout 10 compose_test proxytesta exec -T nginx \
-		wget --no-check-certificate --server-response --spider \
+	run compose_test proxytesta exec -T nginx \
+		wget -T 5 -t 1 --no-check-certificate --server-response --spider \
 		"https://proxytesta.localhost/"
 	[ "$status" -eq 0 ]
 	[[ "$output" == *"200 OK"* ]]
