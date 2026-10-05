@@ -131,21 +131,10 @@ These values configure the routed host, Nextcloud `trusted_domains`,
 `overwritehost`, `overwriteprotocol`, diagnostics and the default Playwright
 base URL.
 
-For remote platforms that expose applications by forwarding a host port, a
-worker can additionally publish its nginx service on a caller-selected loopback
-port:
-
-```bash
-NEXTCLOUD_HOST=remote.example.dev \
-NEXTCLOUD_PROTOCOL=https \
-NEXTCLOUD_PORT=18080 \
-DB_TYPE=sqlite \
-sh ./dev-worker remote up
-```
-
-The local development default remains the shared HTTPS proxy. Use
-`NEXTCLOUD_PORT` only when the remote platform needs a concrete per-worker
-port. The caller is responsible for assigning a non-conflicting port.
+For remote platforms, forward the shared proxy's HTTPS port and set the public
+hostname to the hostname assigned by that platform. The proxy remains the only
+HTTP entry point; individual workers do not publish their nginx service on
+separate host ports.
 
 ## Multiple environments
 
