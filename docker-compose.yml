@@ -132,6 +132,8 @@ services:
     command: sleep infinity
     depends_on:
       - nextcloud
+    extra_hosts:
+      - "${NEXTCLOUD_HOST:-${COMPOSE_PROJECT_NAME}.localhost}:host-gateway"
     restart: unless-stopped
     networks:
       - default
