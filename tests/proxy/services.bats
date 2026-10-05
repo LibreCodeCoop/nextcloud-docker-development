@@ -11,9 +11,10 @@ setup() {
 	source "$REPO_ROOT/.docker/scripts/proxy/services.sh"
 
 	PROJECT_NAME=current
+	NEXTCLOUD_HOST=current.localhost
 }
 
-@test "proxy is connected to the current Compose project network" {
+@test "proxy is connected to the current Compose project network with the public hostname alias" {
 	compatible_proxy_container() { printf '%s\n' librecode-dev-proxy; }
 	container_networks() { printf '{}\n'; }
 	Docker() {
@@ -22,7 +23,7 @@ setup() {
 
 	connect_proxy_to_project_network
 
-	grep -q '^docker network connect current_default librecode-dev-proxy$' "$TEST_LOG"
+	grep -q '^docker network connect --alias current.localhost current_default librecode-dev-proxy$' "$TEST_LOG"
 }
 
 @test "proxy is not connected twice to the project network" {

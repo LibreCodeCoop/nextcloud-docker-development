@@ -113,11 +113,3 @@ setup() {
 }
 
 
-
-@test "Playwright resolves the public Nextcloud hostname through the Docker host" {
-	run env DB_TYPE=sqlite COMPOSE_PROFILES=playwright sh "$WORKER" playwright-route config
-	[ "$status" -eq 0 ]
-	[[ "$output" == *"PLAYWRIGHT_BASE_URL: https://ncdev-playwright-route.localhost"* ]]
-	[[ "$output" == *"ncdev-playwright-route.localhost"* ]]
-	[[ "$output" == *"host-gateway"* ]]
-}
