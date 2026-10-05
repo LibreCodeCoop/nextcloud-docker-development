@@ -145,10 +145,19 @@ if ! occ status | grep -q 'installed: true'; then
 fi
 
 if [[ -n "${NEXTCLOUD_HOST:-}" ]]; then
-    echo "🔧 Setting trusted domain and overwritehost to ${NEXTCLOUD_HOST} ..."
+    nextcloud_protocol="${NEXTCLOUD_PROTOCOL:-https}"
+    case "${nextcloud_protocol}" in
+        http|https) ;;
+        *)
+            echo "❌ Unsupported NEXTCLOUD_PROTOCOL: ${nextcloud_protocol}" >&2
+            exit 1
+            ;;
+    esac
+
+    echo "🔧 Setting canonical Nextcloud URL to ${nextcloud_protocol}://${NEXTCLOUD_HOST} ..."
     occ config:system:set trusted_domains 1 --value "${NEXTCLOUD_HOST}"
     occ config:system:set overwritehost --value "${NEXTCLOUD_HOST}"
-    occ config:system:set overwriteprotocol --value https
+    occ config:system:set overwriteprotocol --value "${nextcloud_protocol}"
 fi
 
 # Run cron

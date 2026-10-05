@@ -102,3 +102,13 @@ setup() {
 	workflow="$REPO_ROOT/.github/workflows/worker-tests.yml"
 	! grep -Eq "matrix\.mariadb ==|MARIADB_VERSION\" = \"[0-9]|maria-[0-9]+-[0-9]+" "$workflow"
 }
+
+
+@test "worker accepts an explicit public Nextcloud URL" {
+	run env DB_TYPE=sqlite NEXTCLOUD_HOST=example.test NEXTCLOUD_PROTOCOL=https sh "$WORKER" public-url config
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"NEXTCLOUD_HOST: example.test"* ]]
+	[[ "$output" == *"NEXTCLOUD_PROTOCOL: https"* ]]
+	[[ "$output" == *"VIRTUAL_HOST: example.test"* ]]
+}
+

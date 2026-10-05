@@ -39,7 +39,7 @@ disconnect_proxy_from_project_network() {
 
 report_environment_ready() {
 	set -- \
-		-e ENV_NEXTCLOUD_URL="https://${PROJECT_NAME:-}.localhost" \
+		-e ENV_NEXTCLOUD_URL="${NEXTCLOUD_PROTOCOL:-https}://${NEXTCLOUD_HOST:-${PROJECT_NAME:-}.localhost}" \
 		-e ENV_ADMIN_USER="${NEXTCLOUD_ADMIN_USER:-admin}" \
 		-e ENV_ADMIN_PASSWORD="${NEXTCLOUD_ADMIN_PASSWORD:-admin}" \
 		-e ENV_NEXTCLOUD_BRANCH="${VERSION_NEXTCLOUD:-master}"
