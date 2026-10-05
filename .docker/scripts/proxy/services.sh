@@ -20,7 +20,8 @@ connect_proxy_to_project_network() {
 		return 0
 	fi
 
-	Docker network connect "$network" "$proxy_container"
+	public_host="${NEXTCLOUD_HOST:-${PROJECT_NAME:-}.localhost}"
+	Docker network connect --alias "$public_host" "$network" "$proxy_container"
 }
 
 disconnect_proxy_from_project_network() {

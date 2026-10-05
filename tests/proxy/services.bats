@@ -11,6 +11,7 @@ setup() {
 	source "$REPO_ROOT/.docker/scripts/proxy/services.sh"
 
 	PROJECT_NAME=current
+	NEXTCLOUD_HOST=current.localhost
 }
 
 @test "proxy is connected to the current Compose project network" {
@@ -22,7 +23,46 @@ setup() {
 
 	connect_proxy_to_project_network
 
-	grep -q '^docker network connect current_default librecode-dev-proxy$' "$TEST_LOG"
+	grep -q '^docker network connect --alias current.localhost current_default librecode-dev-proxy
+}
+
+@test "proxy is not connected twice to the project network" {
+	compatible_proxy_container() { printf '%s\n' librecode-dev-proxy; }
+	container_networks() { printf '{"current_default":{}}\n'; }
+	Docker() {
+		printf 'docker %s\n' "$*" >> "$TEST_LOG"
+	}
+
+	connect_proxy_to_project_network
+
+	! grep -q '^docker network connect' "$TEST_LOG"
+}
+
+@test "project network is disconnected from proxy during release" {
+	compatible_proxy_container() { printf '%s\n' librecode-dev-proxy; }
+	container_networks() { printf '{"current_default":{}}\n'; }
+	Docker() {
+		printf 'docker %s\n' "$*" >> "$TEST_LOG"
+	}
+
+	disconnect_proxy_from_project_network
+
+	grep -q '^docker network disconnect current_default librecode-dev-proxy$' "$TEST_LOG"
+}
+
+@test "backend services wait for coordinator network readiness" {
+	main="$REPO_ROOT/docker-compose.yml"
+	fixture="$REPO_ROOT/tests/proxy/fixtures/compose.yml"
+
+	grep -A8 '^  nginx:' "$main" | grep -q 'proxy-coordinator:'
+	grep -A10 '^  nginx:' "$main" | grep -q 'condition: service_healthy'
+	grep -A8 '^  nginx:' "$fixture" | grep -q 'proxy-coordinator:'
+	grep -A10 '^  nginx:' "$fixture" | grep -q 'condition: service_healthy'
+
+	grep -A20 '^  proxy-coordinator:' "$main" | grep -q 'test -f /tmp/librecode-proxy-ready'
+	grep -A20 '^  proxy-coordinator:' "$fixture" | grep -q 'test -f /tmp/librecode-proxy-ready'
+}
+ "$TEST_LOG"
 }
 
 @test "proxy is not connected twice to the project network" {
