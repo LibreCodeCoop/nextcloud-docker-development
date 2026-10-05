@@ -141,6 +141,20 @@ certificate_matches_host() {
 	wait_for_absent librecode-dev-proxy-ssl-companion
 }
 
+@test "shared proxy accepts HTTPS from the worker network alias" {
+	compose_test proxytesta up --detach
+
+	wait_for_running librecode-dev-proxy
+	wait_for_network librecode-dev-proxy proxytesta_default
+	wait_for_https_status proxytesta.localhost 200
+
+	run compose_test proxytesta exec -T nginx \
+		wget --no-check-certificate --server-response --spider \
+		"https://proxytesta.localhost/" 2>&1
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"HTTP/1.1 200 OK"* ]]
+}
+
 @test "Ctrl+C on attached compose stops the last shared proxy promptly" {
 	log="$BATS_TEST_TMPDIR/compose-up.log"
 
