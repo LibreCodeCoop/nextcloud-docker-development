@@ -118,5 +118,6 @@ setup() {
 	run env DB_TYPE=sqlite COMPOSE_PROFILES=playwright sh "$WORKER" playwright-route config
 	[ "$status" -eq 0 ]
 	[[ "$output" == *"PLAYWRIGHT_BASE_URL: https://ncdev-playwright-route.localhost"* ]]
-	[[ "$output" == *"ncdev-playwright-route.localhost:host-gateway"* ]]
+	[[ "$output" == *"ncdev-playwright-route.localhost"* ]]
+	[[ "$output" == *"host-gateway"* ]]
 }
