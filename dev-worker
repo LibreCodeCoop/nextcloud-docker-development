@@ -10,7 +10,8 @@ Usage: sh ./dev-worker <worker-id> <command> [arguments...]
 
 Commands:
   up                 Start the isolated worker and wait for Nextcloud installation
-  exec <command...>  Run a command in the worker's Nextcloud container
+  exec <command...>  Run a non-interactive command in the worker's Nextcloud container
+  shell              Open an interactive shell in the worker's Nextcloud container
   logs               Print worker logs
   config             Render the resolved Compose configuration
   status             Run occ status in the worker
@@ -28,6 +29,7 @@ Environment:
   NEXTCLOUD_HOST=<hostname>  Public hostname (default: <project>.localhost)
   NEXTCLOUD_PROTOCOL=http|https Public protocol (default: https)
   NCDD_WORKSPACE=<path>     Optional directory mounted as /var/www/html/apps-extra
+  NCDD_SHELL=<command>       Interactive shell command (default: bash)
   WORKER_READY_TIMEOUT=180  Seconds to wait for a clean installation
 EOF
 }
@@ -183,6 +185,9 @@ case "$command" in
 			exit 2
 		}
 		compose exec -T nextcloud "$@"
+		;;
+	shell)
+		compose exec nextcloud "${NCDD_SHELL:-bash}"
 		;;
 	logs)
 		compose logs --no-color "$@"

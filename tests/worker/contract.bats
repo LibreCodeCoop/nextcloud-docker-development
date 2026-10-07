@@ -113,3 +113,11 @@ setup() {
 }
 
 
+
+@test "worker exposes a TTY-enabled interactive shell command" {
+	run grep -F 'compose exec nextcloud "${NCDD_SHELL:-bash}"' "$WORKER"
+	[ "$status" -eq 0 ]
+
+	run grep -F 'compose exec -T nextcloud "$@"' "$WORKER"
+	[ "$status" -eq 0 ]
+}
