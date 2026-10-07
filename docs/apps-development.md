@@ -56,8 +56,19 @@ NCDD does not assign a primary application, manage application repositories or
 limit how many applications the workspace contains. Clones, Git worktrees and
 other source layouts are the responsibility of the caller.
 
+For an interactive development shell, use the worker command that keeps TTY
+allocation enabled:
+
+```bash
+NCDD_WORKSPACE=/tmp/workspaces/issue-123 \
+DB_TYPE=sqlite \
+sh ./dev-worker issue-123 shell
+```
+
+Set `NCDD_SHELL` if a shell other than `bash` is desired.
+
 Application-specific setup remains owned by the application repository or the
-agent operating the worker:
+agent operating the worker. Use `exec` for non-interactive commands:
 
 ```bash
 NCDD_WORKSPACE=/tmp/workspaces/issue-123 \
