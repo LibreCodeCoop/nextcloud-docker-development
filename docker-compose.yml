@@ -115,7 +115,7 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
   playwright:
-    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    image: mcr.microsoft.com/playwright:v1.64.0-noble
     profiles:
       - playwright
     user: pwuser
