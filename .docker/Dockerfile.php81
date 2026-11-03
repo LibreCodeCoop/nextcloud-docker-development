@@ -1,6 +1,6 @@
 # UNSUPPORTED: PHP 8.1 has no official security release for CVE-2026-109618/109619.
 # This Dockerfile is kept for historical reference and excluded from GHCR publishing.
-FROM php:8.1-fpm
+FROM php:8.5-fpm
 
 RUN apt-get update \
     && apt-get install -y \
