@@ -12,6 +12,16 @@ VERSION_NEXTCLOUD=stable33 docker compose up
 
 By default, `VERSION_NEXTCLOUD` uses `master`. To use another Nextcloud version, set it to the corresponding branch from the [Nextcloud server repository](https://github.com/nextcloud/server).
 
+### PHP versions
+
+PHP 8.3 (`PHP_VERSION=83`) is the default, and PHP 8.2 (`PHP_VERSION=82`)
+remains available for compatibility. PHP 8.1 is no longer supported or built;
+its Dockerfile is retained in Git history only.
+
+Base images are pinned to a PHP patch version and OCI digest. Dependabot can
+update patches and digests within each supported PHP minor series. A new PHP
+minor version requires an explicit Dockerfile and publishing-matrix change.
+
 Xdebug can be configured with its native `XDEBUG_MODE` variable:
 
 ```bash
