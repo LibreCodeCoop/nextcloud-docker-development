@@ -1,5 +1,8 @@
 FROM php:8.2.35-fpm@sha256:a58479410c94b3f0f7dfacc27fba8befc122290743fd0eb8c88a99ff2a0b1ba1
 
+# Fail closed if a dependency update changes the PHP minor runtime.
+RUN test "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" = "8.2"
+
 
 
 RUN apt-get update \

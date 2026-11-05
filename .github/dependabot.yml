@@ -9,6 +9,12 @@ updates:
     directory: "/.docker/"
     schedule:
       interval: "daily"
+    # Each Dockerfile targets a fixed PHP minor version; update patches only.
+    ignore:
+      - dependency-name: "php"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
 
   - package-ecosystem: "docker-compose"
     directories:

@@ -58,6 +58,19 @@ jobs:
           NAME="${{ matrix.container }}"
           DOCKERFILE=$([[ -f ".docker/$NAME/Dockerfile" ]] && echo ".docker/$NAME/Dockerfile" || echo ".docker/Dockerfile.$NAME")
           echo "DOCKERFILE=$DOCKERFILE" >> $GITHUB_OUTPUT
+      - name: Verify Dockerfile PHP version
+        env:
+          DOCKERFILE: ${{ steps.dockerfile.outputs.DOCKERFILE }}
+          PHP_VERSION: ${{ matrix.version }}
+        shell: bash
+        run: |
+          major="${PHP_VERSION%%.*}"
+          minor="${PHP_VERSION#*.}"
+          from="$(grep -m 1 -E '^FROM[[:space:]]+' "$DOCKERFILE")"
+          if [[ ! "$from" =~ ^FROM[[:space:]]+php:${major}[.]${minor}[.][0-9]+-fpm@sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error file=$DOCKERFILE::Expected pinned PHP $PHP_VERSION patch image and sha256 digest; found: $from"
+            exit 1
+          fi
       - name: Build container image
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
         with:
