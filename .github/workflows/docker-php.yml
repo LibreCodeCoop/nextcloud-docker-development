@@ -64,9 +64,10 @@ jobs:
           PHP_VERSION: ${{ matrix.version }}
         shell: bash
         run: |
-          expected="${PHP_VERSION//./\\.}"
+          major="${PHP_VERSION%%.*}"
+          minor="${PHP_VERSION#*.}"
           from="$(grep -m 1 -E '^FROM[[:space:]]+' "$DOCKERFILE")"
-          if [[ ! "$from" =~ ^FROM[[:space:]]+php:${expected}\\.[0-9]+-fpm@sha256:[0-9a-f]{64}$ ]]; then
+          if [[ ! "$from" =~ ^FROM[[:space:]]+php:${major}[.]${minor}[.][0-9]+-fpm@sha256:[0-9a-f]{64}$ ]]; then
             echo "::error file=$DOCKERFILE::Expected pinned PHP $PHP_VERSION patch image and sha256 digest; found: $from"
             exit 1
           fi
