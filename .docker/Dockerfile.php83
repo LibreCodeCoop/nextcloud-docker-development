@@ -1,4 +1,4 @@
-FROM php:8.3.36-fpm@sha256:d0dea3f5d95314eac94a732469f4cf0ee658a22c2ce3f2612272b9d5b42d1a72
+FROM php:8.3.36-fpm@sha256:03af352853b05e35ee15ab898a2755532573684c7d1120b246dbd4e3c90f5007
 
 # Fail closed if a dependency update changes the PHP minor runtime.
 RUN test "$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')" = "8.3"
