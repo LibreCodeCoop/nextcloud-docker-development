@@ -10,7 +10,7 @@ services:
         condition: service_healthy
 
   proxy-coordinator:
-    image: docker:29.9.2-cli@sha256:5e6baf67325a79f64ed3bed6863954d5e05d0f3d4e57cbdb14809346814bbfdb
+    image: docker:29.9.3-cli@sha256:2357639ad1ea7d0194134bf3292622fd4e562483966ed674e5d7c945b5f3b28d
     entrypoint: ["/bin/sh", "/project/.docker/scripts/proxy-coordinator.sh"]
     labels:
       coop.librecode.dev-proxy-client: "true"
