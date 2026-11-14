@@ -81,3 +81,12 @@ setup() {
 		done < <(grep -E '^[[:space:]]*-?[[:space:]]*uses:[[:space:]]+[^./][^[:space:]]+@' "$workflow" || true)
 	done < <(find "$REPO_ROOT/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \))
 }
+
+@test "image build downloads are pinned by version and checksum" {
+	grep -Eq '^FROM nginx:[0-9]+\.[0-9]+\.[0-9]+-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/Dockerfile.nginx"
+	for dockerfile in "$REPO_ROOT"/.docker/Dockerfile.php8*; do
+		grep -Eq '^ADD --checksum=sha256:[0-9a-f]{64} https://github\.com/mlocati/docker-php-extension-installer/releases/download/[0-9]+\.[0-9]+\.[0-9]+/install-php-extensions ' "$dockerfile"
+		grep -Eq '^ADD --checksum=sha256:[0-9a-f]{64} https://raw\.githubusercontent\.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install\.sh ' "$dockerfile"
+		! grep -Eq 'releases/latest|nvm/master|\| *(ba)?sh' "$dockerfile"
+	done
+}

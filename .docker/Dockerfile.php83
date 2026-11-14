@@ -28,7 +28,7 @@ ENV LANGUAGE=en_US:en
 ENV LC_ALL=en_US.UTF-8
 
 # Install PHP extensions
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
+ADD --checksum=sha256:27fa8d80bd4e22feb9ddcadff1ca40c8f3e8ea942eb2dd8f446ed1afd2f2f0ab https://github.com/mlocati/docker-php-extension-installer/releases/download/2.13.2/install-php-extensions /usr/local/bin/
 RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     && install-php-extensions \
     apcu \
@@ -62,9 +62,11 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     && chown -R www-data /var/www
 
 # Install NVM
+ADD --checksum=sha256:045932fe05f0d4247c946f2ec0ec4026dbfd8ce88a5f67ea28d8ea833227f48b https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh /tmp/install-nvm.sh
 RUN export NVM_DIR="/usr/local/nvm" \
     && mkdir -p "$NVM_DIR" \
-    && curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash \
+    && bash /tmp/install-nvm.sh \
+    && rm /tmp/install-nvm.sh \
     && . "$NVM_DIR/nvm.sh" \
     && nvm install 24 \
     && nvm alias default 24 \
