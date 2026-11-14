@@ -81,3 +81,8 @@ setup() {
 		done < <(grep -E '^[[:space:]]*-?[[:space:]]*uses:[[:space:]]+[^./][^[:space:]]+@' "$workflow" || true)
 	done < <(find "$REPO_ROOT/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \))
 }
+
+@test "Xdebug connects only to the configured client host" {
+	grep -Fxq 'xdebug.client_host=host.docker.internal' "$REPO_ROOT/.docker/config/php/xdebug.ini"
+	! grep -q 'discover_client_host' "$REPO_ROOT/.docker/config/php/xdebug.ini"
+}
