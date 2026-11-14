@@ -177,11 +177,13 @@ If the directory name creates a long local hostname, use a shorter Compose proje
 COMPOSE_PROJECT_NAME=dev docker compose up
 ```
 
-The shared proxy owns host ports `80` and `443` and binds to `127.0.0.1` by default. To expose only the proxy on other network interfaces, set:
+The shared proxy owns host ports `80` and `443` and binds to `127.0.0.1` by default. To expose the proxy on other network interfaces, set:
 
 ```bash
 PROXY_IP_BIND=0.0.0.0 docker compose up
 ```
+
+The proxy routes requests by the `Host` header, so this exposes every routed service of every active environment, not only Nextcloud: the environment dashboard at `localhost`, Mailpit with all captured email, and the Euro-Office, Playwright and Signal gateway services when their profiles are enabled. Mailpit, Playwright and the Signal gateway have no authentication, Euro-Office uses a default `JWT_SECRET`, and the Nextcloud admin password defaults to `admin` unless `NEXTCLOUD_ADMIN_PASSWORD` is set. Forwarding the proxy port on a remote platform has the same effect.
 
 MySQL and PostgreSQL use independent bind settings and also default to `127.0.0.1`:
 
