@@ -81,3 +81,7 @@ setup() {
 		done < <(grep -E '^[[:space:]]*-?[[:space:]]*uses:[[:space:]]+[^./][^[:space:]]+@' "$workflow" || true)
 	done < <(find "$REPO_ROOT/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \))
 }
+
+@test "nginx hides dotfiles and dependency manifests inside app directories" {
+	grep -Fxq '    location ~ ^/(?:apps|apps-extra|apps-writable)/[^/]+/(?:\.|composer\.(?:json|lock)$|package(?:-lock)?\.json$) { return 404; }' "$REPO_ROOT/.docker/nginx/config/nextcloud.conf"
+}
