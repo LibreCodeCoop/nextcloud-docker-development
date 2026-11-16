@@ -90,3 +90,8 @@ setup() {
 		! grep -Eq 'releases/latest|nvm/master|\| *(ba)?sh' "$dockerfile"
 	done
 }
+
+@test "Xdebug connects only to the configured client host" {
+	grep -Fxq 'xdebug.client_host=host.docker.internal' "$REPO_ROOT/.docker/config/php/xdebug.ini"
+	! grep -q 'discover_client_host' "$REPO_ROOT/.docker/config/php/xdebug.ini"
+}
