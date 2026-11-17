@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": ["custom.regex"],
+  "timezone": "America/Sao_Paulo",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.docker\\/Dockerfile\\.php8\\d$/"],
+      "matchStrings": [
+        "ADD --checksum=sha256:(?<currentDigest>[0-9a-f]{64}) https:\\/\\/github\\.com\\/(?<depName>mlocati\\/docker-php-extension-installer)\\/releases\\/download\\/(?<currentValue>\\d+\\.\\d+\\.\\d+)\\/install-php-extensions "
+      ],
+      "datasourceTemplate": "github-release-attachments",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.docker\\/Dockerfile\\.php8\\d$/"],
+      "matchStrings": [
+        "# (?<currentValue>v\\d+\\.\\d+\\.\\d+)\\nARG NVM_COMMIT=(?<currentDigest>[0-9a-f]{40})\\n"
+      ],
+      "datasourceTemplate": "github-tags",
+      "depNameTemplate": "nvm-sh/nvm",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["custom.regex"],
+      "schedule": ["* * * * 1"]
+    }
+  ]
+}

@@ -86,8 +86,9 @@ setup() {
 	grep -Eq '^FROM nginx:[0-9]+\.[0-9]+\.[0-9]+-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/Dockerfile.nginx"
 	for dockerfile in "$REPO_ROOT"/.docker/Dockerfile.php8*; do
 		grep -Eq '^ADD --checksum=sha256:[0-9a-f]{64} https://github\.com/mlocati/docker-php-extension-installer/releases/download/[0-9]+\.[0-9]+\.[0-9]+/install-php-extensions ' "$dockerfile"
-		grep -Eq '^ADD --checksum=sha256:[0-9a-f]{64} https://raw\.githubusercontent\.com/nvm-sh/nvm/v[0-9]+\.[0-9]+\.[0-9]+/install\.sh ' "$dockerfile"
-		! grep -Eq 'releases/latest|nvm/master|\| *(ba)?sh' "$dockerfile"
+		grep -A1 -E '^# v[0-9]+\.[0-9]+\.[0-9]+$' "$dockerfile" | grep -Eq '^ARG NVM_COMMIT=[0-9a-f]{40}$'
+		grep -Fq 'fetch -q --depth 1 https://github.com/nvm-sh/nvm.git "$NVM_COMMIT"' "$dockerfile"
+		! grep -Eq 'releases/latest|nvm/master|install\.sh|\| *(ba)?sh' "$dockerfile"
 	done
 }
 

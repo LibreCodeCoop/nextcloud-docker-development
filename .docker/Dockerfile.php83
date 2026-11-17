@@ -62,11 +62,12 @@ RUN chmod uga+x /usr/local/bin/install-php-extensions && sync \
     && chown -R www-data /var/www
 
 # Install NVM
-ADD --checksum=sha256:045932fe05f0d4247c946f2ec0ec4026dbfd8ce88a5f67ea28d8ea833227f48b https://raw.githubusercontent.com/nvm-sh/nvm/v0.41.0/install.sh /tmp/install-nvm.sh
+# v0.41.0
+ARG NVM_COMMIT=4e8758a801eea9479b32a904f31093e410ddaba4
 RUN export NVM_DIR="/usr/local/nvm" \
-    && mkdir -p "$NVM_DIR" \
-    && bash /tmp/install-nvm.sh \
-    && rm /tmp/install-nvm.sh \
+    && git init -q "$NVM_DIR" \
+    && git -C "$NVM_DIR" fetch -q --depth 1 https://github.com/nvm-sh/nvm.git "$NVM_COMMIT" \
+    && git -C "$NVM_DIR" checkout -q FETCH_HEAD \
     && . "$NVM_DIR/nvm.sh" \
     && nvm install 24 \
     && nvm alias default 24 \
