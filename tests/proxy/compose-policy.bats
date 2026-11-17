@@ -82,6 +82,16 @@ setup() {
 	done < <(find "$REPO_ROOT/.github/workflows" -type f \( -name '*.yml' -o -name '*.yaml' \))
 }
 
+@test "image build downloads are pinned by version and checksum" {
+	grep -Eq '^FROM nginx:[0-9]+\.[0-9]+\.[0-9]+-alpine@sha256:[0-9a-f]{64}$' "$REPO_ROOT/.docker/Dockerfile.nginx"
+	for dockerfile in "$REPO_ROOT"/.docker/Dockerfile.php8*; do
+		grep -Eq '^ADD --checksum=sha256:[0-9a-f]{64} https://github\.com/mlocati/docker-php-extension-installer/releases/download/[0-9]+\.[0-9]+\.[0-9]+/install-php-extensions ' "$dockerfile"
+		grep -A1 -E '^# v[0-9]+\.[0-9]+\.[0-9]+$' "$dockerfile" | grep -Eq '^ARG NVM_COMMIT=[0-9a-f]{40}$'
+		grep -Fq 'fetch -q --depth 1 https://github.com/nvm-sh/nvm.git "$NVM_COMMIT"' "$dockerfile"
+		! grep -Eq 'releases/latest|nvm/master|install\.sh|\| *(ba)?sh' "$dockerfile"
+	done
+}
+
 @test "nginx hides dotfiles and dependency manifests inside app directories" {
 	grep -Fxq '    location ~ ^/(?:apps|apps-extra|apps-writable)/[^/]+/(?:\.|composer\.(?:json|lock)$|package(?:-lock)?\.json$) { return 404; }' "$REPO_ROOT/.docker/nginx/config/nextcloud.conf"
 }
