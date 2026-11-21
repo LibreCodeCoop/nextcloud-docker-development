@@ -24,7 +24,7 @@ services:
       - proxy
 
   ssl-companion:
-    image: sebastienheyd/self-signed-proxy-companion:1.1.0@sha256:dd698341f804aaffe2974931a185aa088561d76094e040e374847f3a64004d43
+    image: sebastienheyd/self-signed-proxy-companion:1.1.1@sha256:e7a0a30e8b4efd6266c44f3d066a616bce0d2a5dd603b98d3cbef646355395bf
     container_name: librecode-dev-proxy-ssl-companion
     labels:
       coop.librecode.dev-proxy-companion: "true"
